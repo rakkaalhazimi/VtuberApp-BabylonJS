@@ -3,10 +3,13 @@ import '@/style.css';
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import 'babylon-mmd/esm/Loader/pmxLoader';
+// import dat from 'dat.gui';
 
-import { RotateBoneCommand } from '@/command/index';
+// import { RotateBoneCommand } from '@/command/index';
 import { MMDGui } from '@/mmd/gui';
-import { loopBack } from '@/utils';
+// import { loopBack } from '@/utils';
+import { VideoCamera } from '@/video/video';
+import { VideoGUI } from './video/gui';
 
 
 
@@ -108,37 +111,37 @@ const createScene = async () => {
 
   // console.log('Morphs: ', mmdModel.morph.morphs);
   // const bone = mmdModel.runtimeBones.find(b => b.name === '左腕'); // e.g., Left Arm
-  const bone = mmdModel.runtimeBones.find(b => b.name === '頭');
-  let time = 0;
+  // const bone = mmdModel.runtimeBones.find(b => b.name === '頭');
+  // let time = 0;
 
-  const looper = loopBack(-0.5, 0.5, 0.05);
+  // const looper = loopBack(-0.5, 0.5, 0.05);
 
 
   scene.onBeforeRenderObservable.add(() => {
-    if (!bone) return;
-    const deltaTime = engine.getDeltaTime() / 1000;
-    time += deltaTime;
-    const value = looper();
-    const rotateCmd = new RotateBoneCommand(
-      bone.linkedBone,
-      new BABYLON.Vector3(0, 1, 0),
-      value,
-    );
-    rotateCmd.run();
+    // if (!bone) return;
+    // const deltaTime = engine.getDeltaTime() / 1000;
+    // time += deltaTime;
+    // const value = looper();
+    // const rotateCmd = new RotateBoneCommand(
+    //   bone.linkedBone,
+    //   new BABYLON.Vector3(0, 1, 0),
+    //   value,
+    // );
+    // rotateCmd.run();
   });
 
 
   // GUI
-  // const gui = new dat.GUI();
-  // var options = {
-  //   diameter: 0.1,
-  // }
-  // gui.add(options, 'diameter', -1, 1, 0.1).onChange(function (value) {
-  //   console.log('Value: ', value);
-  // });
   const mmdGui = new MMDGui(mmdModel);
   mmdGui.createBoneGUI();
   mmdGui.createMorphGUI();
+
+
+  // Video Camera
+  const videoCamera = new VideoCamera('video');
+  videoCamera.enableCamera();
+  const videoGui = new VideoGUI(videoCamera);
+  videoGui.createEnableCameraGUI();
 
   return scene;
 };
