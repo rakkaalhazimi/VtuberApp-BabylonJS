@@ -75,6 +75,7 @@ export class PoseLandmarkerEstimation {
   public videoHeight: number;
   public landmarker: PoseLandmarker | undefined;
   public isEnabled: boolean = false;
+  public ctx: CanvasRenderingContext2D | undefined = undefined;
 
   constructor(videoHeight: number, videoWidth: number) {
     this.videoHeight = videoHeight;
@@ -118,6 +119,7 @@ export class PoseLandmarkerEstimation {
     result: PoseLandmarkerResult,
   ) {
     const landmarks = result.landmarks[0];
+    this.ctx = ctx;
 
     if (!landmarks) {
       return;
@@ -164,5 +166,14 @@ export class PoseLandmarkerEstimation {
       ctx.lineWidth = 2;
       ctx.stroke();
     }
+  }
+
+  enablePoseLandmarks() {
+    this.isEnabled = true;
+  }
+
+  disablePoseLandmarks() {
+    this.isEnabled = false;
+    this.ctx?.clearRect(0, 0, this.videoWidth, this.videoHeight);
   }
 }

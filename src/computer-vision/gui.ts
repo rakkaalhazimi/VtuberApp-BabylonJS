@@ -15,8 +15,8 @@ export class ComputerVisionGUI {
     const options = {
       enablePoseEstimation: this.poseEstimation.isEnabled,
     };
-    this.gui.add(options, 'enablePoseEstimation').onChange((value) => {
-      this.poseEstimation.isEnabled = value;
-    });
+    this.gui.add(options, 'enablePoseEstimation').onChange((value) => value
+      ? this.poseEstimation.enablePoseLandmarks()
+      : this.poseEstimation.disablePoseLandmarks());
   }
 }
