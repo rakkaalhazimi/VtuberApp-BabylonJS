@@ -6,7 +6,7 @@ import { boneTranslations, morphTranslations } from './translation';
 import { RotateBoneCommand } from '@/command';
 
 
-export class MMDGui {
+export class MMDGUI {
 
   private gui: dat.GUI;
 

@@ -7,7 +7,7 @@ import 'babylon-mmd/esm/Loader/pmxLoader';
 
 // import { RotateBoneCommand } from '@/command/index';
 import { PoseLandmarkerEstimation } from '@/computer-vision/pose-estimation';
-import { MMDGui } from '@/mmd/gui';
+import { MMDGUI } from '@/mmd/gui';
 // import { loopBack } from '@/utils';
 import { VideoCamera } from '@/video/video';
 import { VideoGUI } from './video/gui';
@@ -133,7 +133,7 @@ const createScene = async () => {
 
 
   // GUI
-  const mmdGui = new MMDGui(mmdModel);
+  const mmdGui = new MMDGUI(mmdModel);
   mmdGui.createBoneGUI();
   mmdGui.createMorphGUI();
 
