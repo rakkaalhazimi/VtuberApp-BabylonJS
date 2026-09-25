@@ -147,8 +147,7 @@ const createScene = async () => {
 
 
   // Pose Estimation
-  const pose = new PoseLandmarkerEstimation(
-    videoCamera.video.height, videoCamera.video.width);
+  const pose = new PoseLandmarkerEstimation(videoCamera);
   await pose.loadPoseLandmarkerDetector();
 
   const poseEstimationGUI = new ComputerVisionGUI(pose);
@@ -161,9 +160,8 @@ const createScene = async () => {
   const ctx = videoCanvas.getContext('2d');
 
   scene.onBeforeRenderObservable.add(async () => {
-    if (!pose.isEnabled) return;
-    if (!videoCamera.isEnable) return;
     const poseResult = await pose.estimatePose(videoCamera.video);
+    if (!poseResult) return;
     pose.drawPoseLandmarks(ctx!, poseResult);
   });
 

@@ -1,3 +1,4 @@
+import type { VideoCamera } from '@/video/video';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 
@@ -74,12 +75,12 @@ export class PoseLandmarkerEstimation {
   public videoWidth: number;
   public videoHeight: number;
   public landmarker: PoseLandmarker | undefined;
-  public isEnabled: boolean = false;
   public ctx: CanvasRenderingContext2D | undefined = undefined;
+  public isEnabled: boolean = false;
 
-  constructor(videoHeight: number, videoWidth: number) {
-    this.videoHeight = videoHeight;
-    this.videoWidth = videoWidth;
+  constructor(public videoCamera: VideoCamera) {
+    this.videoHeight = videoCamera.height;
+    this.videoWidth = videoCamera.width;
   }
 
   async loadPoseLandmarkerDetector(options: PoseLandmarkerOptions = {}) {
@@ -105,12 +106,14 @@ export class PoseLandmarkerEstimation {
     return this.landmarker;
   }
 
-  async estimatePose(video: HTMLVideoElement): Promise<PoseLandmarkerResult> {
+  async estimatePose(video: HTMLVideoElement): Promise<PoseLandmarkerResult | null> {
     if (!this.landmarker) {
       throw new Error(
         'Pose landmarker is not loaded. Call loadPoseLandmarkerDetector() first.',
       );
     }
+    if (!this.isEnabled) return null;
+    if (!this.videoCamera.isEnable) return null;
     return this.landmarker.detectForVideo(video, performance.now());
   }
 
