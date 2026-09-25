@@ -74,6 +74,7 @@ export class PoseLandmarkerEstimation {
   public videoWidth: number;
   public videoHeight: number;
   public landmarker: PoseLandmarker | undefined;
+  public isEnabled: boolean = false;
 
   constructor(videoHeight: number, videoWidth: number) {
     this.videoHeight = videoHeight;

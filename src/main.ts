@@ -3,10 +3,10 @@ import '@/style.css';
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import 'babylon-mmd/esm/Loader/pmxLoader';
-// import dat from 'dat.gui';
 
 // import { RotateBoneCommand } from '@/command/index';
 import { PoseLandmarkerEstimation } from '@/computer-vision/pose-estimation';
+import { ComputerVisionGUI } from '@/computer-vision/gui';
 import { MMDGUI } from '@/mmd/gui';
 // import { loopBack } from '@/utils';
 import { VideoCamera } from '@/video/video';
@@ -149,16 +149,24 @@ const createScene = async () => {
   // Pose Estimation
   const pose = new PoseLandmarkerEstimation(
     videoCamera.video.height, videoCamera.video.width);
-  const landmaker = await pose.loadPoseLandmarkerDetector();
+  await pose.loadPoseLandmarkerDetector();
 
-  await new Promise(resolve => setTimeout(resolve, 3000));
+  const poseEstimationGUI = new ComputerVisionGUI(pose);
+  poseEstimationGUI.createPoseEstimationGUI();
 
-  const poseResult = await pose.estimatePose(videoCamera.video);
-  console.log(poseResult);
+  // const poseResult = await pose.estimatePose(videoCamera.video);
+  // console.log(poseResult);
 
   const videoCanvas = document.getElementById('video-canvas') as HTMLCanvasElement;
   const ctx = videoCanvas.getContext('2d');
-  pose.drawPoseLandmarks(ctx!, poseResult);
+
+  scene.onBeforeRenderObservable.add(async () => {
+    if (!pose.isEnabled) return;
+    if (!videoCamera.isEnable) return;
+    const poseResult = await pose.estimatePose(videoCamera.video);
+    pose.drawPoseLandmarks(ctx!, poseResult);
+  });
+
 
   return scene;
 };
