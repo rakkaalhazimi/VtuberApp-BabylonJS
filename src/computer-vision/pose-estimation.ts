@@ -55,8 +55,7 @@ export enum PoseLandmarkerPoint {
 
 export const POSE_CONFIDENCE_SCORE = 0.5;
 
-export const DEFAULT_MODEL_PATH =
-  'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+export const DEFAULT_MODEL_PATH = '/pose/pose_landmarker_lite.task';
 
 export const DEFAULT_WASM_PATH =
   'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm';
