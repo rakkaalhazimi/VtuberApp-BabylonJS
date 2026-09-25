@@ -110,9 +110,6 @@ export class PoseLandmarkerEstimation {
         'Pose landmarker is not loaded. Call loadPoseLandmarkerDetector() first.',
       );
     }
-
-    await this.landmarker.setOptions({ runningMode: 'VIDEO' });
-
     return this.landmarker.detectForVideo(video, performance.now());
   }
 
