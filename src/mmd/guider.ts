@@ -22,7 +22,7 @@ export class MMDMovementGuider {
   }
 
   guideUpperBodyMovement(result: PoseLandmarkerResult) {
-    const landmarks = result.landmarks[0];
+    const landmarks = result.worldLandmarks[0];
     if (!landmarks) return;
     const upperBody = this.model.runtimeBones.find(b => b.name === '上半身');
     if (!upperBody) return;
@@ -73,8 +73,8 @@ export class MMDMovementGuider {
     );
 
     // Roll (Rotation around forward axis, lateral / sideways tilt)
-    const bodyTilt = screenToCartesianSpace(leftShoulder.subtract(rightShoulder));
-    const roll = Math.atan2(bodyTilt.y, Math.abs(bodyTilt.x));
+    const bodyTilt = screenToCartesianSpace(midShoulder.subtract(midHip));
+    const roll = Math.atan2(bodyTilt.x, bodyTilt.y);
     if (Math.abs(roll) > ANGLE_THRESHOLD_RADIANS) {
       this.upperBodyRoll += this.smooth(this.upperBodyRoll, roll);
     }
