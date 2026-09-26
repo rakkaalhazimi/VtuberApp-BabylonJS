@@ -8,6 +8,7 @@ import 'babylon-mmd/esm/Loader/pmxLoader';
 import { PoseLandmarkerEstimation } from '@/computer-vision/pose-estimation';
 import { ComputerVisionGUI } from '@/computer-vision/gui';
 import { MMDGUI } from '@/mmd/gui';
+import { MMDMovementGuider } from '@/mmd/guider';
 // import { loopBack } from '@/utils';
 import { VideoCamera } from '@/video/video';
 import { VideoGUI } from './video/gui';
@@ -155,6 +156,7 @@ const createScene = async () => {
 
   // const poseResult = await pose.estimatePose(videoCamera.video);
   // console.log(poseResult);
+  const guider = new MMDMovementGuider(mmdModel);
 
   const videoCanvas = document.getElementById('video-canvas') as HTMLCanvasElement;
   const ctx = videoCanvas.getContext('2d');
@@ -163,6 +165,7 @@ const createScene = async () => {
     const poseResult = await pose.estimatePose(videoCamera.video);
     if (!poseResult) return;
     pose.drawPoseLandmarks(ctx!, poseResult);
+    guider.guideUpperBodyMovement(poseResult);
   });
 
 
