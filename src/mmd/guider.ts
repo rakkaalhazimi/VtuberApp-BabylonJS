@@ -127,4 +127,33 @@ export class MMDMovementGuider {
     );
   }
 
+  guideRightArmMovement(result: PoseLandmarkerResult) {
+    const landmarks = result.worldLandmarks[0];
+    if (!landmarks) return;
+    const rightShoulder = this.model.runtimeBones.find(b => b.name === '右肩');
+    const rightArm = this.model.runtimeBones.find(b => b.name === '右腕');
+    const rightElbow = this.model.runtimeBones.find(b => b.name === '右ひじ');
+    if (!rightShoulder || !rightArm || !rightElbow) return;
+
+    const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
+    const poseRightElbow = landmarks[PoseLandmarkerPoint.RIGHT_ELBOW];
+
+    const vectorRightShoulder = landmarkToVector(poseRightShoulder);
+    const vectorRightElbow = landmarkToVector(poseRightElbow);
+    const cartesianRightElbow = invertYAxis(vectorRightElbow.subtract(vectorRightShoulder));
+
+    const rightElbowRest = rightElbow.linkedBone.position.subtract(rightShoulder.linkedBone.position);
+
+    const rightArmTargetQuaternion = new BABYLON.Quaternion();
+    BABYLON.Quaternion.FromUnitVectorsToRef(
+      rightElbowRest.normalizeToNew(),
+      cartesianRightElbow.normalizeToNew(),
+      rightArmTargetQuaternion,
+    );
+    rightArm.linkedBone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightArm.linkedBone.rotationQuaternion,
+      rightArmTargetQuaternion,
+      0.1,
+    );
+  }
 }
