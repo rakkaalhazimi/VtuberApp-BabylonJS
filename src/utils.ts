@@ -25,6 +25,6 @@ export function landmarkToVector(landmark: NormalizedLandmark) {
 }
 
 // Convert any vector from top-left origin into center origin (origin is [0, 0])
-export function screenToCartesianSpace(vector3: BABYLON.Vector3) {
+export function invertYAxis(vector3: BABYLON.Vector3) {
   return new BABYLON.Vector3(vector3.x, -vector3.y, vector3.z);
 }

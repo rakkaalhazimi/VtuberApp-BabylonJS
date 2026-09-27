@@ -2,7 +2,7 @@ import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 import { PoseLandmarkerPoint } from '@/computer-vision/pose-estimation';
-import { landmarkToVector, screenToCartesianSpace } from '@/utils';
+import { landmarkToVector, invertYAxis } from '@/utils';
 
 
 
@@ -42,7 +42,7 @@ export class MMDMovementGuider {
     midShoulder.z -= NEUTRAL_SHOULDER_Z;  // Subtracted by neutral shoulder z position
 
     // Pitch (Rotation around horizontal axis)
-    const bodyLean = screenToCartesianSpace(midShoulder.subtract(midHip));
+    const bodyLean = invertYAxis(midShoulder.subtract(midHip));
     const pitch = Math.atan2(bodyLean.z, bodyLean.y);
     if (Math.abs(pitch) > ANGLE_THRESHOLD_RADIANS) {
       this.upperBodyPitch += this.smooth(this.upperBodyPitch, pitch);  // Exponential Moving Average
@@ -73,7 +73,7 @@ export class MMDMovementGuider {
     );
 
     // Roll (Rotation around forward axis, lateral / sideways tilt)
-    const bodyTilt = screenToCartesianSpace(midShoulder.subtract(midHip));
+    const bodyTilt = invertYAxis(midShoulder.subtract(midHip));
     const roll = Math.atan2(bodyTilt.x, bodyTilt.y);
     if (Math.abs(roll) > ANGLE_THRESHOLD_RADIANS) {
       this.upperBodyRoll += this.smooth(this.upperBodyRoll, roll);
@@ -108,7 +108,7 @@ export class MMDMovementGuider {
 
     const vectorLeftShoulder = landmarkToVector(poseLeftShoulder);
     const vectorLeftElbow = landmarkToVector(poseLeftElbow);
-    const cartesianLeftElbow = screenToCartesianSpace(vectorLeftElbow.subtract(vectorLeftShoulder));
+    const cartesianLeftElbow = invertYAxis(vectorLeftElbow.subtract(vectorLeftShoulder));
 
     const leftElbowRest = leftElbow.linkedBone.position.subtract(leftShoulder.linkedBone.position);
 
