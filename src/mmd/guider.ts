@@ -93,4 +93,38 @@ export class MMDMovementGuider {
       0.1,
     );
   }
+
+
+  guideLeftArmMovement(result: PoseLandmarkerResult) {
+    const landmarks = result.worldLandmarks[0];
+    if (!landmarks) return;
+    const leftShoulder = this.model.runtimeBones.find(b => b.name === '左肩');
+    const leftArm = this.model.runtimeBones.find(b => b.name === '左腕');
+    const leftElbow = this.model.runtimeBones.find(b => b.name === '左ひじ');
+    if (!leftShoulder || !leftArm || !leftElbow) return;
+
+    const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
+    const poseLeftElbow = landmarks[PoseLandmarkerPoint.LEFT_ELBOW];
+
+    const vectorLeftShoulder = landmarkToVector(poseLeftShoulder);
+    const vectorLeftElbow = landmarkToVector(poseLeftElbow);
+    const cartesianLeftElbow = screenToCartesianSpace(vectorLeftElbow.subtract(vectorLeftShoulder));
+
+    const leftElbowRest = leftElbow.linkedBone.position.subtract(leftShoulder.linkedBone.position);
+
+    const targetVectorTest = new BABYLON.Vector3(0.300, 0.400, 0.866);
+
+    const leftArmTargetQuaternion = new BABYLON.Quaternion();
+    BABYLON.Quaternion.FromUnitVectorsToRef(
+      leftElbowRest.normalizeToNew(),
+      cartesianLeftElbow.normalizeToNew(),
+      leftArmTargetQuaternion,
+    );
+    leftArm.linkedBone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftArm.linkedBone.rotationQuaternion,
+      leftArmTargetQuaternion,
+      0.1,
+    );
+  }
+
 }

@@ -166,6 +166,8 @@ const createScene = async () => {
     if (!poseResult) return;
     pose.drawPoseLandmarks(ctx!, poseResult);
     guider.guideUpperBodyMovement(poseResult);
+    guider.guideLeftArmMovement(poseResult);
+    // guider.guideLeftElbowMovement(poseResult);
   });
 
 
