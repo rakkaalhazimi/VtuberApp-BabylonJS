@@ -6,7 +6,7 @@ import { landmarkToVector, screenToCartesianSpace } from '@/utils';
 
 
 
-const NEUTRAL_SHOULDER_Z = 0;
+const NEUTRAL_SHOULDER_Z = -0.1;
 const ANGLE_THRESHOLD_RADIANS = BABYLON.Angle.FromDegrees(1.5).radians();
 
 export class MMDMovementGuider {
@@ -49,7 +49,7 @@ export class MMDMovementGuider {
     }
     const hipVisbility = (poseLeftHip.visibility + poseRightHip.visibility) / 2;
     if (hipVisbility < 0.5) {
-      this.upperBodyPitch = 0;
+      // this.upperBodyPitch = 0;
     }
     const pitchQ = BABYLON.Quaternion.RotationAxis(
       new BABYLON.Vector3(1, 0, 0),
