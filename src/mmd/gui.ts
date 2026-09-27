@@ -18,26 +18,30 @@ export class MMDGUI {
 
 
   createBoneGUI() {
-    const axisMap = {
-      'x': new BABYLON.Vector3(1, 0, 0),
-      'y': new BABYLON.Vector3(0, 1, 0),
-      'z': new BABYLON.Vector3(0, 0, 1),
-    };
     const boneFolder = this.gui.addFolder('Bone');
     for (const [localName, globalName] of Object.entries(boneTranslations)) {
-      const options: Record<string, number> = {};
       const bone = this.model.runtimeBones.find(b => b.name === localName);
 
       if (!bone) continue;
 
+      const options: Record<string, number> = {
+        'x': 0,
+        'y': 0,
+        'z': 0,
+      };
       const nameFolder = boneFolder.addFolder(globalName);
-      for (const [axis, vector] of Object.entries(axisMap)) {
-        options[axis] = 0;
-        nameFolder.add(options, axis, -Math.PI, Math.PI, 0.1).onChange((value) => {
-          const rotateCmd = new RotateBoneCommand(bone.linkedBone, vector, value);
-          rotateCmd.run();
-        });
-      }
+      nameFolder.add(options, 'x', -Math.PI, Math.PI, 0.1).onChange((value) => {
+        const targetQuaternion = BABYLON.Quaternion.FromEulerAngles(value, options.y, options.z);
+        bone.linkedBone.rotationQuaternion = targetQuaternion;
+      });
+      nameFolder.add(options, 'y', -Math.PI, Math.PI, 0.1).onChange((value) => {
+        const targetQuaternion = BABYLON.Quaternion.FromEulerAngles(options.x, value, options.z);
+        bone.linkedBone.rotationQuaternion = targetQuaternion;
+      });
+      nameFolder.add(options, 'z', -Math.PI, Math.PI, 0.1).onChange((value) => {
+        const targetQuaternion = BABYLON.Quaternion.FromEulerAngles(options.x, options.y, value);
+        bone.linkedBone.rotationQuaternion = targetQuaternion;
+      });
     }
   }
 
