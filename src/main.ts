@@ -144,12 +144,13 @@ const createScene = async () => {
 
 
   // GUI
-  const controlGUI = new ControlGUI(videoCamera, pose);
-  controlGUI.createControlGUI();
-
   const mmdGui = new MMDGUI(mmdModel);
   mmdGui.createBoneGUI();
   mmdGui.createMorphGUI();
+
+  const controlGUI = new ControlGUI(videoCamera, pose);
+  controlGUI.createControlGUI();
+
 
   // const poseResult = await pose.estimatePose(videoCamera.video);
   // console.log(poseResult);
