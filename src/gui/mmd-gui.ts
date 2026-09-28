@@ -17,8 +17,8 @@ export class MMDGUI {
 
   createBoneGUI() {
     const boneFolder = this.gui.addFolder('Bone');
-    for (const [localName, globalName] of Object.entries(boneTranslations)) {
-      const bone = this.model.runtimeBones.find(b => b.name === localName);
+    for (const value of Object.values(boneTranslations)) {
+      const bone = this.model.runtimeBones.find(b => b.name === value.localName);
 
       if (!bone) continue;
 
@@ -27,7 +27,7 @@ export class MMDGUI {
         'y': 0,
         'z': 0,
       };
-      const nameFolder = boneFolder.addFolder(globalName);
+      const nameFolder = boneFolder.addFolder(value.globalName);
       nameFolder.add(options, 'x', -Math.PI, Math.PI, 0.1).onChange((value) => {
         const targetQuaternion = BABYLON.Quaternion.FromEulerAngles(value, options.y, options.z);
         bone.linkedBone.rotationQuaternion = targetQuaternion;
