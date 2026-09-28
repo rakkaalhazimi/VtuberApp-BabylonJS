@@ -6,7 +6,7 @@ import 'babylon-mmd/esm/Loader/pmxLoader';
 
 // import { RotateBoneCommand } from '@/command/index';
 import { PoseLandmarkerEstimation } from '@/computer-vision/pose-estimation';
-import { ComputerVisionGUI } from '@/computer-vision/gui';
+import { ControlGUI } from '@/gui/control';
 import { MMDGUI } from '@/mmd/gui';
 import { MMDMovementGuider } from '@/mmd/guider';
 // import { loopBack } from '@/utils';
@@ -142,17 +142,16 @@ const createScene = async () => {
   // Video Camera
   const videoCamera = new VideoCamera('video');
   videoCamera.enableCamera();
-  const videoGui = new VideoGUI(videoCamera);
-  videoGui.createEnableCameraGUI();
-
 
 
   // Pose Estimation
   const pose = new PoseLandmarkerEstimation(videoCamera);
   await pose.loadPoseLandmarkerDetector();
 
-  const poseEstimationGUI = new ComputerVisionGUI(pose);
-  poseEstimationGUI.createPoseEstimationGUI();
+
+  // Control GUI
+  const controlGUI = new ControlGUI(videoCamera, pose);
+  controlGUI.createControlGUI();
 
   // const poseResult = await pose.estimatePose(videoCamera.video);
   // console.log(poseResult);
