@@ -157,8 +157,8 @@ export class MMDMovementGuider {
       cartesianRightElbow.normalizeToNew(),
       rightArmTargetQuaternion,
     );
-    rightArm.linkedBone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      rightArm.linkedBone.rotationQuaternion,
+    rightArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightArm.rotationQuaternion,
       rightArmTargetQuaternion,
       0.1,
     );
