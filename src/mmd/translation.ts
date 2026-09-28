@@ -1,3 +1,8 @@
+interface BoneName {
+  localName: string;
+  globalName: string;
+}
+
 export const boneTranslations = {
   CENTER: { localName: "センター", globalName: "Center" },
   UPPER_BODY: { localName: "上半身", globalName: "Upper body" },
@@ -139,7 +144,7 @@ export const boneTranslations = {
   RIGHT_TOE_IK: { localName: "右つま先ＩＫ", globalName: "Right toe IK" },
   RIGHT_TOE_IK_TIP: { localName: "右つま先ＩＫ先", globalName: "Right toe IK tip" },
   RIGHT_LEG_IK_TIP: { localName: "右足ＩＫ先", globalName: "Right leg IK tip" },
-};
+} satisfies Record<string, BoneName>;
 
 export const morphTranslations = {
   // "base": "Base",
