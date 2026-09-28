@@ -39,17 +39,17 @@ export class MMDMovementGuider {
     const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
     const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
 
-    const leftHip = landmarkToVector(poseLeftHip);
-    const rightHip = landmarkToVector(poseRightHip);
-    const leftShoulder = landmarkToVector(poseLeftShoulder);
-    const rightShoulder = landmarkToVector(poseRightShoulder);
+    const poseVecLeftHip = landmarkToVector(poseLeftHip);
+    const poseVecRightHip = landmarkToVector(poseRightHip);
+    const poseVecLeftShoulder = landmarkToVector(poseLeftShoulder);
+    const poseVecRightShoulder = landmarkToVector(poseRightShoulder);
 
-    const midHip = BABYLON.Vector3.Center(leftHip, rightHip);
-    const midShoulder = BABYLON.Vector3.Center(leftShoulder, rightShoulder);
-    midShoulder.z -= NEUTRAL_SHOULDER_Z;  // Subtracted by neutral shoulder z position
+    const poseVecMidHip = BABYLON.Vector3.Center(poseVecLeftHip, poseVecRightHip);
+    const poseVecMidShoulder = BABYLON.Vector3.Center(poseVecLeftShoulder, poseVecRightShoulder);
+    poseVecMidShoulder.z -= NEUTRAL_SHOULDER_Z;  // Subtracted by neutral shoulder z position
 
     // Pitch (Rotation around horizontal axis)
-    const bodyLean = invertYAxis(midShoulder.subtract(midHip));
+    const bodyLean = invertYAxis(poseVecMidShoulder.subtract(poseVecMidHip));
     const pitch = Math.atan2(bodyLean.z, bodyLean.y);
     if (Math.abs(pitch) > ANGLE_THRESHOLD_RADIANS) {
       this.upperBodyPitch += this.smooth(this.upperBodyPitch, pitch);  // Exponential Moving Average
@@ -64,7 +64,7 @@ export class MMDMovementGuider {
     );
 
     // Yaw (Rotation around vertical axis)
-    const bodyTwist = leftShoulder.subtract(rightShoulder);
+    const bodyTwist = poseVecLeftShoulder.subtract(poseVecRightShoulder);
     const yaw = Math.atan2(bodyTwist.z, bodyTwist.x);
     if (Math.abs(yaw) > ANGLE_THRESHOLD_RADIANS) {
       this.upperBodyYaw += this.smooth(this.upperBodyYaw, -yaw); // Flip horizontal
@@ -80,7 +80,7 @@ export class MMDMovementGuider {
     );
 
     // Roll (Rotation around forward axis, lateral / sideways tilt)
-    const bodyTilt = invertYAxis(midShoulder.subtract(midHip));
+    const bodyTilt = invertYAxis(poseVecMidShoulder.subtract(poseVecMidHip));
     const roll = Math.atan2(bodyTilt.x, bodyTilt.y);
     if (Math.abs(roll) > ANGLE_THRESHOLD_RADIANS) {
       this.upperBodyRoll += this.smooth(this.upperBodyRoll, roll);
@@ -113,9 +113,9 @@ export class MMDMovementGuider {
     const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
     const poseLeftElbow = landmarks[PoseLandmarkerPoint.LEFT_ELBOW];
 
-    const vectorLeftShoulder = landmarkToVector(poseLeftShoulder);
-    const vectorLeftElbow = landmarkToVector(poseLeftElbow);
-    const cartesianLeftElbow = invertYAxis(vectorLeftElbow.subtract(vectorLeftShoulder));
+    const poseVecLeftShoulder = landmarkToVector(poseLeftShoulder);
+    const poseVecLeftElbow = landmarkToVector(poseLeftElbow);
+    const poseDirLeftElbow = invertYAxis(poseVecLeftElbow.subtract(poseVecLeftShoulder));
 
     const leftElbowRest = leftElbow.position.subtract(leftShoulder.position);
 
@@ -124,7 +124,7 @@ export class MMDMovementGuider {
     const leftArmTargetQuaternion = new BABYLON.Quaternion();
     BABYLON.Quaternion.FromUnitVectorsToRef(
       leftElbowRest.normalizeToNew(),
-      cartesianLeftElbow.normalizeToNew(),
+      poseDirLeftElbow.normalizeToNew(),
       leftArmTargetQuaternion,
     );
     leftArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
@@ -145,16 +145,16 @@ export class MMDMovementGuider {
     const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
     const poseRightElbow = landmarks[PoseLandmarkerPoint.RIGHT_ELBOW];
 
-    const vectorRightShoulder = landmarkToVector(poseRightShoulder);
-    const vectorRightElbow = landmarkToVector(poseRightElbow);
-    const cartesianRightElbow = invertYAxis(vectorRightElbow.subtract(vectorRightShoulder));
+    const poseVecRightShoulder = landmarkToVector(poseRightShoulder);
+    const poseVecRightElbow = landmarkToVector(poseRightElbow);
+    const poseDirRightElbow = invertYAxis(poseVecRightElbow.subtract(poseVecRightShoulder));
 
     const rightElbowRest = rightElbow.position.subtract(rightShoulder.position);
 
     const rightArmTargetQuaternion = new BABYLON.Quaternion();
     BABYLON.Quaternion.FromUnitVectorsToRef(
       rightElbowRest.normalizeToNew(),
-      cartesianRightElbow.normalizeToNew(),
+      poseDirRightElbow.normalizeToNew(),
       rightArmTargetQuaternion,
     );
     rightArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
