@@ -2,9 +2,7 @@ import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import * as dat from 'dat.gui';
 
-import { boneTranslations, morphTranslations } from './translation';
-import { RotateBoneCommand } from '@/command';
-
+import { boneTranslations, morphTranslations } from '@/mmd/translation';
 
 export class MMDGUI {
 
