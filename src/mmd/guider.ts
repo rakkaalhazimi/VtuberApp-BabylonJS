@@ -2,7 +2,10 @@ import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 import { PoseLandmarkerPoint } from '@/computer-vision/pose-estimation';
-import { landmarkToVector, invertYAxis } from '@/utils';
+
+import { MMDBoneManager } from '@/mmd/bone-manager';
+import { boneTranslations } from '@/mmd/translation';
+import { angleBetweenVectors3D, landmarkToVector, invertYAxis, getBoneRestPosition } from '@/utils';
 
 
 
@@ -11,11 +14,15 @@ const ANGLE_THRESHOLD_RADIANS = BABYLON.Angle.FromDegrees(1.5).radians();
 
 export class MMDMovementGuider {
 
+  private boneManager: MMDBoneManager;
+
   private upperBodyPitch: number = 0;
   private upperBodyYaw: number = 0;
   private upperBodyRoll: number = 0;
 
-  constructor(public model: BABYLONMMD.MmdModel) { }
+  constructor(public model: BABYLONMMD.MmdModel) {
+    this.boneManager = new MMDBoneManager(model);
+  }
 
   smooth(oldValue: number, newValue: number) {
     return (newValue - oldValue) * 0.05;
@@ -24,7 +31,7 @@ export class MMDMovementGuider {
   guideUpperBodyMovement(result: PoseLandmarkerResult) {
     const landmarks = result.worldLandmarks[0];
     if (!landmarks) return;
-    const upperBody = this.model.runtimeBones.find(b => b.name === '上半身');
+    const upperBody = this.boneManager.getBoneByName(boneTranslations.UPPER_BODY.localName);
     if (!upperBody) return;
 
     const poseLeftHip = landmarks[PoseLandmarkerPoint.LEFT_HIP];
@@ -87,20 +94,20 @@ export class MMDMovementGuider {
     );
 
     const targetQuaternion = pitchQ.multiply(yawQ).multiply(rollQ);
-    upperBody.linkedBone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      upperBody.linkedBone.rotationQuaternion,
+    upperBody.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      upperBody.rotationQuaternion,
       targetQuaternion,
       0.1,
     );
   }
 
-
+  // Passed
   guideLeftArmMovement(result: PoseLandmarkerResult) {
     const landmarks = result.worldLandmarks[0];
     if (!landmarks) return;
-    const leftShoulder = this.model.runtimeBones.find(b => b.name === '左肩');
-    const leftArm = this.model.runtimeBones.find(b => b.name === '左腕');
-    const leftElbow = this.model.runtimeBones.find(b => b.name === '左ひじ');
+    const leftShoulder = this.boneManager.getBoneByName(boneTranslations.LEFT_SHOULDER.localName);
+    const leftArm = this.boneManager.getBoneByName(boneTranslations.LEFT_ARM.localName);
+    const leftElbow = this.boneManager.getBoneByName(boneTranslations.LEFT_ELBOW.localName);
     if (!leftShoulder || !leftArm || !leftElbow) return;
 
     const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
@@ -110,7 +117,7 @@ export class MMDMovementGuider {
     const vectorLeftElbow = landmarkToVector(poseLeftElbow);
     const cartesianLeftElbow = invertYAxis(vectorLeftElbow.subtract(vectorLeftShoulder));
 
-    const leftElbowRest = leftElbow.linkedBone.position.subtract(leftShoulder.linkedBone.position);
+    const leftElbowRest = leftElbow.position.subtract(leftShoulder.position);
 
     const targetVectorTest = new BABYLON.Vector3(0.300, 0.400, 0.866);
 
@@ -120,8 +127,8 @@ export class MMDMovementGuider {
       cartesianLeftElbow.normalizeToNew(),
       leftArmTargetQuaternion,
     );
-    leftArm.linkedBone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftArm.linkedBone.rotationQuaternion,
+    leftArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftArm.rotationQuaternion,
       leftArmTargetQuaternion,
       0.1,
     );
@@ -130,9 +137,9 @@ export class MMDMovementGuider {
   guideRightArmMovement(result: PoseLandmarkerResult) {
     const landmarks = result.worldLandmarks[0];
     if (!landmarks) return;
-    const rightShoulder = this.model.runtimeBones.find(b => b.name === '右肩');
-    const rightArm = this.model.runtimeBones.find(b => b.name === '右腕');
-    const rightElbow = this.model.runtimeBones.find(b => b.name === '右ひじ');
+    const rightShoulder = this.boneManager.getBoneByName(boneTranslations.RIGHT_SHOULDER.localName);
+    const rightArm = this.boneManager.getBoneByName(boneTranslations.RIGHT_ARM.localName);
+    const rightElbow = this.boneManager.getBoneByName(boneTranslations.RIGHT_ELBOW.localName);
     if (!rightShoulder || !rightArm || !rightElbow) return;
 
     const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
@@ -142,7 +149,7 @@ export class MMDMovementGuider {
     const vectorRightElbow = landmarkToVector(poseRightElbow);
     const cartesianRightElbow = invertYAxis(vectorRightElbow.subtract(vectorRightShoulder));
 
-    const rightElbowRest = rightElbow.linkedBone.position.subtract(rightShoulder.linkedBone.position);
+    const rightElbowRest = rightElbow.position.subtract(rightShoulder.position);
 
     const rightArmTargetQuaternion = new BABYLON.Quaternion();
     BABYLON.Quaternion.FromUnitVectorsToRef(
