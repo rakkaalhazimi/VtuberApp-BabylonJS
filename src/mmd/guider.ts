@@ -117,13 +117,14 @@ export class MMDMovementGuider {
     const poseVecLeftElbow = landmarkToVector(poseLeftElbow);
     const poseDirLeftElbow = invertYAxis(poseVecLeftElbow.subtract(poseVecLeftShoulder));
 
-    const leftElbowRest = leftElbow.position.subtract(leftShoulder.position);
+    const leftShoulderRest = this.boneManager.getBoneRestPosition(leftShoulder);
+    const leftElbowRestDir = this.boneManager.getBoneRestPosition(leftElbow).subtract(leftShoulderRest);
 
     const targetVectorTest = new BABYLON.Vector3(0.300, 0.400, 0.866);
 
     const leftArmTargetQuaternion = new BABYLON.Quaternion();
     BABYLON.Quaternion.FromUnitVectorsToRef(
-      leftElbowRest.normalizeToNew(),
+      leftElbowRestDir.normalizeToNew(),
       poseDirLeftElbow.normalizeToNew(),
       leftArmTargetQuaternion,
     );
@@ -149,11 +150,12 @@ export class MMDMovementGuider {
     const poseVecRightElbow = landmarkToVector(poseRightElbow);
     const poseDirRightElbow = invertYAxis(poseVecRightElbow.subtract(poseVecRightShoulder));
 
-    const rightElbowRest = rightElbow.position.subtract(rightShoulder.position);
+    const rightShoulderRest = this.boneManager.getBoneRestPosition(rightShoulder);
+    const rightElbowRestDir = this.boneManager.getBoneRestPosition(rightElbow).subtract(rightShoulderRest);
 
     const rightArmTargetQuaternion = new BABYLON.Quaternion();
     BABYLON.Quaternion.FromUnitVectorsToRef(
-      rightElbowRest.normalizeToNew(),
+      rightElbowRestDir.normalizeToNew(),
       poseDirRightElbow.normalizeToNew(),
       rightArmTargetQuaternion,
     );
