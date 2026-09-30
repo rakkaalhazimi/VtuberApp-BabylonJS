@@ -162,7 +162,9 @@ const createScene = async () => {
   scene.onBeforeRenderObservable.add(async () => {
     const poseResult = await pose.estimatePose(videoCamera.video);
     if (!poseResult) return;
-    pose.drawPoseLandmarks(ctx!, poseResult);
+    const smoothenPoseResult = pose.smoothPose(poseResult);
+    pose.prevResult = smoothenPoseResult;
+    pose.drawPoseLandmarks(ctx!, smoothenPoseResult);
     guider.guideUpperBodyMovement(poseResult);
     guider.guideLeftArmMovement(poseResult);
     guider.guideRightArmMovement(poseResult);
