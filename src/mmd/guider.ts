@@ -12,6 +12,10 @@ import { angleBetweenVectors3D, landmarkToVector, invertYAxis, getBoneRestPositi
 const NEUTRAL_SHOULDER_Z = -0.1;
 const ANGLE_THRESHOLD_RADIANS = BABYLON.Angle.FromDegrees(1.5).radians();
 
+const leftArmDefaultQuaternion = BABYLON.Quaternion.FromEulerAngles(0, 0, -0.6);
+const rightArmDefaultQuaternion = BABYLON.Quaternion.FromEulerAngles(0, 0, 0.6);
+
+
 export class MMDMovementGuider {
 
   private boneManager: MMDBoneManager;
@@ -122,6 +126,15 @@ export class MMDMovementGuider {
 
     const targetVectorTest = new BABYLON.Vector3(0.300, 0.400, 0.866);
 
+    if (poseLeftElbow.visibility < 0.5) {
+      leftArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
+        leftArm.rotationQuaternion,
+        leftArmDefaultQuaternion,
+        0.1,
+      );
+      return;
+    };
+
     const leftArmTargetQuaternion = new BABYLON.Quaternion();
     BABYLON.Quaternion.FromUnitVectorsToRef(
       leftElbowRestDir.normalizeToNew(),
@@ -152,6 +165,15 @@ export class MMDMovementGuider {
 
     const rightShoulderRest = this.boneManager.getBoneRestPosition(rightShoulder);
     const rightElbowRestDir = this.boneManager.getBoneRestPosition(rightElbow).subtract(rightShoulderRest);
+
+    if (poseRightElbow.visibility < 0.5) {
+      rightArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
+        rightArm.rotationQuaternion,
+        rightArmDefaultQuaternion,
+        0.1,
+      );
+      return;
+    };
 
     const rightArmTargetQuaternion = new BABYLON.Quaternion();
     BABYLON.Quaternion.FromUnitVectorsToRef(
