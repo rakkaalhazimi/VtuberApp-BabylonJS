@@ -112,27 +112,6 @@ const createScene = async () => {
   const modelAnimationHandle = mmdModel.createRuntimeAnimation(mmdAnimation);
   mmdModel.setRuntimeAnimation(modelAnimationHandle);
 
-  // console.log('Morphs: ', mmdModel.morph.morphs);
-  // const bone = mmdModel.runtimeBones.find(b => b.name === '左腕'); // e.g., Left Arm
-  // const bone = mmdModel.runtimeBones.find(b => b.name === '頭');
-  // let time = 0;
-
-  // const looper = loopBack(-0.5, 0.5, 0.05);
-
-
-  scene.onBeforeRenderObservable.add(() => {
-    // if (!bone) return;
-    // const deltaTime = engine.getDeltaTime() / 1000;
-    // time += deltaTime;
-    // const value = looper();
-    // const rotateCmd = new RotateBoneCommand(
-    //   bone.linkedBone,
-    //   new BABYLON.Vector3(0, 1, 0),
-    //   value,
-    // );
-    // rotateCmd.run();
-  });
-
 
   // Video Camera
   const videoCamera = new VideoCamera('video');
