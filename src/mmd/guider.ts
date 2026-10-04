@@ -5,7 +5,7 @@ import { PoseLandmarkerPoint } from '@/computer-vision/pose-estimation';
 
 import { MMDBoneManager } from '@/mmd/bone-manager';
 import { boneTranslations } from '@/mmd/translation';
-import { angleBetweenVectors3D, landmarkToVector, invertYAxis, getBoneRestPosition } from '@/utils';
+import { landmarkToVector, invertYAxis, makeBasis } from '@/utils';
 
 
 
@@ -148,6 +148,57 @@ export class MMDMovementGuider {
     );
   }
 
+  guideLeftArmMovementBasis(result: PoseLandmarkerResult) {
+    const landmarks = result.worldLandmarks[0];
+    if (!landmarks) return;
+    const rightShoulder = this.boneManager.getBoneByName(boneTranslations.RIGHT_SHOULDER.localName);
+    const leftShoulder = this.boneManager.getBoneByName(boneTranslations.LEFT_SHOULDER.localName);
+    const leftArm = this.boneManager.getBoneByName(boneTranslations.LEFT_ARM.localName);
+    const leftElbow = this.boneManager.getBoneByName(boneTranslations.LEFT_ELBOW.localName);
+    if (!rightShoulder || !leftShoulder || !leftArm || !leftElbow) return;
+
+    const rightShoulderRest = this.boneManager.getBoneRestPosition(rightShoulder);
+    const leftShoulderRest = this.boneManager.getBoneRestPosition(leftShoulder);
+    const leftElbowRest = this.boneManager.getBoneRestPosition(leftElbow);
+
+    const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
+    const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
+    const poseLeftElbow = landmarks[PoseLandmarkerPoint.LEFT_ELBOW];
+
+    const poseVecRightShoulder = landmarkToVector(poseRightShoulder);
+    const poseVecLeftShoulder = landmarkToVector(poseLeftShoulder);
+    const poseVecLeftElbow = landmarkToVector(poseLeftElbow);
+
+    if (poseLeftElbow.visibility < 0.5) {
+      leftArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
+        leftArm.rotationQuaternion,
+        leftArmDefaultQuaternion,
+        0.1,
+      );
+      return;
+    };
+
+    const restBasis = makeBasis(
+      leftElbowRest.subtract(leftShoulderRest),
+      rightShoulderRest.subtract(leftShoulderRest),
+    );
+
+    const poseBasis = makeBasis(
+      invertYAxis(poseVecLeftElbow.subtract(poseVecLeftShoulder)),
+      invertYAxis(poseVecRightShoulder.subtract(poseVecLeftShoulder)),
+    );
+
+    const relative = restBasis.clone().invert().multiply(poseBasis);
+
+    const rotation = new BABYLON.Quaternion();
+    BABYLON.Quaternion.FromRotationMatrixToRef(relative, rotation);
+    leftArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftArm.rotationQuaternion,
+      rotation,
+      0.1,
+    );
+  }
+
   guideRightArmMovement(result: PoseLandmarkerResult) {
     const landmarks = result.worldLandmarks[0];
     if (!landmarks) return;
@@ -184,6 +235,238 @@ export class MMDMovementGuider {
     rightArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
       rightArm.rotationQuaternion,
       rightArmTargetQuaternion,
+      0.1,
+    );
+  }
+
+  guideRightArmMovementBasis(result: PoseLandmarkerResult) {
+    const landmarks = result.worldLandmarks[0];
+    if (!landmarks) return;
+    const leftShoulder = this.boneManager.getBoneByName(boneTranslations.LEFT_SHOULDER.localName);
+    const rightShoulder = this.boneManager.getBoneByName(boneTranslations.RIGHT_SHOULDER.localName);
+    const rightArm = this.boneManager.getBoneByName(boneTranslations.RIGHT_ARM.localName);
+    const rightElbow = this.boneManager.getBoneByName(boneTranslations.RIGHT_ELBOW.localName);
+    if (!leftShoulder || !rightShoulder || !rightArm || !rightElbow) return;
+
+    const leftShoulderRest = this.boneManager.getBoneRestPosition(leftShoulder);
+    const rightShoulderRest = this.boneManager.getBoneRestPosition(rightShoulder);
+    const rightElbowRest = this.boneManager.getBoneRestPosition(rightElbow);
+
+    const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
+    const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
+    const poseRightElbow = landmarks[PoseLandmarkerPoint.RIGHT_ELBOW];
+
+    const poseVecLeftShoulder = landmarkToVector(poseLeftShoulder);
+    const poseVecRightShoulder = landmarkToVector(poseRightShoulder);
+    const poseVecRightElbow = landmarkToVector(poseRightElbow);
+
+    if (poseRightElbow.visibility < 0.5) {
+      rightArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
+        rightArm.rotationQuaternion,
+        rightArmDefaultQuaternion,
+        0.1,
+      );
+      return;
+    };
+
+    const restBasis = makeBasis(
+      rightElbowRest.subtract(rightShoulderRest),
+      leftShoulderRest.subtract(rightShoulderRest),
+    );
+
+    const poseBasis = makeBasis(
+      invertYAxis(poseVecRightElbow.subtract(poseVecRightShoulder)),
+      invertYAxis(poseVecLeftShoulder.subtract(poseVecRightShoulder)),
+    );
+
+    const relative = restBasis.clone().invert().multiply(poseBasis);
+
+    const rotation = new BABYLON.Quaternion();
+    BABYLON.Quaternion.FromRotationMatrixToRef(relative, rotation);
+    rightArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightArm.rotationQuaternion,
+      rotation,
+      0.1,
+    );
+  }
+
+
+  guideLeftElbowMovement(result: PoseLandmarkerResult) {
+    const landmarks = result.worldLandmarks[0];
+    if (!landmarks) return;
+    const leftShoulder = this.boneManager.getBoneByName(boneTranslations.LEFT_SHOULDER.localName);
+    const leftElbow = this.boneManager.getBoneByName(boneTranslations.LEFT_ELBOW.localName);
+    const leftWrist = this.boneManager.getBoneByName(boneTranslations.LEFT_WRIST.localName);
+    if (!leftShoulder || !leftElbow || !leftWrist) return;
+
+    const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
+    const poseLeftElbow = landmarks[PoseLandmarkerPoint.LEFT_ELBOW];
+    const poseLeftWrist = landmarks[PoseLandmarkerPoint.LEFT_WRIST];
+
+    const poseVecLeftShoulder = landmarkToVector(poseLeftShoulder);
+    const poseVecLeftElbow = landmarkToVector(poseLeftElbow);
+    const poseVecLeftWrist = landmarkToVector(poseLeftWrist);
+    const poseDirLeftElbow = invertYAxis(poseVecLeftElbow.subtract(poseVecLeftShoulder));
+    const poseDirLeftWrist = invertYAxis(poseVecLeftWrist.subtract(poseVecLeftElbow));
+
+    const leftShoulderRest = this.boneManager.getBoneRestPosition(leftShoulder);
+    const leftElbowRest = this.boneManager.getBoneRestPosition(leftElbow);
+    const leftWristRest = this.boneManager.getBoneRestPosition(leftWrist);
+    const leftElbowRestDir = leftElbowRest.subtract(leftShoulderRest);
+    const leftWristRestDir = leftWristRest.subtract(leftElbowRest);
+
+    const poseLeftElbowQuaternion = new BABYLON.Quaternion();
+    BABYLON.Quaternion.FromUnitVectorsToRef(
+      poseDirLeftElbow.normalize(),
+      poseDirLeftWrist.normalize(),
+      poseLeftElbowQuaternion,
+    );
+
+    const restLeftElbowQuaternion = new BABYLON.Quaternion();
+    BABYLON.Quaternion.FromUnitVectorsToRef(
+      leftElbowRestDir.normalize(),
+      leftWristRestDir.normalize(),
+      restLeftElbowQuaternion,
+    );
+
+    const targetQuaternion = poseLeftElbowQuaternion.multiply(restLeftElbowQuaternion.invert());
+
+    const euler = targetQuaternion.toEulerAngles();
+    targetQuaternion.copyFrom(BABYLON.Quaternion.FromEulerAngles(0, euler.y, euler.z));
+    leftElbow.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftElbow.rotationQuaternion,
+      targetQuaternion,
+      0.1,
+    );
+  }
+
+  guideLeftElbowMovementBasis(result: PoseLandmarkerResult) {
+    const landmarks = result.worldLandmarks[0];
+    if (!landmarks) return;
+    const leftShoulder = this.boneManager.getBoneByName(boneTranslations.LEFT_SHOULDER.localName);
+    const leftElbow = this.boneManager.getBoneByName(boneTranslations.LEFT_ELBOW.localName);
+    const leftWrist = this.boneManager.getBoneByName(boneTranslations.LEFT_WRIST.localName);
+    if (!leftShoulder || !leftElbow || !leftWrist) return;
+
+    const leftShoulderRest = this.boneManager.getBoneRestPosition(leftShoulder);
+    const leftElbowRest = this.boneManager.getBoneRestPosition(leftElbow);
+    const leftWristRest = this.boneManager.getBoneRestPosition(leftWrist);
+
+    const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
+    const poseLeftElbow = landmarks[PoseLandmarkerPoint.LEFT_ELBOW];
+    const poseLeftWrist = landmarks[PoseLandmarkerPoint.LEFT_WRIST];
+
+    const poseVecLeftShoulder = landmarkToVector(poseLeftShoulder);
+    const poseVecLeftElbow = landmarkToVector(poseLeftElbow);
+    const poseVecLeftWrist = landmarkToVector(poseLeftWrist);
+
+    const restBasis = makeBasis(
+      leftWristRest.subtract(leftElbowRest),
+      leftShoulderRest.subtract(leftElbowRest),
+    );
+
+    const poseBasis = makeBasis(
+      invertYAxis(poseVecLeftWrist.subtract(poseVecLeftElbow)),
+      invertYAxis(poseVecLeftShoulder.subtract(poseVecLeftElbow)),
+    );
+
+    const relative = restBasis.clone().invert().multiply(poseBasis);
+
+    const rotation = new BABYLON.Quaternion();
+    BABYLON.Quaternion.FromRotationMatrixToRef(relative, rotation);
+    leftElbow.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftElbow.rotationQuaternion,
+      rotation,
+      0.1,
+    );
+  }
+
+  guideRightElbowMovement(result: PoseLandmarkerResult) {
+    const landmarks = result.worldLandmarks[0];
+    if (!landmarks) return;
+    const rightShoulder = this.boneManager.getBoneByName(boneTranslations.RIGHT_SHOULDER.localName);
+    const rightElbow = this.boneManager.getBoneByName(boneTranslations.RIGHT_ELBOW.localName);
+    const rightWrist = this.boneManager.getBoneByName(boneTranslations.RIGHT_WRIST.localName);
+    if (!rightShoulder || !rightElbow || !rightWrist) return;
+
+    const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
+    const poseRightElbow = landmarks[PoseLandmarkerPoint.RIGHT_ELBOW];
+    const poseRightWrist = landmarks[PoseLandmarkerPoint.RIGHT_WRIST];
+
+    const poseVecRightShoulder = landmarkToVector(poseRightShoulder);
+    const poseVecRightElbow = landmarkToVector(poseRightElbow);
+    const poseVecRightWrist = landmarkToVector(poseRightWrist);
+    const poseDirRightElbow = invertYAxis(poseVecRightElbow.subtract(poseVecRightShoulder));
+    const poseDirRightWrist = invertYAxis(poseVecRightWrist.subtract(poseVecRightElbow));
+
+    const rightShoulderRest = this.boneManager.getBoneRestPosition(rightShoulder);
+    const rightElbowRest = this.boneManager.getBoneRestPosition(rightElbow);
+    const rightWristRest = this.boneManager.getBoneRestPosition(rightWrist);
+    const rightElbowRestDir = rightElbowRest.subtract(rightShoulderRest);
+    const rightWristRestDir = rightWristRest.subtract(rightElbowRest);
+
+    const poseRightElbowQuaternion = new BABYLON.Quaternion();
+    BABYLON.Quaternion.FromUnitVectorsToRef(
+      poseDirRightElbow.normalize(),
+      poseDirRightWrist.normalize(),
+      poseRightElbowQuaternion,
+    );
+
+    const restRightElbowQuaternion = new BABYLON.Quaternion();
+    BABYLON.Quaternion.FromUnitVectorsToRef(
+      rightElbowRestDir.normalize(),
+      rightWristRestDir.normalize(),
+      restRightElbowQuaternion,
+    );
+
+    const targetQuaternion = poseRightElbowQuaternion.multiply(restRightElbowQuaternion.invert());
+
+    const euler = targetQuaternion.toEulerAngles();
+    targetQuaternion.copyFrom(BABYLON.Quaternion.FromEulerAngles(0, euler.y, euler.z));
+    rightElbow.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightElbow.rotationQuaternion,
+      targetQuaternion,
+      0.1,
+    );
+  }
+
+  guideRightElbowMovementBasis(result: PoseLandmarkerResult) {
+    const landmarks = result.worldLandmarks[0];
+    if (!landmarks) return;
+    const rightShoulder = this.boneManager.getBoneByName(boneTranslations.RIGHT_SHOULDER.localName);
+    const rightElbow = this.boneManager.getBoneByName(boneTranslations.RIGHT_ELBOW.localName);
+    const rightWrist = this.boneManager.getBoneByName(boneTranslations.RIGHT_WRIST.localName);
+    if (!rightShoulder || !rightElbow || !rightWrist) return;
+
+    const rightShoulderRest = this.boneManager.getBoneRestPosition(rightShoulder);
+    const rightElbowRest = this.boneManager.getBoneRestPosition(rightElbow);
+    const rightWristRest = this.boneManager.getBoneRestPosition(rightWrist);
+
+    const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
+    const poseRightElbow = landmarks[PoseLandmarkerPoint.RIGHT_ELBOW];
+    const poseRightWrist = landmarks[PoseLandmarkerPoint.RIGHT_WRIST];
+
+    const poseVecRightShoulder = landmarkToVector(poseRightShoulder);
+    const poseVecRightElbow = landmarkToVector(poseRightElbow);
+    const poseVecRightWrist = landmarkToVector(poseRightWrist);
+
+    const restBasis = makeBasis(
+      rightWristRest.subtract(rightElbowRest),
+      rightShoulderRest.subtract(rightElbowRest),
+    );
+
+    const poseBasis = makeBasis(
+      invertYAxis(poseVecRightWrist.subtract(poseVecRightElbow)),
+      invertYAxis(poseVecRightShoulder.subtract(poseVecRightElbow)),
+    );
+
+    const relative = restBasis.clone().invert().multiply(poseBasis);
+
+    const rotation = new BABYLON.Quaternion();
+    BABYLON.Quaternion.FromRotationMatrixToRef(relative, rotation);
+    rightElbow.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightElbow.rotationQuaternion,
+      rotation,
       0.1,
     );
   }

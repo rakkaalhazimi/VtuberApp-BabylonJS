@@ -80,3 +80,14 @@ export function getBoneRestPosition(mesh: BABYLON.Mesh, bone: BABYLON.Bone): BAB
   console.log("Rest Position:", restPosition.toString());
   return restPosition;
 }
+
+
+export function makeBasis(forward: BABYLON.Vector3, up: BABYLON.Vector3) {
+  const Z = forward.normalize();
+  const X = BABYLON.Vector3.Cross(up, Z).normalize();
+  const Y = BABYLON.Vector3.Cross(Z, X).normalize();
+
+  const basis = new BABYLON.Matrix();
+  BABYLON.Matrix.FromXYZAxesToRef(X, Y, Z, basis);
+  return basis;
+}
