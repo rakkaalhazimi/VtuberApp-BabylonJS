@@ -12,6 +12,7 @@ import { MMDMovementGuider } from '@/mmd/guider';
 // import { loopBack } from '@/utils';
 import { VideoCamera } from '@/video/video';
 import { HandLandmarkerEstimation } from './computer-vision/hand-landmarker';
+import { PoseEMAFilter } from './computer-vision/pose-ema-filter';
 
 
 
@@ -145,6 +146,8 @@ const createScene = async () => {
   const hand = new HandLandmarkerEstimation(videoCamera);
   await hand.loadHandLandmarkerDetector();
 
+  const poseEmaFilter = new PoseEMAFilter();
+
 
   // GUI
   const mmdGui = new MMDGUI(mmdModel);
@@ -167,10 +170,13 @@ const createScene = async () => {
 
   scene.onBeforeRenderObservable.add(async () => {
     const poseResult = await pose.estimatePose(videoCamera.video);
+
     if (!poseResult) return;
-    const smoothenPoseResult = pose.smoothPose(poseResult);
-    pose.prevResult = smoothenPoseResult;
-    pose.drawPoseLandmarks(ctx!, smoothenPoseResult);
+
+    const filteredPoseResult = poseEmaFilter.filter(poseResult);
+
+    pose.drawPoseLandmarks(ctx!, filteredPoseResult);
+
     guider.guideUpperBodyMovement(poseResult);
     guider.guideLeftArmMovement(poseResult);
     guider.guideRightArmMovement(poseResult);
