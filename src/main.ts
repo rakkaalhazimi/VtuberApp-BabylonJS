@@ -11,7 +11,7 @@ import { MMDGUI } from '@/gui/mmd-gui';
 import { MMDMovementGuider } from '@/mmd/guider';
 // import { loopBack } from '@/utils';
 import { VideoCamera } from '@/video/video';
-import { VideoGUI } from './video/gui';
+import { HandLandmarkerEstimation } from './computer-vision/hand-landmarker';
 
 
 
@@ -142,13 +142,16 @@ const createScene = async () => {
   const pose = new PoseLandmarkerEstimation(videoCamera);
   await pose.loadPoseLandmarkerDetector();
 
+  const hand = new HandLandmarkerEstimation(videoCamera);
+  await hand.loadHandLandmarkerDetector();
+
 
   // GUI
   const mmdGui = new MMDGUI(mmdModel);
   mmdGui.createBoneGUI();
   mmdGui.createMorphGUI();
 
-  const controlGUI = new ControlGUI(videoCamera, pose);
+  const controlGUI = new ControlGUI(videoCamera, pose, hand);
   controlGUI.createControlGUI();
 
 
@@ -157,7 +160,10 @@ const createScene = async () => {
   const guider = new MMDMovementGuider(mmdModel);
 
   const videoCanvas = document.getElementById('video-canvas') as HTMLCanvasElement;
+  const handCanvas = document.getElementById('hand-canvas') as HTMLCanvasElement;
+
   const ctx = videoCanvas.getContext('2d');
+  const handCtx = handCanvas.getContext('2d');
 
   scene.onBeforeRenderObservable.add(async () => {
     const poseResult = await pose.estimatePose(videoCamera.video);
@@ -169,6 +175,14 @@ const createScene = async () => {
     guider.guideLeftArmMovement(poseResult);
     guider.guideRightArmMovement(poseResult);
     // guider.guideLeftElbowMovement(poseResult);
+    // guider.guideRightElbowMovement(poseResult);
+    // guider.guideLeftElbowMovementAngle(poseResult);
+  });
+
+  scene.onBeforeRenderObservable.add(async () => {
+    const handResult = await hand.estimateHand(videoCamera.video);
+    if (!handResult) return;
+    hand.drawHandLandmarks(handCtx!, handResult);
   });
 
 
