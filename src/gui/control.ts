@@ -23,6 +23,20 @@ export class ControlGUI {
         : this.videoCamera.disableCamera());
   }
 
+  createHideCameraGUI(folder: dat.GUI = this.gui) {
+    const options = {
+      hideCamera: true,
+    };
+    const video = document.getElementById('video') as HTMLVideoElement;
+    folder.add(options, 'hideCamera').onChange((value: boolean) => {
+      if (value) {
+        video.style.visibility = 'hidden';
+      } else {
+        video.style.visibility = 'visible';
+      }
+    }).setValue(true);
+  }
+
   createPoseEstimationGUI(folder: dat.GUI = this.gui) {
     const options = {
       enablePoseEstimation: this.poseEstimation.isEnabled,
@@ -35,6 +49,7 @@ export class ControlGUI {
   createControlGUI() {
     const controlFolder = this.gui.addFolder('Control');
     this.createEnableCameraGUI(controlFolder);
+    this.createHideCameraGUI(controlFolder);
     this.createPoseEstimationGUI(controlFolder);
     controlFolder.open();
   }
