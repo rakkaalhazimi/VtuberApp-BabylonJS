@@ -77,7 +77,6 @@ export class PoseLandmarkerEstimation {
   public videoHeight: number;
   public landmarker: PoseLandmarker | undefined;
   public ctx: CanvasRenderingContext2D | undefined = undefined;
-  public prevResult: PoseLandmarkerResult | undefined = undefined;
   public isEnabled: boolean = false;
 
   constructor(public videoCamera: VideoCamera) {
@@ -117,39 +116,6 @@ export class PoseLandmarkerEstimation {
     if (!this.isEnabled) return null;
     if (!this.videoCamera.isEnable) return null;
     return this.landmarker.detectForVideo(video, performance.now());
-  }
-
-  smoothLandmark(
-    newValue: Landmark | NormalizedLandmark,
-    oldValue: Landmark | NormalizedLandmark,
-    alpha = 0.25,
-  ): Landmark | NormalizedLandmark {
-    const oldVector = new BABYLON.Vector3(oldValue.x, oldValue.y, oldValue.z);
-    const newVector = new BABYLON.Vector3(newValue.x, newValue.y, newValue.z);
-    const smoothVector = BABYLON.Vector3.Lerp(oldVector, newVector, alpha);
-    return {
-      x: smoothVector.x,
-      y: smoothVector.y,
-      z: smoothVector.z,
-      visibility: newValue.visibility,
-    };
-  }
-
-  smoothPose(result: PoseLandmarkerResult): PoseLandmarkerResult {
-    if (!this.prevResult) return result;
-    const oldLandmarks = this.prevResult.landmarks[0];
-    const oldWorldLandmarks = this.prevResult.worldLandmarks[0];
-    const landmarks = result.landmarks[0];
-    const worldLandmarks = result.worldLandmarks[0];
-
-    for (let i = 0; i < landmarks.length; i++) {
-      landmarks[i] = this.smoothLandmark(landmarks[i], oldLandmarks[i]);
-      worldLandmarks[i] = this.smoothLandmark(worldLandmarks[i], oldWorldLandmarks[i]);
-    }
-
-    result.landmarks[0] = landmarks;
-    result.worldLandmarks[0] = worldLandmarks;
-    return result;
   }
 
   async drawPoseLandmarks(
