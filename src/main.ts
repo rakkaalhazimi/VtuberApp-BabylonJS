@@ -3,7 +3,6 @@ import '@/style.css';
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import 'babylon-mmd/esm/Loader/pmxLoader';
-import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 
 // import { RotateBoneCommand } from '@/command/index';
 import { PoseLandmarkerEstimation } from '@/computer-vision/pose-estimation';
@@ -151,14 +150,14 @@ const createScene = async () => {
 
   scene.onBeforeRenderObservable.add(async () => {
     const poseResult = await pose.estimatePose(videoCamera.video);
+    const filteredPoseResult = poseEmaFilter.filter(poseResult);
     const handResult = await hand.estimateHand(videoCamera.video);
 
-    let filteredPoseResult: PoseLandmarkerResult | undefined = undefined;
-    if (poseResult) {
-      filteredPoseResult = poseEmaFilter.filter(poseResult);
-
+    if (filteredPoseResult) {
       pose.drawPoseLandmarks(ctx!, filteredPoseResult);
+    }
 
+    if (poseResult) {
       guider.guideUpperBodyMovement(poseResult);
       guider.guideLeftArmMovement(poseResult);
       guider.guideRightArmMovement(poseResult);

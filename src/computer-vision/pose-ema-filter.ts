@@ -14,7 +14,9 @@ export class PoseEMAFilter {
 
   constructor() {}
 
-  filter(result: PoseLandmarkerResult): PoseLandmarkerResult {
+  filter(result: PoseLandmarkerResult | null): PoseLandmarkerResult | null {
+    if (!result) return result;
+
     const landmarks = result.landmarks[0];
     const worldLandmarks = result.worldLandmarks[0];
 
