@@ -3,6 +3,7 @@ import '@/style.css';
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import 'babylon-mmd/esm/Loader/pmxLoader';
+import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 
 // import { RotateBoneCommand } from '@/command/index';
 import { PoseLandmarkerEstimation } from '@/computer-vision/pose-estimation';
@@ -13,6 +14,7 @@ import { MMDMovementGuider } from '@/mmd/guider';
 import { VideoCamera } from '@/video/video';
 import { HandLandmarkerEstimation } from './computer-vision/hand-landmarker';
 import { PoseEMAFilter } from './computer-vision/pose-ema-filter';
+import { getPhysicalPalmTwist } from './utils';
 
 
 
@@ -149,18 +151,30 @@ const createScene = async () => {
 
   scene.onBeforeRenderObservable.add(async () => {
     const poseResult = await pose.estimatePose(videoCamera.video);
+    const handResult = await hand.estimateHand(videoCamera.video);
 
-    if (!poseResult) return;
+    let filteredPoseResult: PoseLandmarkerResult | undefined = undefined;
+    if (poseResult) {
+      filteredPoseResult = poseEmaFilter.filter(poseResult);
 
-    const filteredPoseResult = poseEmaFilter.filter(poseResult);
+      pose.drawPoseLandmarks(ctx!, filteredPoseResult);
 
-    pose.drawPoseLandmarks(ctx!, filteredPoseResult);
+      guider.guideUpperBodyMovement(poseResult);
+      guider.guideLeftArmMovement(poseResult);
+      guider.guideRightArmMovement(poseResult);
+      guider.guideLeftElbowMovementBasis(poseResult);
+      guider.guideRightElbowMovementBasis(poseResult);
+    };
 
-    guider.guideUpperBodyMovement(poseResult);
-    guider.guideLeftArmMovement(poseResult);
-    guider.guideRightArmMovement(poseResult);
-    guider.guideLeftElbowMovementBasis(poseResult);
-    guider.guideRightElbowMovementBasis(poseResult);
+    if (handResult) {
+      hand.drawHandLandmarks(handCtx!, handResult);
+    };
+
+    if (poseResult && handResult) {
+      guider.guideLeftForearmTwist(poseResult, handResult);
+      guider.guideRightForearmTwist(poseResult, handResult);
+    }
+
   });
 
   scene.onBeforeRenderObservable.add(async () => {

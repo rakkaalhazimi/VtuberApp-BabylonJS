@@ -1,11 +1,12 @@
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
-import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
+import type { HandLandmarkerResult, PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 import { PoseLandmarkerPoint } from '@/computer-vision/pose-estimation';
 
 import { MMDBoneManager } from '@/mmd/bone-manager';
 import { boneTranslations } from '@/mmd/translation';
-import { landmarkToVector, invertYAxis, makeBasis } from '@/utils';
+import { landmarkToVector, invertYAxis, makeBasis, getPhysicalPalmTwist } from '@/utils';
+import { HandLandmarkerPoint } from '@/computer-vision/hand-landmarker';
 
 
 
@@ -195,6 +196,116 @@ export class MMDMovementGuider {
     leftArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
       leftArm.rotationQuaternion,
       rotation,
+      0.1,
+    );
+  }
+
+  guideLeftForearmTwist(result: PoseLandmarkerResult, hand: HandLandmarkerResult) {
+    const landmarks = result.worldLandmarks[0];
+    if (!landmarks) return;
+
+    let handIndex = 0;
+    for (let i = 0; i < hand.handedness.length; i++) {
+      const handed = hand.handedness[i][0];
+      if (!handed) continue;
+      if (handed.categoryName === 'Left') {
+        handIndex = i;
+      }
+    }
+    const handLandmarks = hand.worldLandmarks[handIndex];
+    if (!handLandmarks) return;
+
+    const leftElbow = this.boneManager.getBoneByName(boneTranslations.LEFT_ELBOW.localName);
+    const leftWrist = this.boneManager.getBoneByName(boneTranslations.LEFT_WRIST.localName);
+    const leftWristTwist = this.boneManager.getBoneByName(boneTranslations.LEFT_WRIST_TWIST.localName);
+    const leftIndexMCP = this.boneManager.getBoneByName(boneTranslations.LEFT_INDEX_FINGER_1.localName);
+    const leftPinkyMCP = this.boneManager.getBoneByName(boneTranslations.LEFT_LITTLE_FINGER_1.localName);
+
+    if (!leftElbow || !leftWrist || !leftWristTwist || !leftIndexMCP || !leftPinkyMCP) return;
+
+    const restLeftElbow = this.boneManager.getBoneRestPosition(leftElbow);
+    const restLeftWrist = this.boneManager.getBoneRestPosition(leftWrist);
+    const restLeftIndexMCP = this.boneManager.getBoneRestPosition(leftIndexMCP);
+    const restLeftPinkyMCP = this.boneManager.getBoneRestPosition(leftPinkyMCP);
+
+    const poseLeftElbow = landmarks[PoseLandmarkerPoint.LEFT_ELBOW];
+    const poseLeftWrist = landmarks[PoseLandmarkerPoint.LEFT_WRIST];
+    const poseLeftIndexMCP = handLandmarks[HandLandmarkerPoint.INDEX_FINGER_MCP];
+    const poseLeftPinkyMCP = handLandmarks[HandLandmarkerPoint.PINKY_MCP];
+
+    const poseVecLeftElbow = landmarkToVector(poseLeftElbow);
+    const poseVecLeftWrist = landmarkToVector(poseLeftWrist);
+    const poseVecLeftIndexMCP = landmarkToVector(poseLeftIndexMCP);
+    const poseVecLeftPinkyMCP = landmarkToVector(poseLeftPinkyMCP);
+
+    const restPalmSurface = restLeftIndexMCP.subtract(restLeftPinkyMCP).normalize();
+    const posePalmSurface = poseVecLeftIndexMCP.subtract(poseVecLeftPinkyMCP).normalize();
+
+    const restForearmAxis = restLeftWrist.subtract(restLeftElbow).normalize();
+    const poseForearmAxis = poseVecLeftWrist.subtract(poseVecLeftElbow).normalize();
+
+    const twistAngle = getPhysicalPalmTwist(restForearmAxis, restPalmSurface, poseForearmAxis, posePalmSurface);
+    const targetQuaternion = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.X, -twistAngle); // Invert the twist angle
+
+    leftWristTwist.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftWristTwist.rotationQuaternion,
+      targetQuaternion,
+      0.1,
+    );
+  }
+
+  guideRightForearmTwist(result: PoseLandmarkerResult, hand: HandLandmarkerResult) {
+    const landmarks = result.worldLandmarks[0];
+    if (!landmarks) return;
+
+    let handIndex = -1;
+    for (let i = 0; i < hand.handedness.length; i++) {
+      const handed = hand.handedness[i][0];
+      if (!handed) continue;
+      if (handed.categoryName === 'Right') {
+        handIndex = i;
+        break;
+      }
+    }
+    if (handIndex === -1) return;
+    const handLandmarks = hand.worldLandmarks[handIndex];
+    if (!handLandmarks) return;
+
+    const rightElbow = this.boneManager.getBoneByName(boneTranslations.RIGHT_ELBOW.localName);
+    const rightWrist = this.boneManager.getBoneByName(boneTranslations.RIGHT_WRIST.localName);
+    const rightWristTwist = this.boneManager.getBoneByName(boneTranslations.RIGHT_WRIST_TWIST.localName);
+    const rightIndexMCP = this.boneManager.getBoneByName(boneTranslations.RIGHT_INDEX_FINGER_1.localName);
+    const rightPinkyMCP = this.boneManager.getBoneByName(boneTranslations.RIGHT_LITTLE_FINGER_1.localName);
+
+    if (!rightElbow || !rightWrist || !rightWristTwist || !rightIndexMCP || !rightPinkyMCP) return;
+
+    const restRightElbow = this.boneManager.getBoneRestPosition(rightElbow);
+    const restRightWrist = this.boneManager.getBoneRestPosition(rightWrist);
+    const restRightIndexMCP = this.boneManager.getBoneRestPosition(rightIndexMCP);
+    const restRightPinkyMCP = this.boneManager.getBoneRestPosition(rightPinkyMCP);
+
+    const poseRightElbow = landmarks[PoseLandmarkerPoint.RIGHT_ELBOW];
+    const poseRightWrist = landmarks[PoseLandmarkerPoint.RIGHT_WRIST];
+    const poseRightIndexMCP = handLandmarks[HandLandmarkerPoint.INDEX_FINGER_MCP];
+    const poseRightPinkyMCP = handLandmarks[HandLandmarkerPoint.PINKY_MCP];
+
+    const poseVecRightElbow = landmarkToVector(poseRightElbow);
+    const poseVecRightWrist = landmarkToVector(poseRightWrist);
+    const poseVecRightIndexMCP = landmarkToVector(poseRightIndexMCP);
+    const poseVecRightPinkyMCP = landmarkToVector(poseRightPinkyMCP);
+
+    const restPalmSurface = restRightIndexMCP.subtract(restRightPinkyMCP).normalize();
+    const posePalmSurface = poseVecRightIndexMCP.subtract(poseVecRightPinkyMCP).normalize();
+
+    const restForearmAxis = restRightWrist.subtract(restRightElbow).normalize();
+    const poseForearmAxis = poseVecRightWrist.subtract(poseVecRightElbow).normalize();
+
+    const twistAngle = getPhysicalPalmTwist(restForearmAxis, restPalmSurface, poseForearmAxis, posePalmSurface);
+    const targetQuaternion = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.X, -twistAngle); // Invert the twist angle
+
+    rightWristTwist.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightWristTwist.rotationQuaternion,
+      targetQuaternion,
       0.1,
     );
   }
