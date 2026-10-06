@@ -18,6 +18,8 @@ export class PoseEMAFilter {
     const landmarks = result.landmarks[0];
     const worldLandmarks = result.worldLandmarks[0];
 
+    if (!landmarks || !worldLandmarks) return result;
+
     if (this.prevLandmarks.length === 0 || this.prevWorldLandmarks.length === 0) {
       this.prevLandmarks = landmarks;
       this.prevWorldLandmarks = worldLandmarks;
