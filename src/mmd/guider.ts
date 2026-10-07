@@ -283,7 +283,7 @@ export class MMDMovementGuider {
     const poseForearmAxis = poseVecRightWrist.subtract(poseVecRightElbow).normalize();
 
     const twistAngle = getPhysicalPalmTwist(restForearmAxis, restPalmSurface, poseForearmAxis, posePalmSurface);
-    const targetQuaternion = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.X, -twistAngle); // Invert the twist angle
+    const targetQuaternion = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.X, twistAngle);
 
     rightWristTwist.rotationQuaternion = BABYLON.Quaternion.Slerp(
       rightWristTwist.rotationQuaternion,
