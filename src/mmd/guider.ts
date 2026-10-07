@@ -1,12 +1,12 @@
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import type { HandLandmarkerResult, PoseLandmarkerResult } from '@mediapipe/tasks-vision';
-import { PoseLandmarkerPoint } from '@/computer-vision/pose-estimation';
 
+import { HandLandmarkerPoint, HandLandmarkerEstimation } from '@/computer-vision/hand-landmarker';
+import { PoseLandmarkerPoint } from '@/computer-vision/pose-estimation';
 import { MMDBoneManager } from '@/mmd/bone-manager';
 import { boneTranslations } from '@/mmd/translation';
 import { landmarkToVector, invertYAxis, makeBasis, getPhysicalPalmTwist } from '@/utils';
-import { HandLandmarkerPoint } from '@/computer-vision/hand-landmarker';
 
 
 
@@ -204,15 +204,7 @@ export class MMDMovementGuider {
     const landmarks = result.worldLandmarks[0];
     if (!landmarks) return;
 
-    let handIndex = 0;
-    for (let i = 0; i < hand.handedness.length; i++) {
-      const handed = hand.handedness[i][0];
-      if (!handed) continue;
-      if (handed.categoryName === 'Left') {
-        handIndex = i;
-      }
-    }
-    const handLandmarks = hand.worldLandmarks[handIndex];
+    const handLandmarks = HandLandmarkerEstimation.GetLeftHand(hand);
     if (!handLandmarks) return;
 
     const leftElbow = this.boneManager.getBoneByName(boneTranslations.LEFT_ELBOW.localName);
@@ -258,17 +250,7 @@ export class MMDMovementGuider {
     const landmarks = result.worldLandmarks[0];
     if (!landmarks) return;
 
-    let handIndex = -1;
-    for (let i = 0; i < hand.handedness.length; i++) {
-      const handed = hand.handedness[i][0];
-      if (!handed) continue;
-      if (handed.categoryName === 'Right') {
-        handIndex = i;
-        break;
-      }
-    }
-    if (handIndex === -1) return;
-    const handLandmarks = hand.worldLandmarks[handIndex];
+    const handLandmarks = HandLandmarkerEstimation.GetRightHand(hand);
     if (!handLandmarks) return;
 
     const rightElbow = this.boneManager.getBoneByName(boneTranslations.RIGHT_ELBOW.localName);

@@ -180,4 +180,26 @@ export class HandLandmarkerEstimation {
     this.isEnabled = false;
     this.ctx?.clearRect(0, 0, this.videoWidth, this.videoHeight);
   }
+
+  static GetLeftHand(result: HandLandmarkerResult) {
+    let handIndex = -1;
+    for (let i = 0; i < result.handedness.length; i++) {
+      const handed = result.handedness[i][0];
+      if (handed.categoryName === 'Left') {
+        handIndex = i;
+      }
+    }
+    return result.worldLandmarks[handIndex];
+  }
+
+  static GetRightHand(result: HandLandmarkerResult) {
+    let handIndex = -1;
+    for (let i = 0; i < result.handedness.length; i++) {
+      const handed = result.handedness[i][0];
+      if (handed.categoryName === 'Right') {
+        handIndex = i;
+      }
+    }
+    return result.worldLandmarks[handIndex];
+  }
 }
