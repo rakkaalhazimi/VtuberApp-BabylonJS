@@ -35,8 +35,8 @@ const createScene = async () => {
   const camera = new BABYLON.FreeCamera('camera1', new BABYLON.Vector3(0, 5, -10), scene);
   const mmdCamera = new BABYLONMMD.MmdCamera('MmdCamera', new BABYLON.Vector3(0, 10, 0), scene);
   // Targets the camera to scene origin
-  camera.setTarget(new BABYLON.Vector3(0, 0, 0));
-  camera.position = new BABYLON.Vector3(0, 25, -30);
+  camera.setTarget(new BABYLON.Vector3(0, 17, 100));
+  camera.position = new BABYLON.Vector3(0, 17, -15);
   // This attaches the camera to the canvas
   camera.attachControl(canvas, true);
   camera.keysUp.push(87);    // 'W' key
