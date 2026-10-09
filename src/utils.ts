@@ -48,6 +48,10 @@ export function angleBetweenVectors3D(a: BABYLON.Vector3, b: BABYLON.Vector3, c:
   const v1 = a.subtract(b);
   const v2 = c.subtract(b);
 
+  if (v1.lengthSquared() === 0 || v2.lengthSquared() === 0) {
+    return 0;
+  }
+
   const v1Norm = v1.normalizeToNew();
   const v2Norm = v2.normalizeToNew();
 
