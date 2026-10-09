@@ -6,7 +6,7 @@ import { HandLandmarkerPoint, HandLandmarkerEstimation } from '@/computer-vision
 import { PoseLandmarkerPoint } from '@/computer-vision/pose-estimation';
 import { MMDBoneManager } from '@/mmd/bone-manager';
 import { boneTranslations } from '@/mmd/translation';
-import { landmarkToVector, invertYAxis, makeBasis, getPhysicalPalmTwist } from '@/utils';
+import { landmarkToVector, invertYAxis, makeBasis, getPhysicalPalmTwist, angleBetweenVectors3D, calculateArmTwistAngle } from '@/utils';
 
 
 
@@ -465,11 +465,59 @@ export class MMDMovementGuider {
 
     const relative = restBasis.clone().invert().multiply(poseBasis);
 
-    const rotation = new BABYLON.Quaternion();
-    BABYLON.Quaternion.FromRotationMatrixToRef(relative, rotation);
+    const rotation = BABYLON.Quaternion.FromRotationMatrixToRef(relative, new BABYLON.Quaternion());
+    const euler = rotation.toEulerAngles();
+    const rollDeg = BABYLON.Tools.ToDegrees(euler.z);
+
     leftElbow.rotationQuaternion = BABYLON.Quaternion.Slerp(
       leftElbow.rotationQuaternion,
-      rotation,
+      BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(0, 0, 1), -rollDeg),
+      0.1,
+    );
+  }
+
+  guideLeftElbowMovementHinge(result: PoseLandmarkerResult) {
+    const landmarks = result.worldLandmarks[0];
+    if (!landmarks) return;
+
+    const leftShoulder = this.boneManager.getBoneByName(boneTranslations.LEFT_SHOULDER.localName);
+    const leftElbow = this.boneManager.getBoneByName(boneTranslations.LEFT_ELBOW.localName);
+    const leftWrist = this.boneManager.getBoneByName(boneTranslations.LEFT_WRIST.localName);
+    if (!leftShoulder || !leftElbow || !leftWrist) return;
+
+    const leftShoulderRest = this.boneManager.getBoneRestPosition(leftShoulder);
+    const leftElbowRest = this.boneManager.getBoneRestPosition(leftElbow);
+    const leftWristRest = this.boneManager.getBoneRestPosition(leftWrist);
+
+    const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
+    const poseLeftElbow = landmarks[PoseLandmarkerPoint.LEFT_ELBOW];
+    const poseLeftWrist = landmarks[PoseLandmarkerPoint.LEFT_WRIST];
+
+    // 2D Rotation by zeroing out the z-axis
+    const poseVecLeftShoulder = landmarkToVector(poseLeftShoulder); poseVecLeftShoulder.z = 0;
+    const poseVecLeftElbow = landmarkToVector(poseLeftElbow); poseVecLeftElbow.z = 0;
+    const poseVecLeftWrist = landmarkToVector(poseLeftWrist); poseVecLeftWrist.z = 0;
+
+    const restAngle = angleBetweenVectors3D(leftShoulderRest, leftElbowRest, leftWristRest); // ~167 degrees (in radians)
+    const poseAngle = angleBetweenVectors3D(poseVecLeftShoulder, poseVecLeftElbow, poseVecLeftWrist);
+    const poseTwistAngle = calculateArmTwistAngle(poseVecLeftShoulder, poseVecLeftElbow, poseVecLeftWrist);
+    // console.log('Pose angle: ', poseAngle);
+    // console.log('Pose twist angle: ', poseTwistAngle);
+
+    // 1. Calculate how much the elbow is bent relative to rest (0 when straight/extended)
+    let bendAngleRad = restAngle - poseAngle;
+
+    // 2. Clamp to 1-way bending: prevents hyper-extension (< 0) and limits maximum flexion to near PI rad (~170°)
+    const MAX_FLEXION = Math.PI - 0.17; // ~170 degrees max physical bend limit
+    bendAngleRad = Math.max(0, Math.min(bendAngleRad, MAX_FLEXION));
+
+    // 3. Apply single Z-axis hinge rotation
+    // Note: If the elbow bends in the wrong direction, invert the sign (-bendAngleRad)
+    const targetQuaternion = BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(0, 0, 1), bendAngleRad);
+
+    leftElbow.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftElbow.rotationQuaternion,
+      targetQuaternion,
       0.1,
     );
   }

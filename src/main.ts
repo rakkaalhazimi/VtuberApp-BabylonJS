@@ -162,6 +162,7 @@ const createScene = async () => {
       guider.guideLeftArmMovement(poseResult);
       guider.guideRightArmMovement(poseResult);
       guider.guideLeftElbowMovementBasis(poseResult);
+      guider.guideLeftElbowMovementHinge(poseResult);
       guider.guideRightElbowMovementBasis(poseResult);
     };
 
