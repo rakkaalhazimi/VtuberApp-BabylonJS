@@ -60,7 +60,6 @@ export function angleBetweenVectors3D(a: BABYLON.Vector3, b: BABYLON.Vector3, c:
   const angle = Math.acos(dot);
 
   return angle;
-  // return normalizeRadians(angle);
 }
 
 
