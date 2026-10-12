@@ -638,4 +638,70 @@ export class MMDMovementGuider {
       0.1,
     );
   }
+
+  guideRightElbowMovementHinge(result: PoseLandmarkerResult) {
+    const landmarks = result.worldLandmarks[0];
+    if (!landmarks) return;
+
+    const rightShoulder = this.boneManager.getBoneByName(boneTranslations.RIGHT_SHOULDER.localName);
+    const rightElbow = this.boneManager.getBoneByName(boneTranslations.RIGHT_ELBOW.localName);
+    const rightWrist = this.boneManager.getBoneByName(boneTranslations.RIGHT_WRIST.localName);
+    const rightArmTwist = this.boneManager.getBoneByName(boneTranslations.RIGHT_ARM_TWIST.localName);
+    if (!rightShoulder || !rightElbow || !rightWrist || !rightArmTwist) return;
+
+    const rightShoulderRest = this.boneManager.getBoneRestPosition(rightShoulder);
+    const rightElbowRest = this.boneManager.getBoneRestPosition(rightElbow);
+    const rightWristRest = this.boneManager.getBoneRestPosition(rightWrist);
+
+    const restUpperArm = rightElbowRest.subtract(rightShoulderRest).normalize();
+    const restLowerArm = rightWristRest.subtract(rightElbowRest).normalize();
+
+    const side = restUpperArm.clone();
+    const forward = side.cross(restLowerArm);
+    const restNormal = invertZAxis(side.cross(forward)); // up
+
+    const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
+    const poseRightElbow = landmarks[PoseLandmarkerPoint.RIGHT_ELBOW];
+    const poseRightWrist = landmarks[PoseLandmarkerPoint.RIGHT_WRIST];
+
+    const poseVecRightShoulder = invertYAxis(landmarkToVector(poseRightShoulder));
+    const poseVecRightElbow = invertYAxis(landmarkToVector(poseRightElbow));
+    const poseVecRightWrist = invertYAxis(landmarkToVector(poseRightWrist));
+
+    const poseUpperArm = poseVecRightElbow.subtract(poseVecRightShoulder).normalize();
+    const poseLowerArm = poseVecRightWrist.subtract(poseVecRightElbow).normalize();
+
+    // 2D Rotation by zeroing out the z-axis
+    const poseVec2DRightShoulder = landmarkToVector(poseRightShoulder); poseVec2DRightShoulder.z = 0;
+    const poseVec2DRightElbow = landmarkToVector(poseRightElbow); poseVec2DRightElbow.z = 0;
+    const poseVec2DRightWrist = landmarkToVector(poseRightWrist); poseVec2DRightWrist.z = 0;
+
+    const restAngle = angleBetweenVectors3D(rightShoulderRest, rightElbowRest, rightWristRest);
+    const poseAngle = angleBetweenVectors3D(poseVec2DRightShoulder, poseVec2DRightElbow, poseVec2DRightWrist);
+    const poseTwistAngle = getArmTwistAngle(poseUpperArm, poseLowerArm, restUpperArm, restNormal);
+
+    // 1. Calculate how much the elbow is bent relative to rest (0 when straight/extended)
+    let bendAngleRad = restAngle - poseAngle;
+
+    // 2. Clamp to 1-way bending: prevents hyper-extension (< 0) and limits maximum flexion to near PI rad (~170°)
+    const MAX_FLEXION = Math.PI - 0.17; // ~170 degrees max physical bend limit
+    bendAngleRad = Math.max(0, Math.min(bendAngleRad, MAX_FLEXION));
+
+    // 3. Apply single Z-axis hinge rotation (mirrored vs left, hence negated)
+    // Note: If the elbow bends in the wrong direction, invert the sign (bendAngleRad)
+    const targetHingeQuaternion = BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(0, 0, 1), -bendAngleRad);
+
+    rightElbow.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightElbow.rotationQuaternion,
+      targetHingeQuaternion,
+      0.1,
+    );
+
+    const targetTwistQuaternion = BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(1, 0, 0), -poseTwistAngle);
+    rightArmTwist.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightArmTwist.rotationQuaternion,
+      targetTwistQuaternion,
+      0.1,
+    );
+  }
 }
