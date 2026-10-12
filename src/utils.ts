@@ -25,9 +25,13 @@ export function landmarkToVector(landmark: NormalizedLandmark) {
   return new BABYLON.Vector3(landmark.x, landmark.y, landmark.z);
 }
 
-// Convert any vector from top-left origin into center origin (origin is [0, 0])
+// Convert Blazepose coordinate to Babylon coordinate
 export function invertYAxis(vector3: BABYLON.Vector3) {
   return new BABYLON.Vector3(vector3.x, -vector3.y, vector3.z);
+}
+
+export function invertZAxis(vector3: BABYLON.Vector3) {
+  return new BABYLON.Vector3(vector3.x, vector3.y, -vector3.z);
 }
 
 
@@ -174,45 +178,37 @@ export function getPhysicalPalmTwist(a1: BABYLON.Vector3, p1: BABYLON.Vector3, a
 }
 
 
-/**
- * Calculates the forearm twist angle around the upper arm axis.
- * @param {Vector3} pShoulder - World position of shoulder
- * @param {Vector3} pElbow - World position of elbow
- * @param {Vector3} pWrist - World position of wrist
- * @param {Vector3} defaultUp - Reference 'up' direction of the body/torso
- * @returns {number} Twist angle in radians
- */
-export function calculateArmTwistAngle(
-  pShoulder: BABYLON.Vector3,
-  pElbow: BABYLON.Vector3,
-  pWrist: BABYLON.Vector3,
-  defaultUp = BABYLON.Vector3.Up(),
+function projectToVector(u: BABYLON.Vector3, v: BABYLON.Vector3) {
+  return v.scale(u.dot(v) / v.lengthSquared());
+}
+
+export function projectToPlane(u: BABYLON.Vector3, normal: BABYLON.Vector3) {
+  return u.subtract(projectToVector(u, normal));
+}
+
+export function getArmTwistAngle(
+  poseUpperArm: BABYLON.Vector3,
+  poseLowerArm: BABYLON.Vector3,
+  restUpperArm: BABYLON.Vector3,
+  restNormal: BABYLON.Vector3,
 ) {
-  // 1. Compute bone vectors
-  const vUpper = pElbow.subtract(pShoulder);
-  const vForearm = pWrist.subtract(pElbow);
+  const rotation = BABYLON.Quaternion.FromUnitVectorsToRef(
+    restUpperArm,
+    poseUpperArm,
+    new BABYLON.Quaternion(),
+  );
 
-  // Twist axis (normalized upper arm)
-  const u = vUpper.normalizeToNew();
+  const projLowerArm = projectToPlane(poseLowerArm, poseUpperArm);
+  const projLowerArmRest = projLowerArm.rotateByQuaternionToRef(rotation.invert(), new BABYLON.Vector3());
 
-  // 2. Project default reference direction onto the plane perpendicular to u
-  let ref = defaultUp.subtract(u.scale(BABYLON.Vector3.Dot(defaultUp, u)));
-  if (ref.lengthSquared() < 1e-6) {
-    // Fallback if upper arm aligns perfectly with defaultUp
-    ref = BABYLON.Vector3.Forward().subtract(u.scale(BABYLON.Vector3.Dot(BABYLON.Vector3.Forward(), u)));
-  }
-  ref.normalize();
+  const cross = restNormal.cross(projLowerArmRest);
+  const sin = restUpperArm.dot(cross);
+  const cos = BABYLON.Scalar.Clamp(restNormal.dot(projLowerArmRest), -1.0, 1.0);
+  const angle = Math.atan2(sin, cos);
 
-  // Orthogonal vector in the projection plane
-  const w = BABYLON.Vector3.Cross(u, ref).normalize();
+  // console.log('Projected: ', projLowerArmRest.toString());
+  // console.log('Normal: ', restNormal.toString());
+  // console.log('Angle: ', angle);
 
-  // 3. Project current forearm vector onto the plane perpendicular to u
-  const vProj = vForearm.subtract(u.scale(BABYLON.Vector3.Dot(vForearm, u)));
-  const vProjNorm = vProj.normalizeToNew();
-
-  // 4. Calculate signed angle using 2D projection components
-  const x = BABYLON.Vector3.Dot(vProjNorm, ref);
-  const y = BABYLON.Vector3.Dot(vProjNorm, w);
-
-  return Math.atan2(y, x);
+  return angle;
 }
