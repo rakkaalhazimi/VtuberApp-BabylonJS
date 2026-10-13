@@ -16,6 +16,11 @@ const ANGLE_THRESHOLD_RADIANS = BABYLON.Angle.FromDegrees(1.5).radians();
 const leftArmDefaultQuaternion = BABYLON.Quaternion.FromEulerAngles(0, 0, -0.6);
 const rightArmDefaultQuaternion = BABYLON.Quaternion.FromEulerAngles(0, 0, 0.6);
 
+// Head rotation limits (radians) to avoid unnatural MMD poses
+const HEAD_PITCH_LIMIT = BABYLON.Angle.FromDegrees(30).radians();
+const HEAD_YAW_LIMIT = BABYLON.Angle.FromDegrees(40).radians();
+const HEAD_ROLL_LIMIT = BABYLON.Angle.FromDegrees(25).radians();
+
 
 export class MMDMovementGuider {
 
@@ -25,12 +30,134 @@ export class MMDMovementGuider {
   private upperBodyYaw: number = 0;
   private upperBodyRoll: number = 0;
 
+  private headPitch: number = 0;
+  private headYaw: number = 0;
+  private headRoll: number = 0;
+  // Neutral nose-drop (nose.y - midEar.y, raw MediaPipe coords where +y = down).
+  // Calibrated on first valid frame; pitch is measured relative to it.
+  private neutralNoseDrop: number | null = null;
+
   constructor(public model: BABYLONMMD.MmdModel) {
     this.boneManager = new MMDBoneManager(model);
   }
 
   smooth(oldValue: number, newValue: number) {
     return (newValue - oldValue) * 0.05;
+  }
+
+  guideHeadMovement(result: PoseLandmarkerResult) {
+    const landmarks = result.worldLandmarks[0];
+    if (!landmarks) return;
+    const head = this.boneManager.getBoneByName(boneTranslations.HEAD.localName);
+    if (!head) return;
+
+    const poseNose = landmarks[PoseLandmarkerPoint.NOSE];
+    const poseLeftEar = landmarks[PoseLandmarkerPoint.LEFT_EAR];
+    const poseRightEar = landmarks[PoseLandmarkerPoint.RIGHT_EAR];
+    const poseMouthLeft = landmarks[PoseLandmarkerPoint.MOUTH_LEFT];
+    const poseMouthRight = landmarks[PoseLandmarkerPoint.MOUTH_RIGHT];
+    if (!poseNose || !poseLeftEar || !poseRightEar || !poseMouthLeft || !poseMouthRight) return;
+
+    const earVisibility = ((poseLeftEar.visibility ?? 1) + (poseRightEar.visibility ?? 1)) / 2;
+    const noseVisibility = poseNose.visibility ?? 1;
+    const mouthVisibility = ((poseMouthLeft.visibility ?? 1) + (poseMouthRight.visibility ?? 1)) / 2;
+    if (earVisibility < 0.5 && noseVisibility < 0.5) {
+      // Face lost: ease back to neutral
+      this.headPitch *= 0.9;
+      this.headYaw *= 0.9;
+      this.headRoll *= 0.9;
+      const neutralQ = BABYLON.Quaternion.Identity();
+      head.rotationQuaternion = BABYLON.Quaternion.Slerp(
+        head.rotationQuaternion,
+        neutralQ,
+        0.1,
+      );
+      return;
+    }
+
+    const poseVecNose = landmarkToVector(poseNose);
+    const poseVecLeftEar = landmarkToVector(poseLeftEar);
+    const poseVecRightEar = landmarkToVector(poseRightEar);
+    const poseVecMouthLeft = landmarkToVector(poseMouthLeft);
+    const poseVecMouthRight = landmarkToVector(poseMouthRight);
+
+    const poseVecMidEar = BABYLON.Vector3.Center(poseVecLeftEar, poseVecRightEar);
+    const poseVecMidMouth = BABYLON.Vector3.Center(poseVecMouthLeft, poseVecMouthRight);
+
+    // Face width as a scale reference (guard against degenerate landmarks)
+    const earDist = Math.max(poseVecLeftEar.subtract(poseVecRightEar).length(), 1e-4);
+
+    // Yaw (rotation around vertical Y axis, turning left/right)
+    // Nose lateral offset from mid-ear line, normalized by face width.
+    // Negated to flip MediaPipe horizontal into Babylon space (same convention as upper body).
+    const noseDx = poseVecNose.x - poseVecMidEar.x;
+    const yawTarget = BABYLON.Scalar.Clamp(
+      -(noseDx / earDist) * 1.5,
+      -HEAD_YAW_LIMIT,
+      HEAD_YAW_LIMIT,
+    );
+    if (Math.abs(yawTarget) > ANGLE_THRESHOLD_RADIANS) {
+      this.headYaw += this.smooth(this.headYaw, yawTarget);
+    }
+    if (earVisibility < 0.5) {
+      this.headYaw *= 0.9;
+    }
+    const yawQ = BABYLON.Quaternion.RotationAxis(
+      new BABYLON.Vector3(0, 1, 0),
+      this.headYaw,
+    );
+
+    // Pitch (rotation around horizontal X axis, nodding up/down)
+    // Raw MediaPipe +y points down, so noseDrop > 0 at neutral and grows when looking down.
+    // Calibrate neutral on first valid frame, then map the delta to a pitch angle.
+    const noseDrop = poseVecNose.y - poseVecMidEar.y;
+    if (this.neutralNoseDrop === null && noseVisibility >= 0.5) {
+      this.neutralNoseDrop = noseDrop;
+    }
+    const neutralDrop = this.neutralNoseDrop ?? noseDrop;
+    // Looking down increases noseDrop -> negative X rotation nods the MMD head down
+    // (model faces -Z, so -X tips the face downward).
+    const pitchTarget = BABYLON.Scalar.Clamp(
+      -((noseDrop - neutralDrop) / earDist) * 2.0,
+      -HEAD_PITCH_LIMIT,
+      HEAD_PITCH_LIMIT,
+    );
+    if (Math.abs(pitchTarget) > ANGLE_THRESHOLD_RADIANS) {
+      this.headPitch += this.smooth(this.headPitch, pitchTarget);
+    }
+    if (noseVisibility < 0.5) {
+      this.headPitch *= 0.9;
+    }
+    const pitchQ = BABYLON.Quaternion.RotationAxis(
+      new BABYLON.Vector3(1, 0, 0),
+      this.headPitch,
+    );
+
+    // Roll (rotation around forward Z axis, sideways tilt)
+    // Same pattern as upper body: up-vector of the face, atan2(x, y) is ~0 at neutral.
+    const faceUp = invertYAxis(poseVecMidEar.subtract(poseVecMidMouth));
+    const rollTarget = BABYLON.Scalar.Clamp(
+      Math.atan2(faceUp.x, Math.max(faceUp.y, 1e-4)),
+      -HEAD_ROLL_LIMIT,
+      HEAD_ROLL_LIMIT,
+    );
+    if (Math.abs(rollTarget) > ANGLE_THRESHOLD_RADIANS) {
+      this.headRoll += this.smooth(this.headRoll, rollTarget);
+    }
+    if (mouthVisibility < 0.5) {
+      this.headRoll *= 0.9;
+    }
+    const rollQ = BABYLON.Quaternion.RotationAxis(
+      new BABYLON.Vector3(0, 0, 1),
+      this.headRoll,
+    );
+
+    const targetQuaternion = pitchQ.multiply(yawQ).multiply(rollQ);
+    head.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      head.rotationQuaternion,
+      targetQuaternion,
+      0.15,
+    );
   }
 
   guideUpperBodyMovement(result: PoseLandmarkerResult) {
