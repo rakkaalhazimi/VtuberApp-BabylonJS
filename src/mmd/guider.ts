@@ -67,8 +67,8 @@ export class MMDMovementGuider {
       this.headYaw *= 0.9;
       this.headRoll *= 0.9;
       const neutralQ = BABYLON.Quaternion.Identity();
-      head.rotationQuaternion = BABYLON.Quaternion.Slerp(
-        head.rotationQuaternion,
+      head.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+        head.bone.rotationQuaternion,
         neutralQ,
         0.1,
       );
@@ -153,8 +153,8 @@ export class MMDMovementGuider {
     );
 
     const targetQuaternion = pitchQ.multiply(yawQ).multiply(rollQ);
-    head.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      head.rotationQuaternion,
+    head.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      head.bone.rotationQuaternion,
       targetQuaternion,
       0.15,
     );
@@ -226,8 +226,8 @@ export class MMDMovementGuider {
     );
 
     const targetQuaternion = pitchQ.multiply(yawQ).multiply(rollQ);
-    upperBody.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      upperBody.rotationQuaternion,
+    upperBody.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      upperBody.bone.rotationQuaternion,
       targetQuaternion,
       0.1,
     );
@@ -249,14 +249,13 @@ export class MMDMovementGuider {
     const poseVecLeftElbow = landmarkToVector(poseLeftElbow);
     const poseDirLeftElbow = invertYAxis(poseVecLeftElbow.subtract(poseVecLeftShoulder));
 
-    const leftShoulderRest = this.boneManager.getBoneRestPosition(leftShoulder);
-    const leftElbowRestDir = this.boneManager.getBoneRestPosition(leftElbow).subtract(leftShoulderRest);
+    const leftElbowRestDir = leftElbow.restPosition.subtract(leftShoulder.restPosition);
 
     const targetVectorTest = new BABYLON.Vector3(0.300, 0.400, 0.866);
 
     if (poseLeftElbow.visibility < 0.5) {
-      leftArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
-        leftArm.rotationQuaternion,
+      leftArm.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+        leftArm.bone.rotationQuaternion,
         leftArmDefaultQuaternion,
         0.1,
       );
@@ -269,8 +268,8 @@ export class MMDMovementGuider {
       poseDirLeftElbow.normalizeToNew(),
       leftArmTargetQuaternion,
     );
-    leftArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftArm.rotationQuaternion,
+    leftArm.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftArm.bone.rotationQuaternion,
       leftArmTargetQuaternion,
       0.1,
     );
@@ -285,10 +284,6 @@ export class MMDMovementGuider {
     const leftElbow = this.boneManager.getBoneByName(boneTranslations.LEFT_ELBOW.localName);
     if (!rightShoulder || !leftShoulder || !leftArm || !leftElbow) return;
 
-    const rightShoulderRest = this.boneManager.getBoneRestPosition(rightShoulder);
-    const leftShoulderRest = this.boneManager.getBoneRestPosition(leftShoulder);
-    const leftElbowRest = this.boneManager.getBoneRestPosition(leftElbow);
-
     const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
     const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
     const poseLeftElbow = landmarks[PoseLandmarkerPoint.LEFT_ELBOW];
@@ -298,8 +293,8 @@ export class MMDMovementGuider {
     const poseVecLeftElbow = landmarkToVector(poseLeftElbow);
 
     if (poseLeftElbow.visibility < 0.5) {
-      leftArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
-        leftArm.rotationQuaternion,
+      leftArm.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+        leftArm.bone.rotationQuaternion,
         leftArmDefaultQuaternion,
         0.1,
       );
@@ -307,8 +302,8 @@ export class MMDMovementGuider {
     };
 
     const restBasis = makeBasis(
-      leftElbowRest.subtract(leftShoulderRest),
-      rightShoulderRest.subtract(leftShoulderRest),
+      leftElbow.restPosition.subtract(leftShoulder.restPosition),
+      rightShoulder.restPosition.subtract(leftShoulder.restPosition),
     );
 
     const poseBasis = makeBasis(
@@ -320,8 +315,8 @@ export class MMDMovementGuider {
 
     const rotation = new BABYLON.Quaternion();
     BABYLON.Quaternion.FromRotationMatrixToRef(relative, rotation);
-    leftArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftArm.rotationQuaternion,
+    leftArm.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftArm.bone.rotationQuaternion,
       rotation,
       0.1,
     );
@@ -342,11 +337,6 @@ export class MMDMovementGuider {
 
     if (!leftElbow || !leftWrist || !leftWristTwist || !leftIndexMCP || !leftPinkyMCP) return;
 
-    const restLeftElbow = this.boneManager.getBoneRestPosition(leftElbow);
-    const restLeftWrist = this.boneManager.getBoneRestPosition(leftWrist);
-    const restLeftIndexMCP = this.boneManager.getBoneRestPosition(leftIndexMCP);
-    const restLeftPinkyMCP = this.boneManager.getBoneRestPosition(leftPinkyMCP);
-
     const poseLeftElbow = landmarks[PoseLandmarkerPoint.LEFT_ELBOW];
     const poseLeftWrist = landmarks[PoseLandmarkerPoint.LEFT_WRIST];
     const poseLeftIndexMCP = handLandmarks[HandLandmarkerPoint.INDEX_FINGER_MCP];
@@ -357,17 +347,17 @@ export class MMDMovementGuider {
     const poseVecLeftIndexMCP = landmarkToVector(poseLeftIndexMCP);
     const poseVecLeftPinkyMCP = landmarkToVector(poseLeftPinkyMCP);
 
-    const restPalmSurface = restLeftIndexMCP.subtract(restLeftPinkyMCP).normalize();
+    const restPalmSurface = leftIndexMCP.restPosition.subtract(leftPinkyMCP.restPosition).normalize();
     const posePalmSurface = poseVecLeftIndexMCP.subtract(poseVecLeftPinkyMCP).normalize();
 
-    const restForearmAxis = restLeftWrist.subtract(restLeftElbow).normalize();
+    const restForearmAxis = leftWrist.restPosition.subtract(leftElbow.restPosition).normalize();
     const poseForearmAxis = poseVecLeftWrist.subtract(poseVecLeftElbow).normalize();
 
     const twistAngle = getPhysicalPalmTwist(restForearmAxis, restPalmSurface, poseForearmAxis, posePalmSurface);
     const targetQuaternion = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.X, -twistAngle); // Invert the twist angle
 
-    leftWristTwist.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftWristTwist.rotationQuaternion,
+    leftWristTwist.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftWristTwist.bone.rotationQuaternion,
       targetQuaternion,
       0.1,
     );
@@ -388,11 +378,6 @@ export class MMDMovementGuider {
 
     if (!rightElbow || !rightWrist || !rightWristTwist || !rightIndexMCP || !rightPinkyMCP) return;
 
-    const restRightElbow = this.boneManager.getBoneRestPosition(rightElbow);
-    const restRightWrist = this.boneManager.getBoneRestPosition(rightWrist);
-    const restRightIndexMCP = this.boneManager.getBoneRestPosition(rightIndexMCP);
-    const restRightPinkyMCP = this.boneManager.getBoneRestPosition(rightPinkyMCP);
-
     const poseRightElbow = landmarks[PoseLandmarkerPoint.RIGHT_ELBOW];
     const poseRightWrist = landmarks[PoseLandmarkerPoint.RIGHT_WRIST];
     const poseRightIndexMCP = handLandmarks[HandLandmarkerPoint.INDEX_FINGER_MCP];
@@ -403,17 +388,17 @@ export class MMDMovementGuider {
     const poseVecRightIndexMCP = landmarkToVector(poseRightIndexMCP);
     const poseVecRightPinkyMCP = landmarkToVector(poseRightPinkyMCP);
 
-    const restPalmSurface = restRightIndexMCP.subtract(restRightPinkyMCP).normalize();
+    const restPalmSurface = rightIndexMCP.restPosition.subtract(rightPinkyMCP.restPosition).normalize();
     const posePalmSurface = poseVecRightIndexMCP.subtract(poseVecRightPinkyMCP).normalize();
 
-    const restForearmAxis = restRightWrist.subtract(restRightElbow).normalize();
+    const restForearmAxis = rightWrist.restPosition.subtract(rightElbow.restPosition).normalize();
     const poseForearmAxis = poseVecRightWrist.subtract(poseVecRightElbow).normalize();
 
     const twistAngle = getPhysicalPalmTwist(restForearmAxis, restPalmSurface, poseForearmAxis, posePalmSurface);
     const targetQuaternion = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.X, twistAngle);
 
-    rightWristTwist.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      rightWristTwist.rotationQuaternion,
+    rightWristTwist.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightWristTwist.bone.rotationQuaternion,
       targetQuaternion,
       0.1,
     );
@@ -434,12 +419,11 @@ export class MMDMovementGuider {
     const poseVecRightElbow = landmarkToVector(poseRightElbow);
     const poseDirRightElbow = invertYAxis(poseVecRightElbow.subtract(poseVecRightShoulder));
 
-    const rightShoulderRest = this.boneManager.getBoneRestPosition(rightShoulder);
-    const rightElbowRestDir = this.boneManager.getBoneRestPosition(rightElbow).subtract(rightShoulderRest);
+    const rightElbowRestDir = rightElbow.restPosition.subtract(rightShoulder.restPosition);
 
     if (poseRightElbow.visibility < 0.5) {
-      rightArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
-        rightArm.rotationQuaternion,
+      rightArm.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+        rightArm.bone.rotationQuaternion,
         rightArmDefaultQuaternion,
         0.1,
       );
@@ -452,8 +436,8 @@ export class MMDMovementGuider {
       poseDirRightElbow.normalizeToNew(),
       rightArmTargetQuaternion,
     );
-    rightArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      rightArm.rotationQuaternion,
+    rightArm.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightArm.bone.rotationQuaternion,
       rightArmTargetQuaternion,
       0.1,
     );
@@ -468,10 +452,6 @@ export class MMDMovementGuider {
     const rightElbow = this.boneManager.getBoneByName(boneTranslations.RIGHT_ELBOW.localName);
     if (!leftShoulder || !rightShoulder || !rightArm || !rightElbow) return;
 
-    const leftShoulderRest = this.boneManager.getBoneRestPosition(leftShoulder);
-    const rightShoulderRest = this.boneManager.getBoneRestPosition(rightShoulder);
-    const rightElbowRest = this.boneManager.getBoneRestPosition(rightElbow);
-
     const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
     const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
     const poseRightElbow = landmarks[PoseLandmarkerPoint.RIGHT_ELBOW];
@@ -481,8 +461,8 @@ export class MMDMovementGuider {
     const poseVecRightElbow = landmarkToVector(poseRightElbow);
 
     if (poseRightElbow.visibility < 0.5) {
-      rightArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
-        rightArm.rotationQuaternion,
+      rightArm.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+        rightArm.bone.rotationQuaternion,
         rightArmDefaultQuaternion,
         0.1,
       );
@@ -490,8 +470,8 @@ export class MMDMovementGuider {
     };
 
     const restBasis = makeBasis(
-      rightElbowRest.subtract(rightShoulderRest),
-      leftShoulderRest.subtract(rightShoulderRest),
+      rightElbow.restPosition.subtract(rightShoulder.restPosition),
+      leftShoulder.restPosition.subtract(rightShoulder.restPosition),
     );
 
     const poseBasis = makeBasis(
@@ -503,8 +483,8 @@ export class MMDMovementGuider {
 
     const rotation = new BABYLON.Quaternion();
     BABYLON.Quaternion.FromRotationMatrixToRef(relative, rotation);
-    rightArm.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      rightArm.rotationQuaternion,
+    rightArm.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightArm.bone.rotationQuaternion,
       rotation,
       0.1,
     );
@@ -529,11 +509,8 @@ export class MMDMovementGuider {
     const poseDirLeftElbow = invertYAxis(poseVecLeftElbow.subtract(poseVecLeftShoulder));
     const poseDirLeftWrist = invertYAxis(poseVecLeftWrist.subtract(poseVecLeftElbow));
 
-    const leftShoulderRest = this.boneManager.getBoneRestPosition(leftShoulder);
-    const leftElbowRest = this.boneManager.getBoneRestPosition(leftElbow);
-    const leftWristRest = this.boneManager.getBoneRestPosition(leftWrist);
-    const leftElbowRestDir = leftElbowRest.subtract(leftShoulderRest);
-    const leftWristRestDir = leftWristRest.subtract(leftElbowRest);
+    const leftElbowRestDir = leftElbow.restPosition.subtract(leftShoulder.restPosition);
+    const leftWristRestDir = leftWrist.restPosition.subtract(leftElbow.restPosition);
 
     const poseLeftElbowQuaternion = new BABYLON.Quaternion();
     BABYLON.Quaternion.FromUnitVectorsToRef(
@@ -553,8 +530,8 @@ export class MMDMovementGuider {
 
     const euler = targetQuaternion.toEulerAngles();
     targetQuaternion.copyFrom(BABYLON.Quaternion.FromEulerAngles(0, euler.y, euler.z));
-    leftElbow.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftElbow.rotationQuaternion,
+    leftElbow.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftElbow.bone.rotationQuaternion,
       targetQuaternion,
       0.1,
     );
@@ -567,10 +544,6 @@ export class MMDMovementGuider {
     const leftElbow = this.boneManager.getBoneByName(boneTranslations.LEFT_ELBOW.localName);
     const leftWrist = this.boneManager.getBoneByName(boneTranslations.LEFT_WRIST.localName);
     if (!leftShoulder || !leftElbow || !leftWrist) return;
-
-    const leftShoulderRest = this.boneManager.getBoneRestPosition(leftShoulder);
-    const leftElbowRest = this.boneManager.getBoneRestPosition(leftElbow);
-    const leftWristRest = this.boneManager.getBoneRestPosition(leftWrist);
 
     const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
     const poseLeftElbow = landmarks[PoseLandmarkerPoint.LEFT_ELBOW];
@@ -585,8 +558,8 @@ export class MMDMovementGuider {
     // const poseVecLeftWrist = new BABYLON.Vector3(3.5310, 15.5611, -3.3329);
 
     const restBasis = makeBasis(
-      leftWristRest.subtract(leftElbowRest),
-      leftShoulderRest.subtract(leftElbowRest),
+      leftWrist.restPosition.subtract(leftElbow.restPosition),
+      leftShoulder.restPosition.subtract(leftElbow.restPosition),
     );
 
     const poseBasis = makeBasis(
@@ -600,8 +573,8 @@ export class MMDMovementGuider {
     const euler = rotation.toEulerAngles();
     const rollDeg = BABYLON.Tools.ToDegrees(euler.z);
 
-    leftElbow.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftElbow.rotationQuaternion,
+    leftElbow.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftElbow.bone.rotationQuaternion,
       BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(0, 0, 1), -rollDeg),
       0.1,
     );
@@ -617,12 +590,8 @@ export class MMDMovementGuider {
     const leftArmTwist = this.boneManager.getBoneByName(boneTranslations.LEFT_ARM_TWIST.localName);
     if (!leftShoulder || !leftElbow || !leftWrist || !leftArmTwist) return;
 
-    const leftShoulderRest = this.boneManager.getBoneRestPosition(leftShoulder);
-    const leftElbowRest = this.boneManager.getBoneRestPosition(leftElbow);
-    const leftWristRest = this.boneManager.getBoneRestPosition(leftWrist);
-
-    const restUpperArm = leftElbowRest.subtract(leftShoulderRest).normalize();
-    const restLowerArm = leftWristRest.subtract(leftElbowRest).normalize();
+    const restUpperArm = leftElbow.restPosition.subtract(leftShoulder.restPosition).normalize();
+    const restLowerArm = leftWrist.restPosition.subtract(leftElbow.restPosition).normalize();
 
     const side = restUpperArm.clone();
     const forward = side.cross(restLowerArm);
@@ -645,7 +614,7 @@ export class MMDMovementGuider {
     const poseVec2DLeftElbow = landmarkToVector(poseLeftElbow); poseVec2DLeftElbow.z = 0;
     const poseVec2DLeftWrist = landmarkToVector(poseLeftWrist); poseVec2DLeftWrist.z = 0;
 
-    const restAngle = angleBetweenVectors3D(leftShoulderRest, leftElbowRest, leftWristRest); // ~167 degrees (in radians)
+    const restAngle = angleBetweenVectors3D(leftShoulder.restPosition, leftElbow.restPosition, leftWrist.restPosition); // ~167 degrees (in radians)
     const poseAngle = angleBetweenVectors3D(poseVec2DLeftShoulder, poseVec2DLeftElbow, poseVec2DLeftWrist);
     const poseTwistAngle = getArmTwistAngle(poseUpperArm, poseLowerArm, restUpperArm, restNormal);
     // console.log('Pose angle: ', poseAngle);
@@ -662,15 +631,15 @@ export class MMDMovementGuider {
     // Note: If the elbow bends in the wrong direction, invert the sign (-bendAngleRad)
     const targetHingeQuaternion = BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(0, 0, 1), bendAngleRad);
 
-    leftElbow.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftElbow.rotationQuaternion,
+    leftElbow.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftElbow.bone.rotationQuaternion,
       targetHingeQuaternion,
       0.1,
     );
 
     const targetTwistQuaternion = BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(1, 0, 0), poseTwistAngle);
-    leftArmTwist.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftArmTwist.rotationQuaternion,
+    leftArmTwist.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftArmTwist.bone.rotationQuaternion,
       targetTwistQuaternion,
       0.1,
     );
@@ -694,11 +663,8 @@ export class MMDMovementGuider {
     const poseDirRightElbow = invertYAxis(poseVecRightElbow.subtract(poseVecRightShoulder));
     const poseDirRightWrist = invertYAxis(poseVecRightWrist.subtract(poseVecRightElbow));
 
-    const rightShoulderRest = this.boneManager.getBoneRestPosition(rightShoulder);
-    const rightElbowRest = this.boneManager.getBoneRestPosition(rightElbow);
-    const rightWristRest = this.boneManager.getBoneRestPosition(rightWrist);
-    const rightElbowRestDir = rightElbowRest.subtract(rightShoulderRest);
-    const rightWristRestDir = rightWristRest.subtract(rightElbowRest);
+    const rightElbowRestDir = rightElbow.restPosition.subtract(rightShoulder.restPosition);
+    const rightWristRestDir = rightWrist.restPosition.subtract(rightElbow.restPosition);
 
     const poseRightElbowQuaternion = new BABYLON.Quaternion();
     BABYLON.Quaternion.FromUnitVectorsToRef(
@@ -718,8 +684,8 @@ export class MMDMovementGuider {
 
     const euler = targetQuaternion.toEulerAngles();
     targetQuaternion.copyFrom(BABYLON.Quaternion.FromEulerAngles(0, euler.y, euler.z));
-    rightElbow.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      rightElbow.rotationQuaternion,
+    rightElbow.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightElbow.bone.rotationQuaternion,
       targetQuaternion,
       0.1,
     );
@@ -733,10 +699,6 @@ export class MMDMovementGuider {
     const rightWrist = this.boneManager.getBoneByName(boneTranslations.RIGHT_WRIST.localName);
     if (!rightShoulder || !rightElbow || !rightWrist) return;
 
-    const rightShoulderRest = this.boneManager.getBoneRestPosition(rightShoulder);
-    const rightElbowRest = this.boneManager.getBoneRestPosition(rightElbow);
-    const rightWristRest = this.boneManager.getBoneRestPosition(rightWrist);
-
     const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
     const poseRightElbow = landmarks[PoseLandmarkerPoint.RIGHT_ELBOW];
     const poseRightWrist = landmarks[PoseLandmarkerPoint.RIGHT_WRIST];
@@ -746,8 +708,8 @@ export class MMDMovementGuider {
     const poseVecRightWrist = landmarkToVector(poseRightWrist);
 
     const restBasis = makeBasis(
-      rightWristRest.subtract(rightElbowRest),
-      rightShoulderRest.subtract(rightElbowRest),
+      rightWrist.restPosition.subtract(rightElbow.restPosition),
+      rightShoulder.restPosition.subtract(rightElbow.restPosition),
     );
 
     const poseBasis = makeBasis(
@@ -759,8 +721,8 @@ export class MMDMovementGuider {
 
     const rotation = new BABYLON.Quaternion();
     BABYLON.Quaternion.FromRotationMatrixToRef(relative, rotation);
-    rightElbow.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      rightElbow.rotationQuaternion,
+    rightElbow.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightElbow.bone.rotationQuaternion,
       rotation,
       0.1,
     );
@@ -776,12 +738,8 @@ export class MMDMovementGuider {
     const rightArmTwist = this.boneManager.getBoneByName(boneTranslations.RIGHT_ARM_TWIST.localName);
     if (!rightShoulder || !rightElbow || !rightWrist || !rightArmTwist) return;
 
-    const rightShoulderRest = this.boneManager.getBoneRestPosition(rightShoulder);
-    const rightElbowRest = this.boneManager.getBoneRestPosition(rightElbow);
-    const rightWristRest = this.boneManager.getBoneRestPosition(rightWrist);
-
-    const restUpperArm = rightElbowRest.subtract(rightShoulderRest).normalize();
-    const restLowerArm = rightWristRest.subtract(rightElbowRest).normalize();
+    const restUpperArm = rightElbow.restPosition.subtract(rightShoulder.restPosition).normalize();
+    const restLowerArm = rightWrist.restPosition.subtract(rightElbow.restPosition).normalize();
 
     const side = restUpperArm.clone();
     const forward = side.cross(restLowerArm);
@@ -803,7 +761,7 @@ export class MMDMovementGuider {
     const poseVec2DRightElbow = landmarkToVector(poseRightElbow); poseVec2DRightElbow.z = 0;
     const poseVec2DRightWrist = landmarkToVector(poseRightWrist); poseVec2DRightWrist.z = 0;
 
-    const restAngle = angleBetweenVectors3D(rightShoulderRest, rightElbowRest, rightWristRest);
+    const restAngle = angleBetweenVectors3D(rightShoulder.restPosition, rightElbow.restPosition, rightWrist.restPosition);
     const poseAngle = angleBetweenVectors3D(poseVec2DRightShoulder, poseVec2DRightElbow, poseVec2DRightWrist);
     const poseTwistAngle = getArmTwistAngle(poseUpperArm, poseLowerArm, restUpperArm, restNormal);
 
@@ -818,15 +776,15 @@ export class MMDMovementGuider {
     // Note: If the elbow bends in the wrong direction, invert the sign (bendAngleRad)
     const targetHingeQuaternion = BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(0, 0, 1), -bendAngleRad);
 
-    rightElbow.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      rightElbow.rotationQuaternion,
+    rightElbow.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightElbow.bone.rotationQuaternion,
       targetHingeQuaternion,
       0.1,
     );
 
     const targetTwistQuaternion = BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(1, 0, 0), -poseTwistAngle);
-    rightArmTwist.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      rightArmTwist.rotationQuaternion,
+    rightArmTwist.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightArmTwist.bone.rotationQuaternion,
       targetTwistQuaternion,
       0.1,
     );

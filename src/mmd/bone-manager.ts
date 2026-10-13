@@ -3,11 +3,21 @@ import * as BABYLONMMD from 'babylon-mmd';
 
 
 
+interface MMDBone {
+  bone: BABYLON.Bone;
+  restPosition: BABYLON.Vector3;
+}
+
 export class MMDBoneManager {
   constructor(public model: BABYLONMMD.MmdModel) { }
 
-  getBoneByName(localName: string): BABYLON.Bone | undefined {
-    return this.model.mesh.metadata.skeleton.bones.find(b => b.name === localName);
+  getBoneByName(localName: string): MMDBone | undefined {
+    const bone = this.model.mesh.metadata.skeleton.bones.find(b => b.name === localName);
+    if (!bone) return;
+    return {
+      bone,
+      restPosition: this.getBoneRestPosition(bone),
+    };
   }
 
   getBoneRestPosition(bone: BABYLON.Bone): BABYLON.Vector3 {
