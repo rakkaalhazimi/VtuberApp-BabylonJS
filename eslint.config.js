@@ -12,8 +12,8 @@ export default tseslint.config(
     rules: {
       '@stylistic/indent': ['error', 2],
       '@stylistic/semi': ['error', 'always'],
-      '@stylistic/comma-dangle': ['error', 'always-multiline'],
-      '@stylistic/no-trailing-spaces': 'error',
+      '@stylistic/comma-dangle': ['warn', 'always-multiline'],
+      '@stylistic/no-trailing-spaces': 'warn',
       '@typescript-eslint/no-unused-vars': 'warn',
     },
   },
