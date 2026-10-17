@@ -67,6 +67,21 @@ export function angleBetweenVectors3D(a: BABYLON.Vector3, b: BABYLON.Vector3, c:
 }
 
 
+export function angleBetweenVectorsNormal(a: BABYLON.Vector3, b: BABYLON.Vector3, c: BABYLON.Vector3) {
+  const v1 = a.subtract(b);
+  const v2 = c.subtract(b);
+  const normal = BABYLON.Vector3.Cross(v1, v2).normalize();
+
+  if (v1.lengthSquared() === 0 || v2.lengthSquared() === 0) {
+    return 0;
+  }
+
+  const angle = BABYLON.Vector3.GetAngleBetweenVectors(v1, v2, normal);
+
+  return angle;
+}
+
+
 export function getBoneRestPosition(mesh: BABYLON.Mesh, bone: BABYLON.Bone): BABYLON.Vector3 {
   // 1. Get the local rest matrix of the bone
   const localRestMatrix = bone.getRestMatrix();
@@ -211,4 +226,15 @@ export function getArmTwistAngle(
   // console.log('Angle: ', angle);
 
   return angle;
+}
+
+export function parseLandmark(landmark: Landmark) {
+  const position = invertYAxis(landmarkToVector(landmark));
+  return {
+    x: landmark.x,
+    y: landmark.y,
+    z: landmark.z,
+    visibility: landmark.visibility,
+    position,
+  };
 }
