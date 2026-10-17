@@ -591,24 +591,15 @@ export class MMDMovementGuider {
     const restNormal = invertZAxis(side.cross(forward)); // up
     // console.log('Rest normal: ', restNormal.toString());
 
-    const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
-    const poseLeftElbow = landmarks[PoseLandmarkerPoint.LEFT_ELBOW];
-    const poseLeftWrist = landmarks[PoseLandmarkerPoint.LEFT_WRIST];
+    const poseLeftShoulder = parseLandmark(landmarks[PoseLandmarkerPoint.LEFT_SHOULDER]);
+    const poseLeftElbow = parseLandmark(landmarks[PoseLandmarkerPoint.LEFT_ELBOW]);
+    const poseLeftWrist = parseLandmark(landmarks[PoseLandmarkerPoint.LEFT_WRIST]);
 
-    const poseVecLeftShoulder = invertYAxis(landmarkToVector(poseLeftShoulder));
-    const poseVecLeftElbow = invertYAxis(landmarkToVector(poseLeftElbow));
-    const poseVecLeftWrist = invertYAxis(landmarkToVector(poseLeftWrist));
-
-    const poseUpperArm = poseVecLeftElbow.subtract(poseVecLeftShoulder).normalize();
-    const poseLowerArm = poseVecLeftWrist.subtract(poseVecLeftElbow).normalize();
-
-    // 2D Rotation by zeroing out the z-axis
-    const poseVec2DLeftShoulder = landmarkToVector(poseLeftShoulder); poseVec2DLeftShoulder.z = 0;
-    const poseVec2DLeftElbow = landmarkToVector(poseLeftElbow); poseVec2DLeftElbow.z = 0;
-    const poseVec2DLeftWrist = landmarkToVector(poseLeftWrist); poseVec2DLeftWrist.z = 0;
+    const poseUpperArm = poseLeftElbow.position.subtract(poseLeftShoulder.position).normalize();
+    const poseLowerArm = poseLeftWrist.position.subtract(poseLeftElbow.position).normalize();
 
     const restAngle = angleBetweenVectors3D(leftShoulder.restPosition, leftElbow.restPosition, leftWrist.restPosition); // ~167 degrees (in radians)
-    const poseAngle = angleBetweenVectors3D(poseVec2DLeftShoulder, poseVec2DLeftElbow, poseVec2DLeftWrist);
+    const poseAngle = angleBetweenVectors3D(poseLeftShoulder.position, poseLeftElbow.position, poseLeftWrist.position, true); // 2D Angle
     const poseTwistAngle = getArmTwistAngle(poseUpperArm, poseLowerArm, restUpperArm, restNormal);
     // console.log('Pose angle: ', poseAngle);
     // console.log('Pose twist angle: ', poseTwistAngle);
@@ -738,24 +729,15 @@ export class MMDMovementGuider {
     const forward = side.cross(restLowerArm);
     const restNormal = invertZAxis(side.cross(forward)); // up
 
-    const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
-    const poseRightElbow = landmarks[PoseLandmarkerPoint.RIGHT_ELBOW];
-    const poseRightWrist = landmarks[PoseLandmarkerPoint.RIGHT_WRIST];
+    const poseRightShoulder = parseLandmark(landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER]);
+    const poseRightElbow = parseLandmark(landmarks[PoseLandmarkerPoint.RIGHT_ELBOW]);
+    const poseRightWrist = parseLandmark(landmarks[PoseLandmarkerPoint.RIGHT_WRIST]);
 
-    const poseVecRightShoulder = invertYAxis(landmarkToVector(poseRightShoulder));
-    const poseVecRightElbow = invertYAxis(landmarkToVector(poseRightElbow));
-    const poseVecRightWrist = invertYAxis(landmarkToVector(poseRightWrist));
-
-    const poseUpperArm = poseVecRightElbow.subtract(poseVecRightShoulder).normalize();
-    const poseLowerArm = poseVecRightWrist.subtract(poseVecRightElbow).normalize();
-
-    // 2D Rotation by zeroing out the z-axis
-    const poseVec2DRightShoulder = landmarkToVector(poseRightShoulder); poseVec2DRightShoulder.z = 0;
-    const poseVec2DRightElbow = landmarkToVector(poseRightElbow); poseVec2DRightElbow.z = 0;
-    const poseVec2DRightWrist = landmarkToVector(poseRightWrist); poseVec2DRightWrist.z = 0;
+    const poseUpperArm = poseRightElbow.position.subtract(poseRightShoulder.position).normalize();
+    const poseLowerArm = poseRightWrist.position.subtract(poseRightElbow.position).normalize();
 
     const restAngle = angleBetweenVectors3D(rightShoulder.restPosition, rightElbow.restPosition, rightWrist.restPosition);
-    const poseAngle = angleBetweenVectors3D(poseVec2DRightShoulder, poseVec2DRightElbow, poseVec2DRightWrist);
+    const poseAngle = angleBetweenVectors3D(poseRightShoulder.position, poseRightElbow.position, poseRightWrist.position, true);
     const poseTwistAngle = getArmTwistAngle(poseUpperArm, poseLowerArm, restUpperArm, restNormal);
 
     // 1. Calculate how much the elbow is bent relative to rest (0 when straight/extended)

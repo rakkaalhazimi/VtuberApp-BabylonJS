@@ -1,6 +1,6 @@
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
-import type { NormalizedLandmark } from "@mediapipe/tasks-vision";
+import type { Landmark, NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 
 
@@ -48,9 +48,14 @@ function normalizeRadians(radians: number) {
 }
 
 
-export function angleBetweenVectors3D(a: BABYLON.Vector3, b: BABYLON.Vector3, c: BABYLON.Vector3) {
+export function angleBetweenVectors3D(a: BABYLON.Vector3, b: BABYLON.Vector3, c: BABYLON.Vector3, is2D: boolean = false) {
   const v1 = a.subtract(b);
   const v2 = c.subtract(b);
+
+  if (is2D) {
+    v1.z = 0;
+    v2.z = 0;
+  }
 
   if (v1.lengthSquared() === 0 || v2.lengthSquared() === 0) {
     return 0;
