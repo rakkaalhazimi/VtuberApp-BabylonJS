@@ -170,22 +170,17 @@ export class MMDMovementGuider {
     const upperBody = this.boneManager.getBoneByName(boneTranslations.UPPER_BODY.localName);
     if (!upperBody) return;
 
-    const poseLeftHip = landmarks[PoseLandmarkerPoint.LEFT_HIP];
-    const poseRightHip = landmarks[PoseLandmarkerPoint.RIGHT_HIP];
-    const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
-    const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
+    const poseLeftHip = parseLandmark(landmarks[PoseLandmarkerPoint.LEFT_HIP]);
+    const poseRightHip = parseLandmark(landmarks[PoseLandmarkerPoint.RIGHT_HIP]);
+    const poseLeftShoulder = parseLandmark(landmarks[PoseLandmarkerPoint.LEFT_SHOULDER]);
+    const poseRightShoulder = parseLandmark(landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER]);
 
-    const poseVecLeftHip = landmarkToVector(poseLeftHip);
-    const poseVecRightHip = landmarkToVector(poseRightHip);
-    const poseVecLeftShoulder = landmarkToVector(poseLeftShoulder);
-    const poseVecRightShoulder = landmarkToVector(poseRightShoulder);
-
-    const poseVecMidHip = BABYLON.Vector3.Center(poseVecLeftHip, poseVecRightHip);
-    const poseVecMidShoulder = BABYLON.Vector3.Center(poseVecLeftShoulder, poseVecRightShoulder);
+    const poseVecMidHip = BABYLON.Vector3.Center(poseLeftHip.position, poseRightHip.position);
+    const poseVecMidShoulder = BABYLON.Vector3.Center(poseLeftShoulder.position, poseRightShoulder.position);
     poseVecMidShoulder.z -= NEUTRAL_SHOULDER_Z;  // Subtracted by neutral shoulder z position
 
     // Pitch (Rotation around horizontal axis)
-    const bodyLean = invertYAxis(poseVecMidShoulder.subtract(poseVecMidHip));
+    const bodyLean = poseVecMidShoulder.subtract(poseVecMidHip);
     const pitch = Math.atan2(bodyLean.z, bodyLean.y);
     if (Math.abs(pitch) > ANGLE_THRESHOLD_RADIANS) {
       this.upperBodyPitch += this.smooth(this.upperBodyPitch, pitch);  // Exponential Moving Average
@@ -200,7 +195,7 @@ export class MMDMovementGuider {
     );
 
     // Yaw (Rotation around vertical axis)
-    const bodyTwist = poseVecLeftShoulder.subtract(poseVecRightShoulder);
+    const bodyTwist = poseLeftShoulder.position.subtract(poseRightShoulder.position);
     const yaw = Math.atan2(bodyTwist.z, bodyTwist.x);
     if (Math.abs(yaw) > ANGLE_THRESHOLD_RADIANS) {
       this.upperBodyYaw += this.smooth(this.upperBodyYaw, -yaw); // Flip horizontal
@@ -216,7 +211,7 @@ export class MMDMovementGuider {
     );
 
     // Roll (Rotation around forward axis, lateral / sideways tilt)
-    const bodyTilt = invertYAxis(poseVecMidShoulder.subtract(poseVecMidHip));
+    const bodyTilt = poseVecMidShoulder.subtract(poseVecMidHip);
     const roll = Math.atan2(bodyTilt.x, bodyTilt.y);
     if (Math.abs(roll) > ANGLE_THRESHOLD_RADIANS) {
       this.upperBodyRoll += this.smooth(this.upperBodyRoll, roll);
