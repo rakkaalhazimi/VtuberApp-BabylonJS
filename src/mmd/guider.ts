@@ -332,21 +332,16 @@ export class MMDMovementGuider {
 
     if (!leftElbow || !leftWrist || !leftWristTwist || !leftIndexMCP || !leftPinkyMCP) return;
 
-    const poseLeftElbow = landmarks[PoseLandmarkerPoint.LEFT_ELBOW];
-    const poseLeftWrist = landmarks[PoseLandmarkerPoint.LEFT_WRIST];
-    const poseLeftIndexMCP = handLandmarks[HandLandmarkerPoint.INDEX_FINGER_MCP];
-    const poseLeftPinkyMCP = handLandmarks[HandLandmarkerPoint.PINKY_MCP];
-
-    const poseVecLeftElbow = landmarkToVector(poseLeftElbow);
-    const poseVecLeftWrist = landmarkToVector(poseLeftWrist);
-    const poseVecLeftIndexMCP = landmarkToVector(poseLeftIndexMCP);
-    const poseVecLeftPinkyMCP = landmarkToVector(poseLeftPinkyMCP);
+    const poseLeftElbow = parseLandmark(landmarks[PoseLandmarkerPoint.LEFT_ELBOW]);
+    const poseLeftWrist = parseLandmark(landmarks[PoseLandmarkerPoint.LEFT_WRIST]);
+    const poseLeftIndexMCP = parseLandmark(handLandmarks[HandLandmarkerPoint.INDEX_FINGER_MCP]);
+    const poseLeftPinkyMCP = parseLandmark(handLandmarks[HandLandmarkerPoint.PINKY_MCP]);
 
     const restPalmSurface = leftIndexMCP.restPosition.subtract(leftPinkyMCP.restPosition).normalize();
-    const posePalmSurface = poseVecLeftIndexMCP.subtract(poseVecLeftPinkyMCP).normalize();
+    const posePalmSurface = poseLeftIndexMCP.position.subtract(poseLeftPinkyMCP.position).normalize();
 
     const restForearmAxis = leftWrist.restPosition.subtract(leftElbow.restPosition).normalize();
-    const poseForearmAxis = poseVecLeftWrist.subtract(poseVecLeftElbow).normalize();
+    const poseForearmAxis = poseLeftWrist.position.subtract(poseLeftElbow.position).normalize();
 
     const twistAngle = getPhysicalPalmTwist(restForearmAxis, restPalmSurface, poseForearmAxis, posePalmSurface);
     const targetQuaternion = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.X, -twistAngle); // Invert the twist angle
@@ -373,21 +368,16 @@ export class MMDMovementGuider {
 
     if (!rightElbow || !rightWrist || !rightWristTwist || !rightIndexMCP || !rightPinkyMCP) return;
 
-    const poseRightElbow = landmarks[PoseLandmarkerPoint.RIGHT_ELBOW];
-    const poseRightWrist = landmarks[PoseLandmarkerPoint.RIGHT_WRIST];
-    const poseRightIndexMCP = handLandmarks[HandLandmarkerPoint.INDEX_FINGER_MCP];
-    const poseRightPinkyMCP = handLandmarks[HandLandmarkerPoint.PINKY_MCP];
-
-    const poseVecRightElbow = landmarkToVector(poseRightElbow);
-    const poseVecRightWrist = landmarkToVector(poseRightWrist);
-    const poseVecRightIndexMCP = landmarkToVector(poseRightIndexMCP);
-    const poseVecRightPinkyMCP = landmarkToVector(poseRightPinkyMCP);
+    const poseRightElbow = parseLandmark(landmarks[PoseLandmarkerPoint.RIGHT_ELBOW]);
+    const poseRightWrist = parseLandmark(landmarks[PoseLandmarkerPoint.RIGHT_WRIST]);
+    const poseRightIndexMCP = parseLandmark(handLandmarks[HandLandmarkerPoint.INDEX_FINGER_MCP]);
+    const poseRightPinkyMCP = parseLandmark(handLandmarks[HandLandmarkerPoint.PINKY_MCP]);
 
     const restPalmSurface = rightIndexMCP.restPosition.subtract(rightPinkyMCP.restPosition).normalize();
-    const posePalmSurface = poseVecRightIndexMCP.subtract(poseVecRightPinkyMCP).normalize();
+    const posePalmSurface = poseRightIndexMCP.position.subtract(poseRightPinkyMCP.position).normalize();
 
     const restForearmAxis = rightWrist.restPosition.subtract(rightElbow.restPosition).normalize();
-    const poseForearmAxis = poseVecRightWrist.subtract(poseVecRightElbow).normalize();
+    const poseForearmAxis = poseRightWrist.position.subtract(poseRightElbow.position).normalize();
 
     const twistAngle = getPhysicalPalmTwist(restForearmAxis, restPalmSurface, poseForearmAxis, posePalmSurface);
     const targetQuaternion = BABYLON.Quaternion.RotationAxis(BABYLON.Axis.X, twistAngle);
