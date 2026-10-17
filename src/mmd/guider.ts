@@ -5,6 +5,7 @@ import type { HandLandmarkerResult, PoseLandmarkerResult } from '@mediapipe/task
 import { HandLandmarkerPoint, HandLandmarkerEstimation } from '@/computer-vision/hand-landmarker';
 import { PoseLandmarkerPoint } from '@/computer-vision/pose-estimation';
 import { MMDBoneManager } from '@/mmd/bone-manager';
+import { GuiderState } from '@/mmd/guider-state';
 import { boneTranslations } from '@/mmd/translation';
 import {
   landmarkToVector,
@@ -34,20 +35,15 @@ const HEAD_ROLL_LIMIT = BABYLON.Angle.FromDegrees(25).radians();
 export class MMDMovementGuider {
 
   private boneManager: MMDBoneManager;
+  private state: GuiderState;
 
   private upperBodyPitch: number = 0;
   private upperBodyYaw: number = 0;
   private upperBodyRoll: number = 0;
 
-  private headPitch: number = 0;
-  private headYaw: number = 0;
-  private headRoll: number = 0;
-  // Neutral nose-drop (nose.y - midEar.y, raw MediaPipe coords where +y = down).
-  // Calibrated on first valid frame; pitch is measured relative to it.
-  private neutralNoseDrop: number | null = null;
-
   constructor(public model: BABYLONMMD.MmdModel) {
     this.boneManager = new MMDBoneManager(model);
+    this.state = new GuiderState();
   }
 
   smooth(oldValue: number, newValue: number) {
@@ -71,9 +67,9 @@ export class MMDMovementGuider {
     const mouthVisibility = ((poseMouthLeft.visibility ?? 1) + (poseMouthRight.visibility ?? 1)) / 2;
     if (earVisibility < 0.5 && noseVisibility < 0.5) {
       // Face lost: ease back to neutral
-      this.headPitch *= 0.9;
-      this.headYaw *= 0.9;
-      this.headRoll *= 0.9;
+      this.state.headPitch *= 0.9;
+      this.state.headYaw *= 0.9;
+      this.state.headRoll *= 0.9;
       const neutralQ = BABYLON.Quaternion.Identity();
       head.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
         head.bone.rotationQuaternion,
@@ -99,24 +95,24 @@ export class MMDMovementGuider {
       HEAD_YAW_LIMIT,
     );
     if (Math.abs(yawTarget) > ANGLE_THRESHOLD_RADIANS) {
-      this.headYaw += this.smooth(this.headYaw, yawTarget);
+      this.state.headYaw += this.smooth(this.state.headYaw, yawTarget);
     }
     if (earVisibility < 0.5) {
-      this.headYaw *= 0.9;
+      this.state.headYaw *= 0.9;
     }
     const yawQ = BABYLON.Quaternion.RotationAxis(
       new BABYLON.Vector3(0, 1, 0),
-      this.headYaw,
+      this.state.headYaw,
     );
 
     // Pitch (rotation around horizontal X axis, nodding up/down)
     // Raw MediaPipe +y points down, so noseDrop > 0 at neutral and grows when looking down.
     // Calibrate neutral on first valid frame, then map the delta to a pitch angle.
     const noseDrop = poseNose.y - poseVecMidEar.y;
-    if (this.neutralNoseDrop === null && noseVisibility >= 0.5) {
-      this.neutralNoseDrop = noseDrop;
+    if (this.state.neutralNoseDrop === null && noseVisibility >= 0.5) {
+      this.state.neutralNoseDrop = noseDrop;
     }
-    const neutralDrop = this.neutralNoseDrop ?? noseDrop;
+    const neutralDrop = this.state.neutralNoseDrop ?? noseDrop;
     // Looking down increases noseDrop -> negative X rotation nods the MMD head down
     // (model faces -Z, so -X tips the face downward).
     const pitchTarget = BABYLON.Scalar.Clamp(
@@ -125,14 +121,14 @@ export class MMDMovementGuider {
       HEAD_PITCH_LIMIT,
     );
     if (Math.abs(pitchTarget) > ANGLE_THRESHOLD_RADIANS) {
-      this.headPitch += this.smooth(this.headPitch, pitchTarget);
+      this.state.headPitch += this.smooth(this.state.headPitch, pitchTarget);
     }
     if (noseVisibility < 0.5) {
-      this.headPitch *= 0.9;
+      this.state.headPitch *= 0.9;
     }
     const pitchQ = BABYLON.Quaternion.RotationAxis(
       new BABYLON.Vector3(1, 0, 0),
-      this.headPitch,
+      this.state.headPitch,
     );
 
     // Roll (rotation around forward Z axis, sideways tilt)
@@ -144,14 +140,14 @@ export class MMDMovementGuider {
       HEAD_ROLL_LIMIT,
     );
     if (Math.abs(rollTarget) > ANGLE_THRESHOLD_RADIANS) {
-      this.headRoll += this.smooth(this.headRoll, rollTarget);
+      this.state.headRoll += this.smooth(this.state.headRoll, rollTarget);
     }
     if (mouthVisibility < 0.5) {
-      this.headRoll *= 0.9;
+      this.state.headRoll *= 0.9;
     }
     const rollQ = BABYLON.Quaternion.RotationAxis(
       new BABYLON.Vector3(0, 0, 1),
-      this.headRoll,
+      this.state.headRoll,
     );
 
     const targetQuaternion = pitchQ.multiply(yawQ).multiply(rollQ);
