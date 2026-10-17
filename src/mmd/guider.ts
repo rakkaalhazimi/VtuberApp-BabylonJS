@@ -241,16 +241,12 @@ export class MMDMovementGuider {
     const leftElbow = this.boneManager.getBoneByName(boneTranslations.LEFT_ELBOW.localName);
     if (!leftShoulder || !leftArm || !leftElbow) return;
 
-    const poseLeftShoulder = landmarks[PoseLandmarkerPoint.LEFT_SHOULDER];
-    const poseLeftElbow = landmarks[PoseLandmarkerPoint.LEFT_ELBOW];
+    const poseLeftShoulder = parseLandmark(landmarks[PoseLandmarkerPoint.LEFT_SHOULDER]);
+    const poseLeftElbow = parseLandmark(landmarks[PoseLandmarkerPoint.LEFT_ELBOW]);
 
-    const poseVecLeftShoulder = landmarkToVector(poseLeftShoulder);
-    const poseVecLeftElbow = landmarkToVector(poseLeftElbow);
-    const poseDirLeftElbow = invertYAxis(poseVecLeftElbow.subtract(poseVecLeftShoulder));
+    const poseDirLeftElbow = poseLeftElbow.position.subtract(poseLeftShoulder.position);
 
     const leftElbowRestDir = leftElbow.restPosition.subtract(leftShoulder.restPosition);
-
-    const targetVectorTest = new BABYLON.Vector3(0.300, 0.400, 0.866);
 
     if (poseLeftElbow.visibility < 0.5) {
       leftArm.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
@@ -411,12 +407,10 @@ export class MMDMovementGuider {
     const rightElbow = this.boneManager.getBoneByName(boneTranslations.RIGHT_ELBOW.localName);
     if (!rightShoulder || !rightArm || !rightElbow) return;
 
-    const poseRightShoulder = landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER];
-    const poseRightElbow = landmarks[PoseLandmarkerPoint.RIGHT_ELBOW];
+    const poseRightShoulder = parseLandmark(landmarks[PoseLandmarkerPoint.RIGHT_SHOULDER]);
+    const poseRightElbow = parseLandmark(landmarks[PoseLandmarkerPoint.RIGHT_ELBOW]);
 
-    const poseVecRightShoulder = landmarkToVector(poseRightShoulder);
-    const poseVecRightElbow = landmarkToVector(poseRightElbow);
-    const poseDirRightElbow = invertYAxis(poseVecRightElbow.subtract(poseVecRightShoulder));
+    const poseDirRightElbow = poseRightElbow.position.subtract(poseRightShoulder.position);
 
     const rightElbowRestDir = rightElbow.restPosition.subtract(rightShoulder.restPosition);
 
