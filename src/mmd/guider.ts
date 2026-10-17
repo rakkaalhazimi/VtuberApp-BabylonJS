@@ -37,10 +37,6 @@ export class MMDMovementGuider {
   private boneManager: MMDBoneManager;
   private state: GuiderState;
 
-  private upperBodyPitch: number = 0;
-  private upperBodyYaw: number = 0;
-  private upperBodyRoll: number = 0;
-
   constructor(public model: BABYLONMMD.MmdModel) {
     this.boneManager = new MMDBoneManager(model);
     this.state = new GuiderState();
@@ -177,45 +173,45 @@ export class MMDMovementGuider {
     const bodyLean = poseVecMidShoulder.subtract(poseVecMidHip);
     const pitch = Math.atan2(bodyLean.z, bodyLean.y);
     if (Math.abs(pitch) > ANGLE_THRESHOLD_RADIANS) {
-      this.upperBodyPitch += this.smooth(this.upperBodyPitch, pitch);  // Exponential Moving Average
+      this.state.upperBodyPitch += this.smooth(this.state.upperBodyPitch, pitch);  // Exponential Moving Average
     }
     const hipVisbility = (poseLeftHip.visibility + poseRightHip.visibility) / 2;
     if (hipVisbility < 0.5) {
-      // this.upperBodyPitch = 0;
+      // this.state.upperBodyPitch = 0;
     }
     const pitchQ = BABYLON.Quaternion.RotationAxis(
       new BABYLON.Vector3(1, 0, 0),
-      this.upperBodyPitch,
+      this.state.upperBodyPitch,
     );
 
     // Yaw (Rotation around vertical axis)
     const bodyTwist = poseLeftShoulder.position.subtract(poseRightShoulder.position);
     const yaw = Math.atan2(bodyTwist.z, bodyTwist.x);
     if (Math.abs(yaw) > ANGLE_THRESHOLD_RADIANS) {
-      this.upperBodyYaw += this.smooth(this.upperBodyYaw, -yaw); // Flip horizontal
+      this.state.upperBodyYaw += this.smooth(this.state.upperBodyYaw, -yaw); // Flip horizontal
       // console.log(yaw);
     }
     const shoulderVisbility = (poseLeftShoulder.visibility + poseRightShoulder.visibility) / 2;
     if (shoulderVisbility < 0.5) {
-      this.upperBodyYaw = 0;
+      this.state.upperBodyYaw = 0;
     }
     const yawQ = BABYLON.Quaternion.RotationAxis(
       new BABYLON.Vector3(0, 1, 0),
-      this.upperBodyYaw,
+      this.state.upperBodyYaw,
     );
 
     // Roll (Rotation around forward axis, lateral / sideways tilt)
     const bodyTilt = poseVecMidShoulder.subtract(poseVecMidHip);
     const roll = Math.atan2(bodyTilt.x, bodyTilt.y);
     if (Math.abs(roll) > ANGLE_THRESHOLD_RADIANS) {
-      this.upperBodyRoll += this.smooth(this.upperBodyRoll, roll);
+      this.state.upperBodyRoll += this.smooth(this.state.upperBodyRoll, roll);
     }
     if (shoulderVisbility < 0.5) {
-      this.upperBodyRoll = 0;
+      this.state.upperBodyRoll = 0;
     }
     const rollQ = BABYLON.Quaternion.RotationAxis(
       new BABYLON.Vector3(0, 0, 1),
-      this.upperBodyRoll,
+      this.state.upperBodyRoll,
     );
 
     const targetQuaternion = pitchQ.multiply(yawQ).multiply(rollQ);
