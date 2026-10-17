@@ -62,12 +62,11 @@ export class MMDMovementGuider {
     const head = this.boneManager.getBoneByName(boneTranslations.HEAD.localName);
     if (!head) return;
 
-    const poseNose = landmarks[PoseLandmarkerPoint.NOSE];
-    const poseLeftEar = landmarks[PoseLandmarkerPoint.LEFT_EAR];
-    const poseRightEar = landmarks[PoseLandmarkerPoint.RIGHT_EAR];
-    const poseMouthLeft = landmarks[PoseLandmarkerPoint.MOUTH_LEFT];
-    const poseMouthRight = landmarks[PoseLandmarkerPoint.MOUTH_RIGHT];
-    if (!poseNose || !poseLeftEar || !poseRightEar || !poseMouthLeft || !poseMouthRight) return;
+    const poseNose = parseLandmark(landmarks[PoseLandmarkerPoint.NOSE]);
+    const poseLeftEar = parseLandmark(landmarks[PoseLandmarkerPoint.LEFT_EAR]);
+    const poseRightEar = parseLandmark(landmarks[PoseLandmarkerPoint.RIGHT_EAR]);
+    const poseMouthLeft = parseLandmark(landmarks[PoseLandmarkerPoint.MOUTH_LEFT]);
+    const poseMouthRight = parseLandmark(landmarks[PoseLandmarkerPoint.MOUTH_RIGHT]);
 
     const earVisibility = ((poseLeftEar.visibility ?? 1) + (poseRightEar.visibility ?? 1)) / 2;
     const noseVisibility = poseNose.visibility ?? 1;
@@ -86,22 +85,16 @@ export class MMDMovementGuider {
       return;
     }
 
-    const poseVecNose = landmarkToVector(poseNose);
-    const poseVecLeftEar = landmarkToVector(poseLeftEar);
-    const poseVecRightEar = landmarkToVector(poseRightEar);
-    const poseVecMouthLeft = landmarkToVector(poseMouthLeft);
-    const poseVecMouthRight = landmarkToVector(poseMouthRight);
-
-    const poseVecMidEar = BABYLON.Vector3.Center(poseVecLeftEar, poseVecRightEar);
-    const poseVecMidMouth = BABYLON.Vector3.Center(poseVecMouthLeft, poseVecMouthRight);
+    const poseVecMidEar = BABYLON.Vector3.Center(poseLeftEar.position, poseRightEar.position);
+    const poseVecMidMouth = BABYLON.Vector3.Center(poseMouthLeft.position, poseMouthRight.position);
 
     // Face width as a scale reference (guard against degenerate landmarks)
-    const earDist = Math.max(poseVecLeftEar.subtract(poseVecRightEar).length(), 1e-4);
+    const earDist = Math.max(poseLeftEar.position.subtract(poseRightEar.position).length(), 1e-4);
 
     // Yaw (rotation around vertical Y axis, turning left/right)
     // Nose lateral offset from mid-ear line, normalized by face width.
     // Negated to flip MediaPipe horizontal into Babylon space (same convention as upper body).
-    const noseDx = poseVecNose.x - poseVecMidEar.x;
+    const noseDx = poseNose.x - poseVecMidEar.x;
     const yawTarget = BABYLON.Scalar.Clamp(
       -(noseDx / earDist) * 1.5,
       -HEAD_YAW_LIMIT,
@@ -121,7 +114,7 @@ export class MMDMovementGuider {
     // Pitch (rotation around horizontal X axis, nodding up/down)
     // Raw MediaPipe +y points down, so noseDrop > 0 at neutral and grows when looking down.
     // Calibrate neutral on first valid frame, then map the delta to a pitch angle.
-    const noseDrop = poseVecNose.y - poseVecMidEar.y;
+    const noseDrop = poseNose.y - poseVecMidEar.y;
     if (this.neutralNoseDrop === null && noseVisibility >= 0.5) {
       this.neutralNoseDrop = noseDrop;
     }
