@@ -570,6 +570,16 @@ export class MMDMovementGuider {
     );
   }
 
+  guideCurlFinger(a: BABYLON.Vector3, b: BABYLON.Vector3, c: BABYLON.Vector3, bone: BABYLON.Bone) {
+    const angle = Math.PI - 0.2 - angleBetweenVectorsNormal(a, b, c);
+    const rotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -angle);
+    bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      bone.rotationQuaternion,
+      rotation,
+      0.1,
+    );
+  }
+
   guideLeftFingersMovement(hand: HandLandmarkerResult) {
     const handLandmarks = HandLandmarkerEstimation.GetLeftHand(hand);
     if (!handLandmarks) return;
@@ -624,151 +634,85 @@ export class MMDMovementGuider {
     const poseLeftPinkyPIP = parseLandmark(handLandmarks[HandLandmarkerPoint.PINKY_PIP]);
     const poseLeftPinkyTIP = parseLandmark(handLandmarks[HandLandmarkerPoint.PINKY_TIP]);
 
-    const indexPIPAngle = Math.PI - 0.2 - angleBetweenVectorsNormal(
+
+    // ---- Index ----
+    this.guideCurlFinger(
       poseLeftIndexDIP.position,
       poseLeftIndexPIP.position,
       poseLeftIndexMCP.position,
+      leftIndexPIP.bone,
     );
-    const indexPIPRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -indexPIPAngle);
-    leftIndexPIP.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftIndexPIP.bone.rotationQuaternion,
-      indexPIPRotation,
-      0.1,
-    );
-
-    const indexDIPAngle = Math.PI - 0.2 - angleBetweenVectorsNormal(
+    this.guideCurlFinger(
       poseLeftIndexTIP.position,
       poseLeftIndexDIP.position,
       poseLeftIndexPIP.position,
+      leftIndexDIP.bone,
     );
-    const indexDIPRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -indexDIPAngle);
-    leftIndexDIP.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftIndexDIP.bone.rotationQuaternion,
-      indexDIPRotation,
-      0.1,
-    );
-
-    const indexMCPAngle = Math.PI - angleBetweenVectorsNormal(
+    this.guideCurlFinger(
       poseLeftIndexPIP.position,
       poseLeftIndexMCP.position,
       poseLeftWrist.position,
-    );
-    // console.log('angle: ', indexMCPAngle);
-    const indexMCPRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -indexMCPAngle);
-    leftIndexMCP.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftIndexMCP.bone.rotationQuaternion,
-      indexMCPRotation,
-      0.1,
+      leftIndexMCP.bone,
     );
 
-    const middlePIPAngle = Math.PI - angleBetweenVectors3D(
+    // ---- Middle ----
+    this.guideCurlFinger(
       poseLeftMiddleDIP.position,
       poseLeftMiddlePIP.position,
       poseLeftMiddleMCP.position,
+      leftMiddlePIP.bone,
     );
-    const middlePIPRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -middlePIPAngle);
-    leftMiddlePIP.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftMiddlePIP.bone.rotationQuaternion,
-      middlePIPRotation,
-      0.1,
-    );
-
-    const middleDIPAngle = Math.PI - angleBetweenVectorsNormal(
+    this.guideCurlFinger(
       poseLeftMiddleTIP.position,
       poseLeftMiddleDIP.position,
       poseLeftMiddlePIP.position,
+      leftMiddleDIP.bone,
     );
-    const middleDIPRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -middleDIPAngle);
-    leftMiddleDIP.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftMiddleDIP.bone.rotationQuaternion,
-      middleDIPRotation,
-      0.1,
-    );
-
-    const middleMCPAngle = Math.PI - angleBetweenVectorsNormal(
+    this.guideCurlFinger(
       poseLeftMiddlePIP.position,
       poseLeftMiddleMCP.position,
       poseLeftWrist.position,
-    );
-    const middleMCPRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -middleMCPAngle);
-    leftMiddleMCP.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftMiddleMCP.bone.rotationQuaternion,
-      middleMCPRotation,
-      0.1,
+      leftMiddleMCP.bone,
     );
 
     // ---- Ring ----
-    const ringPIPAngle = Math.PI - angleBetweenVectors3D(
+    this.guideCurlFinger(
       poseLeftRingDIP.position,
       poseLeftRingPIP.position,
       poseLeftRingMCP.position,
+      leftRingPIP.bone,
     );
-    const ringPIPRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -ringPIPAngle);
-    leftRingPIP.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftRingPIP.bone.rotationQuaternion,
-      ringPIPRotation,
-      0.1,
-    );
-
-    const ringDIPAngle = Math.PI - angleBetweenVectorsNormal(
+    this.guideCurlFinger(
       poseLeftRingTIP.position,
       poseLeftRingDIP.position,
       poseLeftRingPIP.position,
+      leftRingDIP.bone,
     );
-    const ringDIPRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -ringDIPAngle);
-    leftRingDIP.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftRingDIP.bone.rotationQuaternion,
-      ringDIPRotation,
-      0.1,
-    );
-
-    const ringMCPAngle = Math.PI - angleBetweenVectorsNormal(
+    this.guideCurlFinger(
       poseLeftRingPIP.position,
       poseLeftRingMCP.position,
       poseLeftWrist.position,
-    );
-    const ringMCPRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -ringMCPAngle);
-    leftRingMCP.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftRingMCP.bone.rotationQuaternion,
-      ringMCPRotation,
-      0.1,
+      leftRingMCP.bone,
     );
 
     // ---- Pinky ----
-    const pinkyPIPAngle = Math.PI - angleBetweenVectorsNormal(
+    this.guideCurlFinger(
       poseLeftPinkyDIP.position,
       poseLeftPinkyPIP.position,
       poseLeftPinkyMCP.position,
+      leftPinkyPIP.bone,
     );
-    const pinkyPIPRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -pinkyPIPAngle);
-    leftPinkyPIP.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftPinkyPIP.bone.rotationQuaternion,
-      pinkyPIPRotation,
-      0.1,
-    );
-
-    const pinkyDIPAngle = Math.PI - angleBetweenVectorsNormal(
+    this.guideCurlFinger(
       poseLeftPinkyTIP.position,
       poseLeftPinkyDIP.position,
       poseLeftPinkyPIP.position,
+      leftPinkyDIP.bone,
     );
-    const pinkyDIPRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -pinkyDIPAngle);
-    leftPinkyDIP.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftPinkyDIP.bone.rotationQuaternion,
-      pinkyDIPRotation,
-      0.1,
-    );
-
-    const pinkyMCPAngle = Math.PI - angleBetweenVectorsNormal(
+    this.guideCurlFinger(
       poseLeftPinkyPIP.position,
       poseLeftPinkyMCP.position,
       poseLeftWrist.position,
-    );
-    const pinkyMCPRotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -pinkyMCPAngle);
-    leftPinkyMCP.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
-      leftPinkyMCP.bone.rotationQuaternion,
-      pinkyMCPRotation,
-      0.1,
+      leftPinkyMCP.bone,
     );
   }
 }
