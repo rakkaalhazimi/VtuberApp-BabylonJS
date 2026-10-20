@@ -607,11 +607,13 @@ export class MMDMovementGuider {
 
     if (
       !leftWrist
-      || !leftIndexMCP || !leftMiddleMCP || !leftRingMCP || !leftPinkyMCP
-      || !leftIndexPIP || !leftMiddlePIP || !leftRingPIP || !leftPinkyPIP
-      || !leftIndexDIP || !leftMiddleDIP || !leftRingDIP || !leftPinkyDIP
-      || !leftIndexTIP || !leftMiddleTIP || !leftRingTIP || !leftPinkyTIP
-    ) return;
+      || !leftIndexMCP || !leftIndexPIP || !leftIndexDIP || !leftIndexTIP
+      || !leftMiddleMCP || !leftMiddlePIP || !leftMiddleDIP || !leftMiddleTIP
+      || !leftRingMCP || !leftRingPIP || !leftRingDIP || !leftRingTIP
+      || !leftPinkyMCP || !leftPinkyPIP || !leftPinkyDIP || !leftPinkyTIP
+    ) {
+      return;
+    }
 
     const poseLeftWrist = parseLandmark(handLandmarks[HandLandmarkerPoint.WRIST]);
     const poseLeftIndexMCP = parseLandmark(handLandmarks[HandLandmarkerPoint.INDEX_FINGER_MCP]);
