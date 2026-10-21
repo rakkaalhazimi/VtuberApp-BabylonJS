@@ -605,12 +605,17 @@ export class MMDMovementGuider {
     const leftPinkyDIP = this.boneManager.getBoneByName(boneTranslations.LEFT_LITTLE_FINGER_3.localName);
     const leftPinkyTIP = this.boneManager.getBoneByName(boneTranslations.LEFT_LITTLE_FINGER_TIP.localName);
 
+    const leftThumbMCP = this.boneManager.getBoneByName(boneTranslations.LEFT_THUMB_1.localName);
+    const leftThumbIP = this.boneManager.getBoneByName(boneTranslations.LEFT_THUMB_2.localName);
+    const leftThumbTIP = this.boneManager.getBoneByName(boneTranslations.LEFT_THUMB_TIP.localName);
+
     if (
       !leftWrist
       || !leftIndexMCP || !leftIndexPIP || !leftIndexDIP || !leftIndexTIP
       || !leftMiddleMCP || !leftMiddlePIP || !leftMiddleDIP || !leftMiddleTIP
       || !leftRingMCP || !leftRingPIP || !leftRingDIP || !leftRingTIP
       || !leftPinkyMCP || !leftPinkyPIP || !leftPinkyDIP || !leftPinkyTIP
+      || !leftThumbMCP || !leftThumbIP || !leftThumbTIP
     ) {
       return;
     }
@@ -635,6 +640,11 @@ export class MMDMovementGuider {
     const poseLeftPinkyDIP = parseLandmark(handLandmarks[HandLandmarkerPoint.PINKY_DIP]);
     const poseLeftPinkyPIP = parseLandmark(handLandmarks[HandLandmarkerPoint.PINKY_PIP]);
     const poseLeftPinkyTIP = parseLandmark(handLandmarks[HandLandmarkerPoint.PINKY_TIP]);
+
+    const poseLeftThumbCMC = parseLandmark(handLandmarks[HandLandmarkerPoint.THUMB_CMC]);
+    const poseLeftThumbMCP = parseLandmark(handLandmarks[HandLandmarkerPoint.THUMB_MCP]);
+    const poseLeftThumbIP = parseLandmark(handLandmarks[HandLandmarkerPoint.THUMB_IP]);
+    const poseLeftThumbTIP = parseLandmark(handLandmarks[HandLandmarkerPoint.THUMB_TIP]);
 
 
     // ---- Index ----
@@ -715,6 +725,21 @@ export class MMDMovementGuider {
       poseLeftPinkyMCP.position,
       poseLeftWrist.position,
       leftPinkyMCP.bone,
+    );
+
+    // ---- Thumb ----
+    this.guideCurlFinger(
+      poseLeftThumbTIP.position,
+      poseLeftThumbIP.position,
+      poseLeftThumbMCP.position,
+      leftThumbIP.bone,
+    );
+
+    this.guideCurlFinger(
+      poseLeftThumbIP.position,
+      poseLeftThumbMCP.position,
+      poseLeftThumbCMC.position,
+      leftThumbMCP.bone,
     );
   }
 }
