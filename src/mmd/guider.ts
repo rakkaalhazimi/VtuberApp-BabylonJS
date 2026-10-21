@@ -46,6 +46,10 @@ export class MMDMovementGuider {
     return (newValue - oldValue) * 0.05;
   }
 
+  rotateBone() {
+
+  }
+
   guideHeadMovement(result: PoseLandmarkerResult) {
     const landmarks = result.worldLandmarks[0];
     if (!landmarks) return;
@@ -570,8 +574,12 @@ export class MMDMovementGuider {
     );
   }
 
-  guideCurlFinger(a: BABYLON.Vector3, b: BABYLON.Vector3, c: BABYLON.Vector3, bone: BABYLON.Bone) {
+  getFingerAngle(a: BABYLON.Vector3, b: BABYLON.Vector3, c: BABYLON.Vector3) {
     const angle = Math.PI - 0.2 - angleBetweenVectorsNormal(a, b, c);
+    return angle;
+  }
+
+  guideCurlFinger(angle: number, bone: BABYLON.Bone) {
     const rotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -angle);
     bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
       bone.rotationQuaternion,
@@ -648,98 +656,106 @@ export class MMDMovementGuider {
 
 
     // ---- Index ----
-    this.guideCurlFinger(
+    const leftIndexPIPAngle = this.getFingerAngle(
       poseLeftIndexDIP.position,
       poseLeftIndexPIP.position,
       poseLeftIndexMCP.position,
-      leftIndexPIP.bone,
     );
-    this.guideCurlFinger(
+    this.guideCurlFinger(leftIndexPIPAngle, leftIndexPIP.bone);
+
+    const leftIndexDIPAngle = this.getFingerAngle(
       poseLeftIndexTIP.position,
       poseLeftIndexDIP.position,
       poseLeftIndexPIP.position,
-      leftIndexDIP.bone,
     );
-    this.guideCurlFinger(
+    this.guideCurlFinger(leftIndexDIPAngle, leftIndexDIP.bone);
+
+    const leftIndexMCPAngle = this.getFingerAngle(
       poseLeftIndexPIP.position,
       poseLeftIndexMCP.position,
       poseLeftWrist.position,
-      leftIndexMCP.bone,
     );
+    this.guideCurlFinger(leftIndexMCPAngle, leftIndexMCP.bone);
 
     // ---- Middle ----
-    this.guideCurlFinger(
+    const leftMiddlePIPAngle = this.getFingerAngle(
       poseLeftMiddleDIP.position,
       poseLeftMiddlePIP.position,
       poseLeftMiddleMCP.position,
-      leftMiddlePIP.bone,
     );
-    this.guideCurlFinger(
+    this.guideCurlFinger(leftMiddlePIPAngle, leftMiddlePIP.bone);
+
+    const leftMiddleDIPAngle = this.getFingerAngle(
       poseLeftMiddleTIP.position,
       poseLeftMiddleDIP.position,
       poseLeftMiddlePIP.position,
-      leftMiddleDIP.bone,
     );
-    this.guideCurlFinger(
+    this.guideCurlFinger(leftMiddleDIPAngle, leftMiddleDIP.bone);
+
+    const leftMiddleMCPAngle = this.getFingerAngle(
       poseLeftMiddlePIP.position,
       poseLeftMiddleMCP.position,
       poseLeftWrist.position,
-      leftMiddleMCP.bone,
     );
+    this.guideCurlFinger(leftMiddleMCPAngle, leftMiddleMCP.bone);
 
     // ---- Ring ----
-    this.guideCurlFinger(
+    const leftRingPIPAngle = this.getFingerAngle(
       poseLeftRingDIP.position,
       poseLeftRingPIP.position,
       poseLeftRingMCP.position,
-      leftRingPIP.bone,
     );
-    this.guideCurlFinger(
+    this.guideCurlFinger(leftRingPIPAngle, leftRingPIP.bone);
+
+    const leftRingDIPAngle = this.getFingerAngle(
       poseLeftRingTIP.position,
       poseLeftRingDIP.position,
       poseLeftRingPIP.position,
-      leftRingDIP.bone,
     );
-    this.guideCurlFinger(
+    this.guideCurlFinger(leftRingDIPAngle, leftRingDIP.bone);
+
+    const leftRingMCPAngle = this.getFingerAngle(
       poseLeftRingPIP.position,
       poseLeftRingMCP.position,
       poseLeftWrist.position,
-      leftRingMCP.bone,
     );
+    this.guideCurlFinger(leftRingMCPAngle, leftRingMCP.bone);
 
     // ---- Pinky ----
-    this.guideCurlFinger(
+    const leftPinkyPIPAngle = this.getFingerAngle(
       poseLeftPinkyDIP.position,
       poseLeftPinkyPIP.position,
       poseLeftPinkyMCP.position,
-      leftPinkyPIP.bone,
     );
-    this.guideCurlFinger(
+    this.guideCurlFinger(leftPinkyPIPAngle, leftPinkyPIP.bone);
+
+    const leftPinkyDIPAngle = this.getFingerAngle(
       poseLeftPinkyTIP.position,
       poseLeftPinkyDIP.position,
       poseLeftPinkyPIP.position,
-      leftPinkyDIP.bone,
     );
-    this.guideCurlFinger(
+    this.guideCurlFinger(leftPinkyDIPAngle, leftPinkyDIP.bone);
+
+    const leftPinkyMCPAngle = this.getFingerAngle(
       poseLeftPinkyPIP.position,
       poseLeftPinkyMCP.position,
       poseLeftWrist.position,
-      leftPinkyMCP.bone,
     );
+    this.guideCurlFinger(leftPinkyMCPAngle, leftPinkyMCP.bone);
 
     // ---- Thumb ----
-    this.guideCurlFinger(
+    const leftThumbIPAngle = this.getFingerAngle(
       poseLeftThumbTIP.position,
       poseLeftThumbIP.position,
       poseLeftThumbMCP.position,
-      leftThumbIP.bone,
     );
+    this.guideCurlFinger(leftThumbIPAngle, leftThumbIP.bone);
 
-    this.guideCurlFinger(
+    const leftThumbMCPAngle = this.getFingerAngle(
       poseLeftThumbIP.position,
       poseLeftThumbMCP.position,
       poseLeftThumbCMC.position,
-      leftThumbMCP.bone,
     );
+    this.guideCurlFinger(leftThumbMCPAngle, leftThumbMCP.bone);
   }
 }
