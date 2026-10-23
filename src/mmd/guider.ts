@@ -675,7 +675,6 @@ export class MMDMovementGuider {
       poseLeftIndexMCP.position,
       poseLeftWrist.position,
     );
-    this.guideCurlFinger(leftIndexMCPAngle, leftIndexMCP.bone);
 
     // ---- Middle ----
     const leftMiddlePIPAngle = this.getFingerAngle(
@@ -697,7 +696,6 @@ export class MMDMovementGuider {
       poseLeftMiddleMCP.position,
       poseLeftWrist.position,
     );
-    this.guideCurlFinger(leftMiddleMCPAngle, leftMiddleMCP.bone);
 
     // ---- Ring ----
     const leftRingPIPAngle = this.getFingerAngle(
@@ -719,7 +717,6 @@ export class MMDMovementGuider {
       poseLeftRingMCP.position,
       poseLeftWrist.position,
     );
-    this.guideCurlFinger(leftRingMCPAngle, leftRingMCP.bone);
 
     // ---- Pinky ----
     const leftPinkyPIPAngle = this.getFingerAngle(
@@ -741,7 +738,6 @@ export class MMDMovementGuider {
       poseLeftPinkyMCP.position,
       poseLeftWrist.position,
     );
-    this.guideCurlFinger(leftPinkyMCPAngle, leftPinkyMCP.bone);
 
     // ---- Thumb ----
     const leftThumbIPAngle = this.getFingerAngle(
@@ -749,7 +745,7 @@ export class MMDMovementGuider {
       poseLeftThumbIP.position,
       poseLeftThumbMCP.position,
     );
-    this.guideCurlFinger(leftThumbIPAngle, leftThumbIP.bone);
+    this.guideTwistFinger(leftThumbIPAngle, leftThumbIP.bone);
 
     const leftThumbMCPAngle = this.getFingerAngle(
       poseLeftThumbIP.position,
@@ -757,5 +753,28 @@ export class MMDMovementGuider {
       poseLeftThumbCMC.position,
     );
     this.guideCurlFinger(leftThumbMCPAngle, leftThumbMCP.bone);
+
+
+    // MCP Angle
+    const mcpAngles = [
+      leftIndexMCPAngle,
+      leftMiddleMCPAngle,
+      leftRingMCPAngle,
+      leftPinkyMCPAngle,
+    ];
+
+    if (mcpAngles.every(item => item > 0.499)) {
+      const maxAngle = Math.max(...mcpAngles);
+      this.guideCurlFinger(maxAngle, leftIndexMCP.bone);
+      this.guideCurlFinger(maxAngle, leftMiddleMCP.bone);
+      this.guideCurlFinger(maxAngle, leftRingMCP.bone);
+      this.guideCurlFinger(maxAngle, leftPinkyMCP.bone);
+
+    } else {
+      this.guideCurlFinger(leftIndexMCPAngle, leftIndexMCP.bone);
+      this.guideCurlFinger(leftMiddleMCPAngle, leftMiddleMCP.bone);
+      this.guideCurlFinger(leftRingMCPAngle, leftRingMCP.bone);
+      this.guideCurlFinger(leftPinkyMCPAngle, leftPinkyMCP.bone);
+    }
   }
 }
