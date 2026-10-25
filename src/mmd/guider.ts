@@ -575,6 +575,11 @@ export class MMDMovementGuider {
   }
 
   getTwistFingerAngle(a: BABYLON.Vector3, b: BABYLON.Vector3, c: BABYLON.Vector3) {
+    const angle = angleBetweenVectorsNormal(a, b, c);
+    return angle;
+  }
+
+  getCurlThumbAngle(a: BABYLON.Vector3, b: BABYLON.Vector3, c: BABYLON.Vector3) {
     const angle = Math.PI - angleBetweenVectorsNormal(a, b, c);
     return angle;
   }
@@ -593,8 +598,17 @@ export class MMDMovementGuider {
     );
   }
 
-  guideTwistFinger(angle: number, bone: BABYLON.Bone) {
+  guideCurlThumb(angle: number, bone: BABYLON.Bone) {
     const rotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Right(), -angle);
+    bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      bone.rotationQuaternion,
+      rotation,
+      0.1,
+    );
+  }
+
+  guideTwistFinger(angle: number, bone: BABYLON.Bone) {
+    const rotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Right(), angle);
     bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
       bone.rotationQuaternion,
       rotation,
@@ -755,19 +769,28 @@ export class MMDMovementGuider {
     );
 
     // ---- Thumb ----
-    const leftThumbIPAngle = this.getTwistFingerAngle(
+    const leftThumbIPAngle = this.getCurlThumbAngle(
       poseLeftThumbTIP.position,
       poseLeftThumbIP.position,
       poseLeftThumbMCP.position,
     );
-    this.guideTwistFinger(leftThumbIPAngle, leftThumbIP.bone);
+    this.guideCurlThumb(leftThumbIPAngle, leftThumbIP.bone);
+
+    const baseThumbAngle = this.getTwistFingerAngle(
+      leftThumbIP.restPosition,
+      leftThumbMCP.restPosition,
+      leftIndexDIP.restPosition,
+    );
+    // console.log('Base Angle: ', baseThumbAngle);
 
     const leftThumbMCPAngle = this.getTwistFingerAngle(
       poseLeftThumbIP.position,
       poseLeftThumbMCP.position,
-      poseLeftThumbCMC.position,
-    );
+      poseLeftIndexDIP.position,
+    ) - baseThumbAngle;
     this.guideTwistFinger(leftThumbMCPAngle, leftThumbMCP.bone);
+    // console.log('Thumb MCP: ', leftThumbMCPAngle);
+
 
 
     // MCP Angle
