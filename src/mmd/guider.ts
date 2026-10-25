@@ -627,6 +627,7 @@ export class MMDMovementGuider {
     const leftPinkyDIP = this.boneManager.getBoneByName(boneTranslations.LEFT_LITTLE_FINGER_3.localName);
     const leftPinkyTIP = this.boneManager.getBoneByName(boneTranslations.LEFT_LITTLE_FINGER_TIP.localName);
 
+    const leftThumbCMC = this.boneManager.getBoneByName(boneTranslations.LEFT_THUMB_0.localName);
     const leftThumbMCP = this.boneManager.getBoneByName(boneTranslations.LEFT_THUMB_1.localName);
     const leftThumbIP = this.boneManager.getBoneByName(boneTranslations.LEFT_THUMB_2.localName);
     const leftThumbTIP = this.boneManager.getBoneByName(boneTranslations.LEFT_THUMB_TIP.localName);
@@ -637,7 +638,7 @@ export class MMDMovementGuider {
       || !leftMiddleMCP || !leftMiddlePIP || !leftMiddleDIP || !leftMiddleTIP
       || !leftRingMCP || !leftRingPIP || !leftRingDIP || !leftRingTIP
       || !leftPinkyMCP || !leftPinkyPIP || !leftPinkyDIP || !leftPinkyTIP
-      || !leftThumbMCP || !leftThumbIP || !leftThumbTIP
+      || !leftThumbMCP || !leftThumbIP || !leftThumbTIP || !leftThumbCMC
     ) {
       return;
     }
