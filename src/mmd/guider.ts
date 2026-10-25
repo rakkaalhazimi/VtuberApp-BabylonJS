@@ -31,6 +31,8 @@ const HEAD_PITCH_LIMIT = BABYLON.Angle.FromDegrees(30).radians();
 const HEAD_YAW_LIMIT = BABYLON.Angle.FromDegrees(40).radians();
 const HEAD_ROLL_LIMIT = BABYLON.Angle.FromDegrees(25).radians();
 
+const FINGER_CURL_THRESHOLD = 0.499;
+
 
 export class MMDMovementGuider {
 
@@ -801,7 +803,7 @@ export class MMDMovementGuider {
       leftPinkyMCPAngle,
     ];
 
-    if (mcpAngles.every(item => item > 0.499)) {
+    if (mcpAngles.every(item => item > FINGER_CURL_THRESHOLD)) {
       const maxAngle = Math.max(...mcpAngles);
       this.guideCurlFinger(maxAngle, leftIndexMCP.bone);
       this.guideCurlFinger(maxAngle, leftMiddleMCP.bone);
