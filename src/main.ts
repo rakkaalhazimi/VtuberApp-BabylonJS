@@ -169,6 +169,7 @@ const createScene = async () => {
     if (handResult) {
       hand.drawHandLandmarks(handCtx!, handResult);
       guider.guideLeftFingersMovement(handResult);
+      guider.guideRightFingersMovement(handResult);
     };
 
     if (poseResult && handResult) {

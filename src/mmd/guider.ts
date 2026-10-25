@@ -591,8 +591,8 @@ export class MMDMovementGuider {
     return angle;
   }
 
-  guideCurlFinger(angle: number, bone: BABYLON.Bone) {
-    const rotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), -angle);
+  guideCurlFinger(angle: number, bone: BABYLON.Bone, direction: number = -1) {
+    const rotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Forward(), direction * angle);
     bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
       bone.rotationQuaternion,
       rotation,
@@ -600,8 +600,8 @@ export class MMDMovementGuider {
     );
   }
 
-  guideCurlThumb(angle: number, bone: BABYLON.Bone) {
-    const rotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Right(), -angle);
+  guideCurlThumb(angle: number, bone: BABYLON.Bone, direction: number = -1) {
+    const rotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Right(), direction * angle);
     bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
       bone.rotationQuaternion,
       rotation,
@@ -609,8 +609,8 @@ export class MMDMovementGuider {
     );
   }
 
-  guideTwistFinger(angle: number, bone: BABYLON.Bone) {
-    const rotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Right(), angle);
+  guideTwistFinger(angle: number, bone: BABYLON.Bone, direction: number = 1) {
+    const rotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Right(), direction * angle);
     bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
       bone.rotationQuaternion,
       rotation,
@@ -795,26 +795,237 @@ export class MMDMovementGuider {
 
 
 
-    // MCP Angle
-    const mcpAngles = [
-      leftIndexMCPAngle,
-      leftMiddleMCPAngle,
-      leftRingMCPAngle,
-      leftPinkyMCPAngle,
-    ];
+    // Finger Curls
+    const fingerCurlMap = [
+      [leftIndexMCPAngle, leftIndexMCP.bone],
+      [leftMiddleMCPAngle, leftMiddleMCP.bone],
+      [leftRingMCPAngle, leftRingMCP.bone],
+      [leftPinkyMCPAngle, leftPinkyMCP.bone],
+    ] as const;
 
-    if (mcpAngles.every(item => item > FINGER_CURL_THRESHOLD)) {
-      const maxAngle = Math.max(...mcpAngles);
-      this.guideCurlFinger(maxAngle, leftIndexMCP.bone);
-      this.guideCurlFinger(maxAngle, leftMiddleMCP.bone);
-      this.guideCurlFinger(maxAngle, leftRingMCP.bone);
-      this.guideCurlFinger(maxAngle, leftPinkyMCP.bone);
+    const curledFingers = fingerCurlMap.filter(item => item[0] > FINGER_CURL_THRESHOLD);
+    const uncurledFingers = fingerCurlMap.filter(item => item[0] < FINGER_CURL_THRESHOLD);
+    const maxCurlAngle = Math.max(...curledFingers.map(item => item[0]));
 
-    } else {
-      this.guideCurlFinger(leftIndexMCPAngle, leftIndexMCP.bone);
-      this.guideCurlFinger(leftMiddleMCPAngle, leftMiddleMCP.bone);
-      this.guideCurlFinger(leftRingMCPAngle, leftRingMCP.bone);
-      this.guideCurlFinger(leftPinkyMCPAngle, leftPinkyMCP.bone);
+    for (const [_, bone] of curledFingers) {
+      this.guideCurlFinger(maxCurlAngle, bone);
+    }
+
+    for (const [angle, bone] of uncurledFingers) {
+      this.guideCurlFinger(0, bone);
+    }
+
+    // const mcpAngles = [
+    //   leftIndexMCPAngle,
+    //   leftMiddleMCPAngle,
+    //   leftRingMCPAngle,
+    //   leftPinkyMCPAngle,
+    // ];
+
+    // if (mcpAngles.every(item => item > FINGER_CURL_THRESHOLD)) {
+    //   const maxAngle = Math.max(...mcpAngles);
+    //   this.guideCurlFinger(maxAngle, leftIndexMCP.bone);
+    //   this.guideCurlFinger(maxAngle, leftMiddleMCP.bone);
+    //   this.guideCurlFinger(maxAngle, leftRingMCP.bone);
+    //   this.guideCurlFinger(maxAngle, leftPinkyMCP.bone);
+
+    // } else {
+    //   this.guideCurlFinger(leftIndexMCPAngle, leftIndexMCP.bone);
+    //   this.guideCurlFinger(leftMiddleMCPAngle, leftMiddleMCP.bone);
+    //   this.guideCurlFinger(leftRingMCPAngle, leftRingMCP.bone);
+    //   this.guideCurlFinger(leftPinkyMCPAngle, leftPinkyMCP.bone);
+    // }
+  }
+
+  guideRightFingersMovement(hand: HandLandmarkerResult) {
+    const handLandmarks = HandLandmarkerEstimation.GetRightHand(hand);
+    if (!handLandmarks) return;
+
+    const rightWrist = this.boneManager.getBoneByName(boneTranslations.RIGHT_WRIST.localName);
+    const rightIndexMCP = this.boneManager.getBoneByName(boneTranslations.RIGHT_INDEX_FINGER_1.localName);
+    const rightIndexPIP = this.boneManager.getBoneByName(boneTranslations.RIGHT_INDEX_FINGER_2.localName);
+    const rightIndexDIP = this.boneManager.getBoneByName(boneTranslations.RIGHT_INDEX_FINGER_3.localName);
+    const rightIndexTIP = this.boneManager.getBoneByName(boneTranslations.RIGHT_INDEX_FINGER_TIP.localName);
+
+    const rightMiddleMCP = this.boneManager.getBoneByName(boneTranslations.RIGHT_MIDDLE_FINGER_1.localName);
+    const rightMiddlePIP = this.boneManager.getBoneByName(boneTranslations.RIGHT_MIDDLE_FINGER_2.localName);
+    const rightMiddleDIP = this.boneManager.getBoneByName(boneTranslations.RIGHT_MIDDLE_FINGER_3.localName);
+    const rightMiddleTIP = this.boneManager.getBoneByName(boneTranslations.RIGHT_MIDDLE_FINGER_TIP.localName);
+
+    const rightRingMCP = this.boneManager.getBoneByName(boneTranslations.RIGHT_RING_FINGER_1.localName);
+    const rightRingPIP = this.boneManager.getBoneByName(boneTranslations.RIGHT_RING_FINGER_2.localName);
+    const rightRingDIP = this.boneManager.getBoneByName(boneTranslations.RIGHT_RING_FINGER_3.localName);
+    const rightRingTIP = this.boneManager.getBoneByName(boneTranslations.RIGHT_RING_FINGER_TIP.localName);
+
+    const rightPinkyMCP = this.boneManager.getBoneByName(boneTranslations.RIGHT_LITTLE_FINGER_1.localName);
+    const rightPinkyPIP = this.boneManager.getBoneByName(boneTranslations.RIGHT_LITTLE_FINGER_2.localName);
+    const rightPinkyDIP = this.boneManager.getBoneByName(boneTranslations.RIGHT_LITTLE_FINGER_3.localName);
+    const rightPinkyTIP = this.boneManager.getBoneByName(boneTranslations.RIGHT_LITTLE_FINGER_TIP.localName);
+
+    const rightThumbCMC = this.boneManager.getBoneByName(boneTranslations.RIGHT_THUMB_0.localName);
+    const rightThumbMCP = this.boneManager.getBoneByName(boneTranslations.RIGHT_THUMB_1.localName);
+    const rightThumbIP = this.boneManager.getBoneByName(boneTranslations.RIGHT_THUMB_2.localName);
+    const rightThumbTIP = this.boneManager.getBoneByName(boneTranslations.RIGHT_THUMB_TIP.localName);
+
+    if (
+      !rightWrist
+      || !rightIndexMCP || !rightIndexPIP || !rightIndexDIP || !rightIndexTIP
+      || !rightMiddleMCP || !rightMiddlePIP || !rightMiddleDIP || !rightMiddleTIP
+      || !rightRingMCP || !rightRingPIP || !rightRingDIP || !rightRingTIP
+      || !rightPinkyMCP || !rightPinkyPIP || !rightPinkyDIP || !rightPinkyTIP
+      || !rightThumbMCP || !rightThumbIP || !rightThumbTIP || !rightThumbCMC
+    ) {
+      return;
+    }
+
+    const poseRightWrist = parseLandmark(handLandmarks[HandLandmarkerPoint.WRIST]);
+    const poseRightIndexMCP = parseLandmark(handLandmarks[HandLandmarkerPoint.INDEX_FINGER_MCP]);
+    const poseRightIndexDIP = parseLandmark(handLandmarks[HandLandmarkerPoint.INDEX_FINGER_DIP]);
+    const poseRightIndexPIP = parseLandmark(handLandmarks[HandLandmarkerPoint.INDEX_FINGER_PIP]);
+    const poseRightIndexTIP = parseLandmark(handLandmarks[HandLandmarkerPoint.INDEX_FINGER_TIP]);
+
+    const poseRightMiddleMCP = parseLandmark(handLandmarks[HandLandmarkerPoint.MIDDLE_FINGER_MCP]);
+    const poseRightMiddleDIP = parseLandmark(handLandmarks[HandLandmarkerPoint.MIDDLE_FINGER_DIP]);
+    const poseRightMiddlePIP = parseLandmark(handLandmarks[HandLandmarkerPoint.MIDDLE_FINGER_PIP]);
+    const poseRightMiddleTIP = parseLandmark(handLandmarks[HandLandmarkerPoint.MIDDLE_FINGER_TIP]);
+
+    const poseRightRingMCP = parseLandmark(handLandmarks[HandLandmarkerPoint.RING_FINGER_MCP]);
+    const poseRightRingDIP = parseLandmark(handLandmarks[HandLandmarkerPoint.RING_FINGER_DIP]);
+    const poseRightRingPIP = parseLandmark(handLandmarks[HandLandmarkerPoint.RING_FINGER_PIP]);
+    const poseRightRingTIP = parseLandmark(handLandmarks[HandLandmarkerPoint.RING_FINGER_TIP]);
+
+    const poseRightPinkyMCP = parseLandmark(handLandmarks[HandLandmarkerPoint.PINKY_MCP]);
+    const poseRightPinkyDIP = parseLandmark(handLandmarks[HandLandmarkerPoint.PINKY_DIP]);
+    const poseRightPinkyPIP = parseLandmark(handLandmarks[HandLandmarkerPoint.PINKY_PIP]);
+    const poseRightPinkyTIP = parseLandmark(handLandmarks[HandLandmarkerPoint.PINKY_TIP]);
+
+    const poseRightThumbMCP = parseLandmark(handLandmarks[HandLandmarkerPoint.THUMB_MCP]);
+    const poseRightThumbIP = parseLandmark(handLandmarks[HandLandmarkerPoint.THUMB_IP]);
+    const poseRightThumbTIP = parseLandmark(handLandmarks[HandLandmarkerPoint.THUMB_TIP]);
+
+    // ---- Index ----
+    const rightIndexPIPAngle = this.getCurlFingerAngle(
+      poseRightIndexDIP.position,
+      poseRightIndexPIP.position,
+      poseRightIndexMCP.position,
+    );
+    this.guideCurlFinger(rightIndexPIPAngle, rightIndexPIP.bone, 1);
+
+    const rightIndexDIPAngle = this.getCurlFingerAngle(
+      poseRightIndexTIP.position,
+      poseRightIndexDIP.position,
+      poseRightIndexPIP.position,
+    );
+    this.guideCurlFinger(rightIndexDIPAngle, rightIndexDIP.bone, 1);
+
+    const rightIndexMCPAngle = this.getCurlFingerAngle(
+      poseRightIndexPIP.position,
+      poseRightIndexMCP.position,
+      poseRightWrist.position,
+    );
+
+    // ---- Middle ----
+    const rightMiddlePIPAngle = this.getCurlFingerAngle(
+      poseRightMiddleDIP.position,
+      poseRightMiddlePIP.position,
+      poseRightMiddleMCP.position,
+    );
+    this.guideCurlFinger(rightMiddlePIPAngle, rightMiddlePIP.bone, 1);
+
+    const rightMiddleDIPAngle = this.getCurlFingerAngle(
+      poseRightMiddleTIP.position,
+      poseRightMiddleDIP.position,
+      poseRightMiddlePIP.position,
+    );
+    this.guideCurlFinger(rightMiddleDIPAngle, rightMiddleDIP.bone, 1);
+
+    const rightMiddleMCPAngle = this.getCurlFingerAngle(
+      poseRightMiddlePIP.position,
+      poseRightMiddleMCP.position,
+      poseRightWrist.position,
+    );
+
+    // ---- Ring ----
+    const rightRingPIPAngle = this.getCurlFingerAngle(
+      poseRightRingDIP.position,
+      poseRightRingPIP.position,
+      poseRightRingMCP.position,
+    );
+    this.guideCurlFinger(rightRingPIPAngle, rightRingPIP.bone, 1);
+
+    const rightRingDIPAngle = this.getCurlFingerAngle(
+      poseRightRingTIP.position,
+      poseRightRingDIP.position,
+      poseRightRingPIP.position,
+    );
+    this.guideCurlFinger(rightRingDIPAngle, rightRingDIP.bone, 1);
+
+    const rightRingMCPAngle = this.getCurlFingerAngle(
+      poseRightRingPIP.position,
+      poseRightRingMCP.position,
+      poseRightWrist.position,
+    );
+
+    // ---- Pinky ----
+    const rightPinkyPIPAngle = this.getCurlFingerAngle(
+      poseRightPinkyDIP.position,
+      poseRightPinkyPIP.position,
+      poseRightPinkyMCP.position,
+    );
+    this.guideCurlFinger(rightPinkyPIPAngle, rightPinkyPIP.bone, 1);
+
+    const rightPinkyDIPAngle = this.getCurlFingerAngle(
+      poseRightPinkyTIP.position,
+      poseRightPinkyDIP.position,
+      poseRightPinkyPIP.position,
+    );
+    this.guideCurlFinger(rightPinkyDIPAngle, rightPinkyDIP.bone, 1);
+
+    const rightPinkyMCPAngle = this.getCurlFingerAngle(
+      poseRightPinkyPIP.position,
+      poseRightPinkyMCP.position,
+      poseRightWrist.position,
+    );
+
+    // ---- Thumb ----
+    const rightThumbIPAngle = this.getCurlThumbAngle(
+      poseRightThumbTIP.position,
+      poseRightThumbIP.position,
+      poseRightThumbMCP.position,
+    );
+    this.guideCurlThumb(rightThumbIPAngle, rightThumbIP.bone);
+
+    const baseThumbAngle = this.getTwistFingerAngle(
+      rightThumbIP.restPosition,
+      rightThumbMCP.restPosition,
+      rightIndexDIP.restPosition,
+    );
+
+    const rightThumbMCPAngle = this.getTwistFingerAngle(
+      poseRightThumbIP.position,
+      poseRightThumbMCP.position,
+      poseRightIndexDIP.position,
+    ) - baseThumbAngle;
+    this.guideTwistFinger(rightThumbMCPAngle, rightThumbMCP.bone, -1);
+
+    // Finger Curls
+    const fingerCurlMap = [
+      [rightIndexMCPAngle, rightIndexMCP.bone],
+      [rightMiddleMCPAngle, rightMiddleMCP.bone],
+      [rightRingMCPAngle, rightRingMCP.bone],
+      [rightPinkyMCPAngle, rightPinkyMCP.bone],
+    ] as const;
+
+    const curledFingers = fingerCurlMap.filter(item => item[0] > FINGER_CURL_THRESHOLD);
+    const uncurledFingers = fingerCurlMap.filter(item => item[0] < FINGER_CURL_THRESHOLD);
+    const maxCurlAngle = Math.max(...curledFingers.map(item => item[0]));
+
+    for (const [_, bone] of curledFingers) {
+      this.guideCurlFinger(maxCurlAngle, bone, 1);
+    }
+
+    for (const [, bone] of uncurledFingers) {
+      this.guideCurlFinger(0, bone, 1);
     }
   }
 }
