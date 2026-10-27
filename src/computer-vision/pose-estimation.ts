@@ -71,15 +71,11 @@ export interface PoseLandmarkerOptions {
 }
 
 export class PoseLandmarkerEstimation {
-  public videoWidth: number;
-  public videoHeight: number;
   public landmarker: PoseLandmarker | undefined;
   public ctx: CanvasRenderingContext2D | undefined = undefined;
   public isEnabled: boolean = false;
 
-  constructor(width: number, height: number) {
-    this.videoHeight = height;
-    this.videoWidth = width;
+  constructor() {
   }
 
   async loadPoseLandmarkerDetector(options: PoseLandmarkerOptions = {}) {
