@@ -12,8 +12,8 @@ import { MMDMovementGuider } from '@/mmd/guider';
 // import { loopBack } from '@/utils';
 import { VideoCamera } from '@/video/video';
 import { HandLandmarkerEstimation } from './computer-vision/hand-landmarker';
+import { PoseLandmarkerDrawer } from './computer-vision/pose-drawer';
 import { PoseEMAFilter } from './computer-vision/pose-ema-filter';
-import { getPhysicalPalmTwist } from './utils';
 
 
 
@@ -118,10 +118,17 @@ const createScene = async () => {
   const videoCamera = new VideoCamera('video');
   videoCamera.enableCamera();
 
+  const videoCanvas = document.getElementById('video-canvas') as HTMLCanvasElement;
+  const handCanvas = document.getElementById('hand-canvas') as HTMLCanvasElement;
+
+  const ctx = videoCanvas.getContext('2d');
+  const handCtx = handCanvas.getContext('2d');
+
 
   // Pose Estimation
   const pose = new PoseLandmarkerEstimation(videoCamera.width, videoCamera.height);
   await pose.loadPoseLandmarkerDetector();
+  const poseDrawer = new PoseLandmarkerDrawer(videoCamera.width, videoCamera.height);
 
   const hand = new HandLandmarkerEstimation(videoCamera);
   await hand.loadHandLandmarkerDetector();
@@ -142,19 +149,13 @@ const createScene = async () => {
   // console.log(poseResult);
   const guider = new MMDMovementGuider(mmdModel);
 
-  const videoCanvas = document.getElementById('video-canvas') as HTMLCanvasElement;
-  const handCanvas = document.getElementById('hand-canvas') as HTMLCanvasElement;
-
-  const ctx = videoCanvas.getContext('2d');
-  const handCtx = handCanvas.getContext('2d');
-
   scene.onBeforeRenderObservable.add(async () => {
     const poseResult = await pose.estimatePose(videoCamera.video);
     const filteredPoseResult = poseEmaFilter.filter(poseResult);
     const handResult = await hand.estimateHand(videoCamera.video);
 
     if (filteredPoseResult) {
-      pose.drawPoseLandmarks(ctx!, filteredPoseResult);
+      poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult);
     }
 
     if (poseResult) {

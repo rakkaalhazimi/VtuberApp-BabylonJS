@@ -5,7 +5,7 @@ import type { Landmark, NormalizedLandmark, PoseLandmarkerResult } from '@mediap
 
 // Pose Landmarker keypoint pairs to connect for drawing the skeleton (33 landmarks, same
 // order as the Pose Landmarker / BlazePose model).
-const poseLandmarkerConnections = [
+export const poseLandmarkerConnections = [
   // Head and Face
   [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8],
   [9, 10],
