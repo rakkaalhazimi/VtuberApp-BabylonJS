@@ -1,7 +1,5 @@
-import * as BABYLON from '@babylonjs/core';
-import type { VideoCamera } from '@/video/video';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
-import type { Landmark, NormalizedLandmark, PoseLandmarkerResult } from '@mediapipe/tasks-vision';
+import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 
 // Pose Landmarker keypoint pairs to connect for drawing the skeleton (33 landmarks, same
 // order as the Pose Landmarker / BlazePose model).
@@ -115,60 +113,6 @@ export class PoseLandmarkerEstimation {
     }
     if (!this.isEnabled) return null;
     return this.landmarker.detectForVideo(video, performance.now());
-  }
-
-  async drawPoseLandmarks(
-    ctx: CanvasRenderingContext2D,
-    result: PoseLandmarkerResult,
-  ) {
-    const landmarks = result.landmarks[0];
-    this.ctx = ctx;
-
-    if (!landmarks) {
-      return;
-    }
-
-    // Clear previous drawings
-    ctx.clearRect(0, 0, this.videoWidth, this.videoHeight);
-
-    // Normalized landmarks are scaled to the video dimensions
-    const toCanvasX = (x: number) => x * this.videoWidth;
-    const toCanvasY = (y: number) => y * this.videoHeight;
-
-    // Draw keypoints
-    for (const keypoint of landmarks) {
-      const visibility = keypoint.visibility ?? 1;
-
-      if (visibility < POSE_CONFIDENCE_SCORE) {
-        continue;
-      }
-
-      ctx.beginPath();
-      ctx.arc(toCanvasX(keypoint.x), toCanvasY(keypoint.y), 3, 0, 2 * Math.PI);
-      ctx.fillStyle = 'red';
-      ctx.fill();
-    }
-
-    // Draw skeletons
-    for (const connections of poseLandmarkerConnections) {
-      const [index1, index2] = connections;
-      const keyPoint1 = landmarks[index1];
-      const keyPoint2 = landmarks[index2];
-
-      if (
-        (keyPoint1.visibility ?? 1) < POSE_CONFIDENCE_SCORE ||
-        (keyPoint2.visibility ?? 1) < POSE_CONFIDENCE_SCORE
-      ) {
-        continue;
-      }
-
-      ctx.beginPath();
-      ctx.moveTo(toCanvasX(keyPoint1.x), toCanvasY(keyPoint1.y));
-      ctx.lineTo(toCanvasX(keyPoint2.x), toCanvasY(keyPoint2.y));
-      ctx.strokeStyle = 'green';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
   }
 
   enablePoseLandmarks() {
