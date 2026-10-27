@@ -102,7 +102,7 @@ export class PoseLandmarkerEstimation {
     return this.landmarker;
   }
 
-  async estimatePose(video: HTMLVideoElement): Promise<PoseLandmarkerResult | null> {
+  async estimatePose(video: TexImageSource): Promise<PoseLandmarkerResult | null> {
     if (!this.landmarker) {
       throw new Error(
         'Pose landmarker is not loaded. Call loadPoseLandmarkerDetector() first.',
