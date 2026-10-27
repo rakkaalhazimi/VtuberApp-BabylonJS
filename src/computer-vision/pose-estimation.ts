@@ -79,9 +79,9 @@ export class PoseLandmarkerEstimation {
   public ctx: CanvasRenderingContext2D | undefined = undefined;
   public isEnabled: boolean = false;
 
-  constructor(public videoCamera: VideoCamera) {
-    this.videoHeight = videoCamera.height;
-    this.videoWidth = videoCamera.width;
+  constructor(width: number, height: number) {
+    this.videoHeight = height;
+    this.videoWidth = width;
   }
 
   async loadPoseLandmarkerDetector(options: PoseLandmarkerOptions = {}) {
@@ -114,7 +114,6 @@ export class PoseLandmarkerEstimation {
       );
     }
     if (!this.isEnabled) return null;
-    if (!this.videoCamera.isEnable) return null;
     return this.landmarker.detectForVideo(video, performance.now());
   }
 

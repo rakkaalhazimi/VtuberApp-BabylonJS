@@ -120,7 +120,7 @@ const createScene = async () => {
 
 
   // Pose Estimation
-  const pose = new PoseLandmarkerEstimation(videoCamera);
+  const pose = new PoseLandmarkerEstimation(videoCamera.width, videoCamera.height);
   await pose.loadPoseLandmarkerDetector();
 
   const hand = new HandLandmarkerEstimation(videoCamera);
