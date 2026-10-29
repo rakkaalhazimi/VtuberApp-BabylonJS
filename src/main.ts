@@ -4,16 +4,15 @@ import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import 'babylon-mmd/esm/Loader/pmxLoader';
 
-// import { RotateBoneCommand } from '@/command/index';
-import { PoseLandmarkerEstimation } from '@/computer-vision/pose-estimation';
+import { PoseEMAFilter } from '@/computer-vision/pose-ema-filter';
+import { HandLandmarkerDrawer } from '@/computer-vision/hand-drawer';
+import { PoseLandmarkerDrawer } from '@/computer-vision/pose-drawer';
 import { ControlGUI } from '@/gui/control';
 import { MMDGUI } from '@/gui/mmd-gui';
 import { MMDMovementGuider } from '@/mmd/guider';
-// import { loopBack } from '@/utils';
 import { VideoCamera } from '@/video/video';
-import { HandLandmarkerEstimation } from './computer-vision/hand-landmarker';
-import { PoseLandmarkerDrawer } from './computer-vision/pose-drawer';
-import { PoseEMAFilter } from './computer-vision/pose-ema-filter';
+import { HandLandmarkerWorker } from '@/worker/hand-landmarker-worker';
+import { PoseEstimationWorker } from '@/worker/pose-estimation-worker';
 
 
 
@@ -126,12 +125,11 @@ const createScene = async () => {
 
 
   // Pose Estimation
-  const pose = new PoseLandmarkerEstimation();
-  await pose.loadPoseLandmarkerDetector();
   const poseDrawer = new PoseLandmarkerDrawer(videoCamera.width, videoCamera.height);
+  const poseWorker = new PoseEstimationWorker();
 
-  const hand = new HandLandmarkerEstimation(videoCamera);
-  await hand.loadHandLandmarkerDetector();
+  const handDrawer = new HandLandmarkerDrawer(videoCamera.width, videoCamera.height);
+  const handWorker = new HandLandmarkerWorker();
 
   const poseEmaFilter = new PoseEMAFilter();
 
@@ -141,7 +139,7 @@ const createScene = async () => {
   mmdGui.createBoneGUI();
   mmdGui.createMorphGUI();
 
-  const controlGUI = new ControlGUI(videoCamera, pose, hand);
+  const controlGUI = new ControlGUI(videoCamera, poseWorker, handWorker);
   controlGUI.createControlGUI();
 
 
@@ -150,40 +148,90 @@ const createScene = async () => {
   const guider = new MMDMovementGuider(mmdModel);
 
   scene.onBeforeRenderObservable.add(async () => {
-    const poseResult = await pose.estimatePose(videoCamera.video);
-    const filteredPoseResult = poseEmaFilter.filter(poseResult);
-    const handResult = await hand.estimateHand(videoCamera.video);
+    if (poseWorker.isProcessing) return;
 
-    if (filteredPoseResult) {
-      poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult);
+    if (videoCamera.video.readyState >= 2) {
+      try {
+        poseWorker.isProcessing = true;
+        const poseResult = await poseWorker.post(
+          'POSE_ESTIMATION',
+          await createImageBitmap(videoCamera.video),
+        );
+
+        if (!poseResult) return;
+
+        const filteredPoseResult = poseEmaFilter.filter(poseResult);
+        poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult!);
+        guider.guideHeadMovement(poseResult);
+        guider.guideUpperBodyMovement(poseResult);
+        guider.guideLeftArmMovement(poseResult);
+        guider.guideRightArmMovement(poseResult);
+        guider.guideLeftElbowMovementHinge(poseResult);
+        guider.guideRightElbowMovementHinge(poseResult);
+
+      } finally {
+        poseWorker.isProcessing = false;
+      }
     }
-
-    if (poseResult) {
-      guider.guideHeadMovement(poseResult);
-      guider.guideUpperBodyMovement(poseResult);
-      guider.guideLeftArmMovement(poseResult);
-      guider.guideRightArmMovement(poseResult);
-      guider.guideLeftElbowMovementHinge(poseResult);
-      guider.guideRightElbowMovementHinge(poseResult);
-    };
-
-    if (handResult) {
-      hand.drawHandLandmarks(handCtx!, handResult);
-      guider.guideLeftFingersMovement(handResult);
-      guider.guideRightFingersMovement(handResult);
-    };
-
-    if (poseResult && handResult) {
-      guider.guideLeftForearmTwist(poseResult, handResult);
-      guider.guideRightForearmTwist(poseResult, handResult);
-    }
-
   });
 
   scene.onBeforeRenderObservable.add(async () => {
-    const handResult = await hand.estimateHand(videoCamera.video);
-    if (!handResult) return;
-    hand.drawHandLandmarks(handCtx!, handResult);
+    if (handWorker.isProcessing) return;
+
+    if (videoCamera.video.readyState >= 2) {
+      try {
+        handWorker.isProcessing = true;
+        const handResult = await handWorker.post(
+          'HAND_LANDMARK',
+          await createImageBitmap(videoCamera.video),
+        );
+
+        if (!handResult) return;
+
+        handDrawer.drawHandLandmarks(handCtx!, handResult);
+        guider.guideLeftFingersMovement(handResult);
+        guider.guideRightFingersMovement(handResult);
+
+      } finally {
+        handWorker.isProcessing = false;
+      }
+    }
+  });
+
+  scene.onBeforeRenderObservable.add(async () => {
+    // const poseResult = await pose.estimatePose(videoCamera.video);
+    // const filteredPoseResult = poseEmaFilter.filter(poseResult);
+    // const handResult = await hand.estimateHand(videoCamera.video);
+
+    // if (filteredPoseResult) {
+    // poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult);
+    // }
+
+    // if (poseResult) {
+    // guider.guideHeadMovement(poseResult);
+    // guider.guideUpperBodyMovement(poseResult);
+    // guider.guideLeftArmMovement(poseResult);
+    // guider.guideRightArmMovement(poseResult);
+    // guider.guideLeftElbowMovementHinge(poseResult);
+    // guider.guideRightElbowMovementHinge(poseResult);
+    // };
+
+    // if (handResult) {
+    // hand.drawHandLandmarks(handCtx!, handResult);
+    // guider.guideLeftFingersMovement(handResult);
+    // guider.guideRightFingersMovement(handResult);
+    // };
+
+    // if (poseResult && handResult) {
+    // guider.guideLeftForearmTwist(poseResult, handResult);
+    // guider.guideRightForearmTwist(poseResult, handResult);
+    // }
+  });
+
+  scene.onBeforeRenderObservable.add(async () => {
+    // const handResult = await hand.estimateHand(videoCamera.video);
+    // if (!handResult) return;
+    // hand.drawHandLandmarks(handCtx!, handResult);
   });
 
 

@@ -73,7 +73,7 @@ export interface PoseLandmarkerOptions {
 export class PoseLandmarkerEstimation {
   public landmarker: PoseLandmarker | undefined;
   public ctx: CanvasRenderingContext2D | undefined = undefined;
-  public isEnabled: boolean = false;
+  public isEnabled: boolean = true;
 
   constructor() {
   }
@@ -83,6 +83,7 @@ export class PoseLandmarkerEstimation {
 
     const vision = await FilesetResolver.forVisionTasks(
       options.wasmPath ?? DEFAULT_WASM_PATH,
+      true,
     );
 
     this.landmarker = await PoseLandmarker.createFromOptions(vision, {
@@ -101,7 +102,7 @@ export class PoseLandmarkerEstimation {
     return this.landmarker;
   }
 
-  async estimatePose(video: HTMLVideoElement): Promise<PoseLandmarkerResult | null> {
+  async estimatePose(video: TexImageSource): Promise<PoseLandmarkerResult | null> {
     if (!this.landmarker) {
       throw new Error(
         'Pose landmarker is not loaded. Call loadPoseLandmarkerDetector() first.',
@@ -117,6 +118,5 @@ export class PoseLandmarkerEstimation {
 
   disablePoseLandmarks() {
     this.isEnabled = false;
-    this.ctx?.clearRect(0, 0, this.videoWidth, this.videoHeight);
   }
 }
