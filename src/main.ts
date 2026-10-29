@@ -147,7 +147,7 @@ const createScene = async () => {
   mmdGui.createBoneGUI();
   mmdGui.createMorphGUI();
 
-  const controlGUI = new ControlGUI(videoCamera, pose, hand);
+  const controlGUI = new ControlGUI(videoCamera, poseWorker, hand);
   controlGUI.createControlGUI();
 
 
@@ -159,17 +159,27 @@ const createScene = async () => {
     if (poseWorker.isProcessing) return;
 
     if (videoCamera.video.readyState >= 2) {
-      poseWorker.isProcessing = true;
-      const poseResult = await poseWorker.post('POSE_ESTIMATION', await createImageBitmap(videoCamera.video));
-      const filteredPoseResult = poseEmaFilter.filter(poseResult);
-      poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult!);
-      guider.guideHeadMovement(poseResult);
-      guider.guideUpperBodyMovement(poseResult);
-      guider.guideLeftArmMovement(poseResult);
-      guider.guideRightArmMovement(poseResult);
-      guider.guideLeftElbowMovementHinge(poseResult);
-      guider.guideRightElbowMovementHinge(poseResult);
-      poseWorker.isProcessing = false;
+      try {
+        poseWorker.isProcessing = true;
+        const poseResult = await poseWorker.post(
+          'POSE_ESTIMATION',
+          await createImageBitmap(videoCamera.video),
+        );
+
+        if (!poseResult) return;
+
+        const filteredPoseResult = poseEmaFilter.filter(poseResult);
+        poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult!);
+        guider.guideHeadMovement(poseResult);
+        guider.guideUpperBodyMovement(poseResult);
+        guider.guideLeftArmMovement(poseResult);
+        guider.guideRightArmMovement(poseResult);
+        guider.guideLeftElbowMovementHinge(poseResult);
+        guider.guideRightElbowMovementHinge(poseResult);
+
+      } finally {
+        poseWorker.isProcessing = false;
+      }
     }
   });
 

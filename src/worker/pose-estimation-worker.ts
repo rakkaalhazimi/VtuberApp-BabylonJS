@@ -5,6 +5,7 @@ import type { PoseLandmarkerResult } from "@mediapipe/tasks-vision";
 export class PoseEstimationWorker {
   public worker: Worker;
   public requests = new Map();
+  public isEnabled = false;
   public isProcessing = false;
   public idCounter = 0;
 
@@ -22,11 +23,20 @@ export class PoseEstimationWorker {
     };
   }
 
-  async post(type: string, payload: unknown): Promise<PoseLandmarkerResult> {
+  async post(type: string, payload: unknown): Promise<PoseLandmarkerResult | null> {
+    if (!this.isEnabled) return new Promise((resolve) => resolve(null));
     return new Promise((resolve) => {
       const id = ++this.idCounter;
       this.requests.set(id, resolve);
       this.worker.postMessage({ id, type, payload });
     });
+  }
+
+  enableWorker() {
+    this.isEnabled = true;
+  }
+
+  disableWorker() {
+    this.isEnabled = false;
   }
 }

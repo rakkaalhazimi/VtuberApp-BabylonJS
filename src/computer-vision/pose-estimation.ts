@@ -73,7 +73,7 @@ export interface PoseLandmarkerOptions {
 export class PoseLandmarkerEstimation {
   public landmarker: PoseLandmarker | undefined;
   public ctx: CanvasRenderingContext2D | undefined = undefined;
-  public isEnabled: boolean = false;
+  public isEnabled: boolean = true;
 
   constructor() {
   }
@@ -118,6 +118,5 @@ export class PoseLandmarkerEstimation {
 
   disablePoseLandmarks() {
     this.isEnabled = false;
-    this.ctx?.clearRect(0, 0, this.videoWidth, this.videoHeight);
   }
 }
