@@ -14,6 +14,7 @@ import { VideoCamera } from '@/video/video';
 import { HandLandmarkerEstimation } from './computer-vision/hand-landmarker';
 import { PoseLandmarkerDrawer } from './computer-vision/pose-drawer';
 import { PoseEMAFilter } from './computer-vision/pose-ema-filter';
+import { PoseEstimationWorker } from './worker/pose-estimation-worker';
 
 
 
@@ -127,8 +128,9 @@ const createScene = async () => {
 
   // Pose Estimation
   const pose = new PoseLandmarkerEstimation();
-  await pose.loadPoseLandmarkerDetector();
+  // await pose.loadPoseLandmarkerDetector();
   const poseDrawer = new PoseLandmarkerDrawer(videoCamera.width, videoCamera.height);
+  const poseWorker = new PoseEstimationWorker();
 
   const hand = new HandLandmarkerEstimation(videoCamera);
   await hand.loadHandLandmarkerDetector();
@@ -150,34 +152,44 @@ const createScene = async () => {
   const guider = new MMDMovementGuider(mmdModel);
 
   scene.onBeforeRenderObservable.add(async () => {
-    const poseResult = await pose.estimatePose(videoCamera.video);
-    const filteredPoseResult = poseEmaFilter.filter(poseResult);
-    const handResult = await hand.estimateHand(videoCamera.video);
+    if (poseWorker.isProcessing) return;
 
-    if (filteredPoseResult) {
-      poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult);
+    if (videoCamera.video.readyState >= 2) {
+      poseWorker.isProcessing = true;
+      const workerResult = await poseWorker.post('POSE_ESTIMATION', await createImageBitmap(videoCamera.video));
+      poseDrawer.drawPoseLandmarks(ctx!, workerResult);
+      poseWorker.isProcessing = false;
     }
+  });
 
-    if (poseResult) {
-      guider.guideHeadMovement(poseResult);
-      guider.guideUpperBodyMovement(poseResult);
-      guider.guideLeftArmMovement(poseResult);
-      guider.guideRightArmMovement(poseResult);
-      guider.guideLeftElbowMovementHinge(poseResult);
-      guider.guideRightElbowMovementHinge(poseResult);
-    };
+  scene.onBeforeRenderObservable.add(async () => {
+    // const poseResult = await pose.estimatePose(videoCamera.video);
+    // const filteredPoseResult = poseEmaFilter.filter(poseResult);
+    // const handResult = await hand.estimateHand(videoCamera.video);
 
-    if (handResult) {
-      hand.drawHandLandmarks(handCtx!, handResult);
-      guider.guideLeftFingersMovement(handResult);
-      guider.guideRightFingersMovement(handResult);
-    };
+    // if (filteredPoseResult) {
+    // poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult);
+    // }
 
-    if (poseResult && handResult) {
-      guider.guideLeftForearmTwist(poseResult, handResult);
-      guider.guideRightForearmTwist(poseResult, handResult);
-    }
+    // if (poseResult) {
+    // guider.guideHeadMovement(poseResult);
+    // guider.guideUpperBodyMovement(poseResult);
+    // guider.guideLeftArmMovement(poseResult);
+    // guider.guideRightArmMovement(poseResult);
+    // guider.guideLeftElbowMovementHinge(poseResult);
+    // guider.guideRightElbowMovementHinge(poseResult);
+    // };
 
+    // if (handResult) {
+    // hand.drawHandLandmarks(handCtx!, handResult);
+    // guider.guideLeftFingersMovement(handResult);
+    // guider.guideRightFingersMovement(handResult);
+    // };
+
+    // if (poseResult && handResult) {
+    // guider.guideLeftForearmTwist(poseResult, handResult);
+    // guider.guideRightForearmTwist(poseResult, handResult);
+    // }
   });
 
   scene.onBeforeRenderObservable.add(async () => {
