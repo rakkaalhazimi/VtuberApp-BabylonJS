@@ -156,8 +156,15 @@ const createScene = async () => {
 
     if (videoCamera.video.readyState >= 2) {
       poseWorker.isProcessing = true;
-      const workerResult = await poseWorker.post('POSE_ESTIMATION', await createImageBitmap(videoCamera.video));
-      poseDrawer.drawPoseLandmarks(ctx!, workerResult);
+      const poseResult = await poseWorker.post('POSE_ESTIMATION', await createImageBitmap(videoCamera.video));
+      const filteredPoseResult = poseEmaFilter.filter(poseResult);
+      poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult!);
+      guider.guideHeadMovement(poseResult);
+      guider.guideUpperBodyMovement(poseResult);
+      guider.guideLeftArmMovement(poseResult);
+      guider.guideRightArmMovement(poseResult);
+      guider.guideLeftElbowMovementHinge(poseResult);
+      guider.guideRightElbowMovementHinge(poseResult);
       poseWorker.isProcessing = false;
     }
   });
