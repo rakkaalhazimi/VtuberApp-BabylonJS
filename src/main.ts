@@ -11,6 +11,7 @@ import { MMDGUI } from '@/gui/mmd-gui';
 import { MMDMovementGuider } from '@/mmd/guider';
 // import { loopBack } from '@/utils';
 import { VideoCamera } from '@/video/video';
+import { HandLandmarkerDrawer } from './computer-vision/hand-drawer';
 import { HandLandmarkerEstimation } from './computer-vision/hand-landmarker';
 import { PoseLandmarkerDrawer } from './computer-vision/pose-drawer';
 import { PoseEMAFilter } from './computer-vision/pose-ema-filter';
@@ -132,8 +133,9 @@ const createScene = async () => {
   const poseDrawer = new PoseLandmarkerDrawer(videoCamera.width, videoCamera.height);
   const poseWorker = new PoseEstimationWorker();
 
-  const hand = new HandLandmarkerEstimation(videoCamera);
-  await hand.loadHandLandmarkerDetector();
+  const hand = new HandLandmarkerEstimation();
+  // await hand.loadHandLandmarkerDetector();
+  const handDrawer = new HandLandmarkerDrawer(videoCamera.width, videoCamera.height);
 
   const poseEmaFilter = new PoseEMAFilter();
 
@@ -200,9 +202,9 @@ const createScene = async () => {
   });
 
   scene.onBeforeRenderObservable.add(async () => {
-    const handResult = await hand.estimateHand(videoCamera.video);
-    if (!handResult) return;
-    hand.drawHandLandmarks(handCtx!, handResult);
+    // const handResult = await hand.estimateHand(videoCamera.video);
+    // if (!handResult) return;
+    // hand.drawHandLandmarks(handCtx!, handResult);
   });
 
 
