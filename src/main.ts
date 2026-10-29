@@ -4,19 +4,15 @@ import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import 'babylon-mmd/esm/Loader/pmxLoader';
 
-// import { RotateBoneCommand } from '@/command/index';
-import { PoseLandmarkerEstimation } from '@/computer-vision/pose-estimation';
+import { PoseEMAFilter } from '@/computer-vision/pose-ema-filter';
+import { HandLandmarkerDrawer } from '@/computer-vision/hand-drawer';
+import { PoseLandmarkerDrawer } from '@/computer-vision/pose-drawer';
 import { ControlGUI } from '@/gui/control';
 import { MMDGUI } from '@/gui/mmd-gui';
 import { MMDMovementGuider } from '@/mmd/guider';
-// import { loopBack } from '@/utils';
 import { VideoCamera } from '@/video/video';
-import { HandLandmarkerDrawer } from './computer-vision/hand-drawer';
-import { HandLandmarkerEstimation } from './computer-vision/hand-landmarker';
-import { PoseLandmarkerDrawer } from './computer-vision/pose-drawer';
-import { PoseEMAFilter } from './computer-vision/pose-ema-filter';
-import { HandLandmarkerWorker } from './worker/hand-landmarker-worker';
-import { PoseEstimationWorker } from './worker/pose-estimation-worker';
+import { HandLandmarkerWorker } from '@/worker/hand-landmarker-worker';
+import { PoseEstimationWorker } from '@/worker/pose-estimation-worker';
 
 
 
@@ -129,13 +125,9 @@ const createScene = async () => {
 
 
   // Pose Estimation
-  const pose = new PoseLandmarkerEstimation();
-  // await pose.loadPoseLandmarkerDetector();
   const poseDrawer = new PoseLandmarkerDrawer(videoCamera.width, videoCamera.height);
   const poseWorker = new PoseEstimationWorker();
 
-  const hand = new HandLandmarkerEstimation();
-  // await hand.loadHandLandmarkerDetector();
   const handDrawer = new HandLandmarkerDrawer(videoCamera.width, videoCamera.height);
   const handWorker = new HandLandmarkerWorker();
 
@@ -147,7 +139,7 @@ const createScene = async () => {
   mmdGui.createBoneGUI();
   mmdGui.createMorphGUI();
 
-  const controlGUI = new ControlGUI(videoCamera, poseWorker, hand);
+  const controlGUI = new ControlGUI(videoCamera, poseWorker, handWorker);
   controlGUI.createControlGUI();
 
 
@@ -187,13 +179,22 @@ const createScene = async () => {
     if (handWorker.isProcessing) return;
 
     if (videoCamera.video.readyState >= 2) {
-      handWorker.isProcessing = true;
-      const handResult = await handWorker.post('HAND_LANDMARK', await createImageBitmap(videoCamera.video));
-      // console.log('Hand result: ', handResult);
-      handDrawer.drawHandLandmarks(handCtx!, handResult);
-      guider.guideLeftFingersMovement(handResult);
-      guider.guideRightFingersMovement(handResult);
-      handWorker.isProcessing = false;
+      try {
+        handWorker.isProcessing = true;
+        const handResult = await handWorker.post(
+          'HAND_LANDMARK',
+          await createImageBitmap(videoCamera.video),
+        );
+
+        if (!handResult) return;
+
+        handDrawer.drawHandLandmarks(handCtx!, handResult);
+        guider.guideLeftFingersMovement(handResult);
+        guider.guideRightFingersMovement(handResult);
+
+      } finally {
+        handWorker.isProcessing = false;
+      }
     }
   });
 

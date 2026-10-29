@@ -64,7 +64,7 @@ export interface HandLandmarkerOptions {
 
 export class HandLandmarkerEstimation {
   public landmarker: HandLandmarker | undefined;
-  public isEnabled: boolean = false;
+  public isEnabled: boolean = true;
 
   constructor() {}
 
@@ -92,7 +92,7 @@ export class HandLandmarkerEstimation {
     return this.landmarker;
   }
 
-  async estimateHand(video: HTMLVideoElement): Promise<HandLandmarkerResult | null> {
+  async estimateHand(video: TexImageSource): Promise<HandLandmarkerResult | null> {
     if (!this.landmarker) {
       throw new Error(
         'Pose landmarker is not loaded. Call loadPoseLandmarkerDetector() first.',

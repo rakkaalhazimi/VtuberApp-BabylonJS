@@ -5,6 +5,7 @@ import type { HandLandmarkerResult } from "@mediapipe/tasks-vision";
 export class HandLandmarkerWorker {
   public worker: Worker;
   public requests = new Map();
+  public isEnabled = false;
   public isProcessing = false;
   public idCounter = 0;
 
@@ -22,11 +23,20 @@ export class HandLandmarkerWorker {
     };
   }
 
-  async post(type: string, payload: unknown): Promise<HandLandmarkerResult> {
+  async post(type: string, payload: unknown): Promise<HandLandmarkerResult | null> {
+    if (!this.isEnabled) return new Promise((resolve) => resolve(null));
     return new Promise((resolve) => {
       const id = ++this.idCounter;
       this.requests.set(id, resolve);
       this.worker.postMessage({ id, type, payload });
     });
+  }
+
+  enableWorker() {
+    this.isEnabled = true;
+  }
+
+  disableWorker() {
+    this.isEnabled = false;
   }
 }

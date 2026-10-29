@@ -1,7 +1,7 @@
 import dat from 'dat.gui';
 
-import type { HandLandmarkerEstimation } from '@/computer-vision/hand-landmarker';
 import type { VideoCamera } from '@/video/video';
+import type { HandLandmarkerWorker } from '@/worker/hand-landmarker-worker';
 import type { PoseEstimationWorker } from '@/worker/pose-estimation-worker';
 
 
@@ -12,7 +12,7 @@ export class ControlGUI {
   constructor(
     public videoCamera: VideoCamera,
     private poseWorker: PoseEstimationWorker,
-    private handEstimation: HandLandmarkerEstimation,
+    private handWorker: HandLandmarkerWorker,
   ) {
     this.gui = new dat.GUI();
   }
@@ -52,11 +52,11 @@ export class ControlGUI {
 
   createHandEstimationGUI(folder: dat.GUI = this.gui) {
     const options = {
-      enableHandEstimation: this.handEstimation.isEnabled,
+      enableHandEstimation: this.handWorker.isEnabled,
     };
     folder.add(options, 'enableHandEstimation').onChange((value: boolean) => value
-      ? this.handEstimation.enableHandLandmarks()
-      : this.handEstimation.disableHandLandmarks());
+      ? this.handWorker.enableWorker()
+      : this.handWorker.disableWorker());
   }
 
   createControlGUI() {
