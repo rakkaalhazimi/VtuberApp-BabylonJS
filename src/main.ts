@@ -15,6 +15,7 @@ import { HandLandmarkerDrawer } from './computer-vision/hand-drawer';
 import { HandLandmarkerEstimation } from './computer-vision/hand-landmarker';
 import { PoseLandmarkerDrawer } from './computer-vision/pose-drawer';
 import { PoseEMAFilter } from './computer-vision/pose-ema-filter';
+import { HandLandmarkerWorker } from './worker/hand-landmarker-worker';
 import { PoseEstimationWorker } from './worker/pose-estimation-worker';
 
 
@@ -136,6 +137,7 @@ const createScene = async () => {
   const hand = new HandLandmarkerEstimation();
   // await hand.loadHandLandmarkerDetector();
   const handDrawer = new HandLandmarkerDrawer(videoCamera.width, videoCamera.height);
+  const handWorker = new HandLandmarkerWorker();
 
   const poseEmaFilter = new PoseEMAFilter();
 
@@ -168,6 +170,20 @@ const createScene = async () => {
       guider.guideLeftElbowMovementHinge(poseResult);
       guider.guideRightElbowMovementHinge(poseResult);
       poseWorker.isProcessing = false;
+    }
+  });
+
+  scene.onBeforeRenderObservable.add(async () => {
+    if (handWorker.isProcessing) return;
+
+    if (videoCamera.video.readyState >= 2) {
+      handWorker.isProcessing = true;
+      const handResult = await handWorker.post('HAND_LANDMARK', await createImageBitmap(videoCamera.video));
+      // console.log('Hand result: ', handResult);
+      handDrawer.drawHandLandmarks(handCtx!, handResult);
+      guider.guideLeftFingersMovement(handResult);
+      guider.guideRightFingersMovement(handResult);
+      handWorker.isProcessing = false;
     }
   });
 
