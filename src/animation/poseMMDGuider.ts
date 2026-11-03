@@ -40,4 +40,13 @@ export class PoseMMDGuider {
       0.1,
     );
   }
+
+  guideRightArm(state: GuiderState) {
+    const rightArm = this.mmdBoneState.RIGHT_ARM!;
+    rightArm.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      rightArm.bone.rotationQuaternion,
+      state.rightArmQuaternion,
+      0.1,
+    );
+  }
 }

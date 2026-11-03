@@ -12,6 +12,7 @@ export class GuiderState {
   public headRoll: number = 0;
 
   public leftArmQuaternion = new BABYLON.Quaternion();
+  public rightArmQuaternion = new BABYLON.Quaternion();
 
   // Neutral nose-drop (nose.y - midEar.y, raw MediaPipe coords where +y = down).
   // Calibrated on first valid frame; pitch is measured relative to it.
