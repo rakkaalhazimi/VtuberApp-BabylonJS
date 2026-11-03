@@ -10,6 +10,7 @@ import { smooth } from '@/utils';
 
 const NEUTRAL_SHOULDER_Z = -0.1;
 const ANGLE_THRESHOLD_RADIANS = BABYLON.Angle.FromDegrees(1.5).radians();
+const LEFT_ARM_DEFAULT_QUATERNION = BABYLON.Quaternion.FromEulerAngles(0, 0, -0.6);
 
 export class PoseMMDRetargeter {
   public state = new GuiderState();
@@ -26,7 +27,8 @@ export class PoseMMDRetargeter {
   }
 
   retargetUpperBody() {
-    if (!this.poseState) return;
+    if (!this.poseState) return this.state;
+
     const poseVecMidHip = BABYLON.Vector3.Center(this.poseState.LEFT_HIP.position, this.poseState.RIGHT_HIP.position);
     const poseVecMidShoulder = BABYLON.Vector3.Center(this.poseState.LEFT_SHOULDER.position, this.poseState.RIGHT_SHOULDER.position);
     poseVecMidShoulder.z -= NEUTRAL_SHOULDER_Z;  // Subtracted by neutral shoulder z position
@@ -62,6 +64,35 @@ export class PoseMMDRetargeter {
     if (shoulderVisbility < 0.5) {
       this.state.upperBodyRoll = 0;
     }
+
+    return this.state;
+  }
+
+  retargetLeftArm() {
+    if (!this.poseState) return this.state;
+
+    const leftShoulder = this.mmdBoneState.LEFT_SHOULDER!;
+    const leftElbow = this.mmdBoneState.LEFT_ELBOW!;
+
+    const poseLeftShoulder = this.poseState.LEFT_SHOULDER;
+    const poseLeftElbow = this.poseState.LEFT_ELBOW;
+
+    const poseDirLeftElbow = poseLeftElbow.position.subtract(poseLeftShoulder.position);
+
+    const leftElbowRestDir = leftElbow.restPosition.subtract(leftShoulder.restPosition);
+
+    if (poseLeftElbow.visibility < 0.5) {
+      this.state.leftArmQuaternion = LEFT_ARM_DEFAULT_QUATERNION;
+      return this.state;
+    };
+
+    const leftArmTargetQuaternion = new BABYLON.Quaternion();
+    BABYLON.Quaternion.FromUnitVectorsToRef(
+      leftElbowRestDir.normalizeToNew(),
+      poseDirLeftElbow.normalizeToNew(),
+      leftArmTargetQuaternion,
+    );
+    this.state.leftArmQuaternion = leftArmTargetQuaternion;
 
     return this.state;
   }

@@ -186,6 +186,7 @@ const createScene = async () => {
   scene.onBeforeRenderObservable.add(async () => {
     if (poseWorker.isProcessing) {
       poseGuider.guideUpperBody(poseRetargeter.state);
+      poseGuider.guideLeftArm(poseRetargeter.state);
       return;
     };
 
@@ -206,7 +207,10 @@ const createScene = async () => {
         poseRetargeter.updatePoseState(poseState);
 
         poseRetargeter.retargetUpperBody();
+        poseRetargeter.retargetLeftArm();
+
         poseGuider.guideUpperBody(poseRetargeter.state);
+        poseGuider.guideLeftArm(poseRetargeter.state);
 
       } finally {
         poseWorker.isProcessing = false;
