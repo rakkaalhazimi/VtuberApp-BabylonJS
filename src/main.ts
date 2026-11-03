@@ -4,15 +4,19 @@ import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import 'babylon-mmd/esm/Loader/pmxLoader';
 
+import { PoseMMDRetargeter } from '@/animation/poseMMDRetargeter';
 import { PoseEMAFilter } from '@/computer-vision/pose-ema-filter';
 import { HandLandmarkerDrawer } from '@/computer-vision/hand-drawer';
 import { PoseLandmarkerDrawer } from '@/computer-vision/pose-drawer';
+import { createPoseLandmarkState } from '@/computer-vision/pose-landmark-state';
 import { ControlGUI } from '@/gui/control';
 import { MMDGUI } from '@/gui/mmd-gui';
+import { createMMDBoneState } from '@/mmd/mmd-bone-state';
 import { MMDMovementGuider } from '@/mmd/guider';
 import { VideoCamera } from '@/video/video';
 import { HandLandmarkerWorker } from '@/worker/hand-landmarker-worker';
 import { PoseEstimationWorker } from '@/worker/pose-estimation-worker';
+import { PoseMMDGuider } from './animation/poseMMDGuider';
 
 
 
@@ -133,6 +137,10 @@ const createScene = async () => {
 
   const poseEmaFilter = new PoseEMAFilter();
 
+  // MMD Pose Movement
+  const boneState = createMMDBoneState(mmdModel);
+  const poseRetargeter = new PoseMMDRetargeter(boneState);
+  const poseGuider = new PoseMMDGuider(boneState);
 
   // GUI
   const mmdGui = new MMDGUI(mmdModel);
@@ -148,7 +156,38 @@ const createScene = async () => {
   const guider = new MMDMovementGuider(mmdModel);
 
   scene.onBeforeRenderObservable.add(async () => {
-    if (poseWorker.isProcessing) return;
+    // if (poseWorker.isProcessing) return;
+
+    // if (videoCamera.video.readyState >= 2) {
+    //   try {
+    //     poseWorker.isProcessing = true;
+    //     const poseResult = await poseWorker.post(
+    //       'POSE_ESTIMATION',
+    //       await createImageBitmap(videoCamera.video),
+    //     );
+
+    //     if (!poseResult) return;
+
+    //     const filteredPoseResult = poseEmaFilter.filter(poseResult);
+    //     poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult!);
+    //     guider.guideHeadMovement(poseResult);
+    //     guider.guideUpperBodyMovement(poseResult);
+    //     guider.guideLeftArmMovement(poseResult);
+    //     guider.guideRightArmMovement(poseResult);
+    //     guider.guideLeftElbowMovementHinge(poseResult);
+    //     guider.guideRightElbowMovementHinge(poseResult);
+
+    //   } finally {
+    //     poseWorker.isProcessing = false;
+    //   }
+    // }
+  });
+
+  scene.onBeforeRenderObservable.add(async () => {
+    if (poseWorker.isProcessing) {
+      poseGuider.guideUpperBody(poseRetargeter.state);
+      return;
+    };
 
     if (videoCamera.video.readyState >= 2) {
       try {
@@ -162,12 +201,12 @@ const createScene = async () => {
 
         const filteredPoseResult = poseEmaFilter.filter(poseResult);
         poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult!);
-        guider.guideHeadMovement(poseResult);
-        guider.guideUpperBodyMovement(poseResult);
-        guider.guideLeftArmMovement(poseResult);
-        guider.guideRightArmMovement(poseResult);
-        guider.guideLeftElbowMovementHinge(poseResult);
-        guider.guideRightElbowMovementHinge(poseResult);
+
+        const poseState = createPoseLandmarkState(poseResult);
+        poseRetargeter.updatePoseState(poseState);
+
+        poseRetargeter.retargetUpperBody();
+        poseGuider.guideUpperBody(poseRetargeter.state);
 
       } finally {
         poseWorker.isProcessing = false;
@@ -176,26 +215,26 @@ const createScene = async () => {
   });
 
   scene.onBeforeRenderObservable.add(async () => {
-    if (handWorker.isProcessing) return;
+    // if (handWorker.isProcessing) return;
 
-    if (videoCamera.video.readyState >= 2) {
-      try {
-        handWorker.isProcessing = true;
-        const handResult = await handWorker.post(
-          'HAND_LANDMARK',
-          await createImageBitmap(videoCamera.video),
-        );
+    // if (videoCamera.video.readyState >= 2) {
+    //   try {
+    //     handWorker.isProcessing = true;
+    //     const handResult = await handWorker.post(
+    //       'HAND_LANDMARK',
+    //       await createImageBitmap(videoCamera.video),
+    //     );
 
-        if (!handResult) return;
+    //     if (!handResult) return;
 
-        handDrawer.drawHandLandmarks(handCtx!, handResult);
-        guider.guideLeftFingersMovement(handResult);
-        guider.guideRightFingersMovement(handResult);
+    //     handDrawer.drawHandLandmarks(handCtx!, handResult);
+    //     guider.guideLeftFingersMovement(handResult);
+    //     guider.guideRightFingersMovement(handResult);
 
-      } finally {
-        handWorker.isProcessing = false;
-      }
-    }
+    //   } finally {
+    //     handWorker.isProcessing = false;
+    //   }
+    // }
   });
 
   scene.onBeforeRenderObservable.add(async () => {

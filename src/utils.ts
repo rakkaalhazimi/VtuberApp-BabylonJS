@@ -243,3 +243,7 @@ export function parseLandmark(landmark: Landmark) {
     position,
   };
 }
+
+export function smooth(oldValue: number, newValue: number, alpha = 0.05) {
+  return oldValue + (newValue - oldValue) * alpha;
+}
