@@ -5,7 +5,7 @@ import type { HandLandmarkState } from "@/computer-vision/hand-landmark-state";
 import type { PoseLandmarkState } from "@/computer-vision/pose-landmark-state";
 import { GuiderState } from '@/mmd/guider-state';
 import { type MMDBoneState } from "@/mmd/mmd-bone-state";
-import { smooth } from '@/utils';
+import { angleBetweenVectors3D, getArmTwistAngle, invertZAxis, smooth } from '@/utils';
 
 
 const NEUTRAL_SHOULDER_Z = -0.1;
@@ -123,6 +123,50 @@ export class PoseMMDRetargeter {
       rightArmTargetQuaternion,
     );
     this.state.rightArmQuaternion = rightArmTargetQuaternion;
+
+    return this.state;
+  }
+
+  retargetLeftElbow() {
+    if (!this.poseState) return;
+
+    const leftShoulder = this.mmdBoneState.LEFT_SHOULDER!;
+    const leftElbow = this.mmdBoneState.LEFT_ELBOW!;
+    const leftWrist = this.mmdBoneState.LEFT_WRIST!;
+    const leftArmTwist = this.mmdBoneState.LEFT_ARM_TWIST!;
+
+    const restUpperArm = leftElbow.restPosition.subtract(leftShoulder.restPosition).normalize();
+    const restLowerArm = leftWrist.restPosition.subtract(leftElbow.restPosition).normalize();
+
+    const side = restUpperArm.clone();
+    const forward = side.cross(restLowerArm);
+    const restNormal = invertZAxis(side.cross(forward)); // up
+    // console.log('Rest normal: ', restNormal.toString());
+
+    const poseLeftShoulder = this.poseState.LEFT_SHOULDER;
+    const poseLeftElbow = this.poseState.LEFT_ELBOW;
+    const poseLeftWrist = this.poseState.LEFT_WRIST;
+
+    const poseUpperArm = poseLeftElbow.position.subtract(poseLeftShoulder.position).normalize();
+    const poseLowerArm = poseLeftWrist.position.subtract(poseLeftElbow.position).normalize();
+
+    const restAngle = angleBetweenVectors3D(leftShoulder.restPosition, leftElbow.restPosition, leftWrist.restPosition); // ~167 degrees (in radians)
+    const poseAngle = angleBetweenVectors3D(poseLeftShoulder.position, poseLeftElbow.position, poseLeftWrist.position, true); // 2D Angle
+    const poseTwistAngle = getArmTwistAngle(poseUpperArm, poseLowerArm, restUpperArm, restNormal);
+    // console.log('Pose angle: ', poseAngle);
+    // console.log('Pose twist angle: ', poseTwistAngle);
+
+    // 1. Calculate how much the elbow is bent relative to rest (0 when straight/extended)
+    let bendAngleRad = restAngle - poseAngle;
+
+    // 2. Clamp to 1-way bending: prevents hyper-extension (< 0) and limits maximum flexion to near PI rad (~170°)
+    const MAX_FLEXION = Math.PI - 0.17; // ~170 degrees max physical bend limit
+    bendAngleRad = Math.max(0, Math.min(bendAngleRad, MAX_FLEXION));
+
+    // 3. Apply single Z-axis hinge rotation
+    // Note: If the elbow bends in the wrong direction, invert the sign (-bendAngleRad)
+    this.state.leftElbowHingeQuaternion = BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(0, 0, 1), bendAngleRad);
+    this.state.leftArmTwistQuaternion = BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(1, 0, 0), poseTwistAngle);
 
     return this.state;
   }

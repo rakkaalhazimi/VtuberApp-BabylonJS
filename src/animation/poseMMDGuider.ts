@@ -49,4 +49,22 @@ export class PoseMMDGuider {
       0.1,
     );
   }
+
+  guideLeftArmTwist(state: GuiderState) {
+    const leftArmTwist = this.mmdBoneState.LEFT_ARM_TWIST!;
+    leftArmTwist.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftArmTwist.bone.rotationQuaternion,
+      state.leftArmTwistQuaternion,
+      0.1,
+    );
+  }
+
+  guideLeftElbowHinge(state: GuiderState) {
+    const leftElbow = this.mmdBoneState.LEFT_ELBOW!;
+    leftElbow.bone.rotationQuaternion = BABYLON.Quaternion.Slerp(
+      leftElbow.bone.rotationQuaternion,
+      state.leftElbowHingeQuaternion,
+      0.1,
+    );
+  }
 }
