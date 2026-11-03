@@ -170,4 +170,43 @@ export class PoseMMDRetargeter {
 
     return this.state;
   }
+
+  retargetRightElbow() {
+    if (!this.poseState) return;
+
+    const rightShoulder = this.mmdBoneState.RIGHT_SHOULDER!;
+    const rightElbow = this.mmdBoneState.RIGHT_ELBOW!;
+    const rightWrist = this.mmdBoneState.RIGHT_WRIST!;
+
+    const restUpperArm = rightElbow.restPosition.subtract(rightShoulder.restPosition).normalize();
+    const restLowerArm = rightWrist.restPosition.subtract(rightElbow.restPosition).normalize();
+
+    const side = restUpperArm.clone();
+    const forward = side.cross(restLowerArm);
+    const restNormal = invertZAxis(side.cross(forward)); // up
+
+    const poseRightShoulder = this.poseState.RIGHT_SHOULDER;
+    const poseRightElbow = this.poseState.RIGHT_ELBOW;
+    const poseRightWrist = this.poseState.RIGHT_WRIST;
+
+    const poseUpperArm = poseRightElbow.position.subtract(poseRightShoulder.position).normalize();
+    const poseLowerArm = poseRightWrist.position.subtract(poseRightElbow.position).normalize();
+
+    const restAngle = angleBetweenVectors3D(rightShoulder.restPosition, rightElbow.restPosition, rightWrist.restPosition); // ~167 degrees (in radians)
+    const poseAngle = angleBetweenVectors3D(poseRightShoulder.position, poseRightElbow.position, poseRightWrist.position, true); // 2D Angle
+    const poseTwistAngle = getArmTwistAngle(poseUpperArm, poseLowerArm, restUpperArm, restNormal);
+
+    // 1. Calculate how much the elbow is bent relative to rest (0 when straight/extended)
+    let bendAngleRad = restAngle - poseAngle;
+
+    // 2. Clamp to 1-way bending: prevents hyper-extension (< 0) and limits maximum flexion to near PI rad (~170°)
+    const MAX_FLEXION = Math.PI - 0.17; // ~170 degrees max physical bend limit
+    bendAngleRad = Math.max(0, Math.min(bendAngleRad, MAX_FLEXION));
+
+    // 3. Apply single Z-axis hinge rotation (mirrored vs left, hence negated)
+    this.state.rightElbowHingeQuaternion = BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(0, 0, 1), -bendAngleRad);
+    this.state.rightArmTwistQuaternion = BABYLON.Quaternion.RotationAxis(new BABYLON.Vector3(1, 0, 0), -poseTwistAngle);
+
+    return this.state;
+  }
 }

@@ -190,6 +190,8 @@ const createScene = async () => {
       poseGuider.guideRightArm(poseRetargeter.state);
       poseGuider.guideLeftArmTwist(poseRetargeter.state);
       poseGuider.guideLeftElbowHinge(poseRetargeter.state);
+      poseGuider.guideRightArmTwist(poseRetargeter.state);
+      poseGuider.guideRightElbowHinge(poseRetargeter.state);
       return;
     };
 
@@ -213,12 +215,15 @@ const createScene = async () => {
         poseRetargeter.retargetLeftArm();
         poseRetargeter.retargetRightArm();
         poseRetargeter.retargetLeftElbow();
+        poseRetargeter.retargetRightElbow();
 
         poseGuider.guideUpperBody(poseRetargeter.state);
         poseGuider.guideLeftArm(poseRetargeter.state);
         poseGuider.guideRightArm(poseRetargeter.state);
         poseGuider.guideLeftArmTwist(poseRetargeter.state);
         poseGuider.guideLeftElbowHinge(poseRetargeter.state);
+        poseGuider.guideRightArmTwist(poseRetargeter.state);
+        poseGuider.guideRightElbowHinge(poseRetargeter.state);
 
       } finally {
         poseWorker.isProcessing = false;
