@@ -68,7 +68,7 @@ export class PoseMMDRetargeter {
       HEAD_YAW_LIMIT,
     );
     if (Math.abs(yawTarget) > ANGLE_THRESHOLD_RADIANS) {
-      this.state.headYaw += smooth(this.state.headYaw, yawTarget);
+      this.state.headYaw = smooth(this.state.headYaw, yawTarget);
     }
     if (earVisibility < 0.5) {
       this.state.headYaw *= 0.9;
@@ -90,7 +90,7 @@ export class PoseMMDRetargeter {
       HEAD_PITCH_LIMIT,
     );
     if (Math.abs(pitchTarget) > ANGLE_THRESHOLD_RADIANS) {
-      this.state.headPitch += smooth(this.state.headPitch, pitchTarget);
+      this.state.headPitch = smooth(this.state.headPitch, pitchTarget);
     }
     if (noseVisibility < 0.5) {
       this.state.headPitch *= 0.9;
@@ -105,10 +105,10 @@ export class PoseMMDRetargeter {
       HEAD_ROLL_LIMIT,
     );
     if (Math.abs(rollTarget) > ANGLE_THRESHOLD_RADIANS) {
-      this.state.headRoll += smooth(this.state.headRoll, rollTarget);
+      this.state.headRoll = smooth(this.state.headRoll, rollTarget);
     }
     if (mouthVisibility < 0.5) {
-      this.state.headRoll *= 0.9;
+      this.state.headRoll = 0.9;
     }
 
     return this.state;
