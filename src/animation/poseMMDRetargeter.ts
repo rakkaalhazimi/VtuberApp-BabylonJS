@@ -18,6 +18,9 @@ const ANGLE_THRESHOLD_RADIANS = BABYLON.Angle.FromDegrees(1.5).radians();
 const LEFT_ARM_DEFAULT_QUATERNION = BABYLON.Quaternion.FromEulerAngles(0, 0, -0.6);
 const RIGHT_ARM_DEFAULT_QUATERNION = BABYLON.Quaternion.FromEulerAngles(0, 0, 0.6);
 
+const ELBOW_VISIBILITY_TRESHOLD = 0.5;
+
+
 export class PoseMMDRetargeter {
   public state = new GuiderState();
   public poseState: PoseLandmarkState;
@@ -220,7 +223,6 @@ export class PoseMMDRetargeter {
     const leftShoulder = this.mmdBoneState.LEFT_SHOULDER!;
     const leftElbow = this.mmdBoneState.LEFT_ELBOW!;
     const leftWrist = this.mmdBoneState.LEFT_WRIST!;
-    const leftArmTwist = this.mmdBoneState.LEFT_ARM_TWIST!;
 
     const restUpperArm = leftElbow.restPosition.subtract(leftShoulder.restPosition).normalize();
     const restLowerArm = leftWrist.restPosition.subtract(leftElbow.restPosition).normalize();
@@ -236,6 +238,12 @@ export class PoseMMDRetargeter {
 
     const poseUpperArm = poseLeftElbow.position.subtract(poseLeftShoulder.position).normalize();
     const poseLowerArm = poseLeftWrist.position.subtract(poseLeftElbow.position).normalize();
+
+    if (poseLeftElbow.visibility < ELBOW_VISIBILITY_TRESHOLD) {
+      this.state.leftElbowHingeQuaternion = new BABYLON.Quaternion(0, 0, 0, 1);
+      this.state.leftArmTwistQuaternion = new BABYLON.Quaternion(0, 0, 0, 1);
+      return this.state;
+    }
 
     const restAngle = angleBetweenVectors3D(leftShoulder.restPosition, leftElbow.restPosition, leftWrist.restPosition); // ~167 degrees (in radians)
     const poseAngle = angleBetweenVectors3D(poseLeftShoulder.position, poseLeftElbow.position, poseLeftWrist.position, true); // 2D Angle
@@ -278,6 +286,12 @@ export class PoseMMDRetargeter {
 
     const poseUpperArm = poseRightElbow.position.subtract(poseRightShoulder.position).normalize();
     const poseLowerArm = poseRightWrist.position.subtract(poseRightElbow.position).normalize();
+
+    if (poseRightElbow.visibility < ELBOW_VISIBILITY_TRESHOLD) {
+      this.state.rightElbowHingeQuaternion = new BABYLON.Quaternion(0, 0, 0, 1);
+      this.state.rightArmTwistQuaternion = new BABYLON.Quaternion(0, 0, 0, 1);
+      return this.state;
+    }
 
     const restAngle = angleBetweenVectors3D(rightShoulder.restPosition, rightElbow.restPosition, rightWrist.restPosition); // ~167 degrees (in radians)
     const poseAngle = angleBetweenVectors3D(poseRightShoulder.position, poseRightElbow.position, poseRightWrist.position, true); // 2D Angle
