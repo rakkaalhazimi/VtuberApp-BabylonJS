@@ -185,6 +185,7 @@ const createScene = async () => {
 
   scene.onBeforeRenderObservable.add(async () => {
     if (poseWorker.isProcessing) {
+      poseGuider.guideHead(poseRetargeter.state);
       poseGuider.guideUpperBody(poseRetargeter.state);
       poseGuider.guideLeftArm(poseRetargeter.state);
       poseGuider.guideRightArm(poseRetargeter.state);
@@ -211,12 +212,14 @@ const createScene = async () => {
         const poseState = createPoseLandmarkState(poseResult);
         poseRetargeter.updatePoseState(poseState);
 
+        poseRetargeter.retargetHead();
         poseRetargeter.retargetUpperBody();
         poseRetargeter.retargetLeftArm();
         poseRetargeter.retargetRightArm();
         poseRetargeter.retargetLeftElbow();
         poseRetargeter.retargetRightElbow();
 
+        poseGuider.guideHead(poseRetargeter.state);
         poseGuider.guideUpperBody(poseRetargeter.state);
         poseGuider.guideLeftArm(poseRetargeter.state);
         poseGuider.guideRightArm(poseRetargeter.state);
