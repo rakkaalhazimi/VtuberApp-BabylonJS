@@ -169,7 +169,7 @@ export class PoseMMDRetargeter {
 
     const leftElbowRestDir = leftElbow.restPosition.subtract(leftShoulder.restPosition);
 
-    if (poseLeftElbow.visibility < 0.5) {
+    if (poseLeftElbow.visibility < 0.75) {
       this.state.leftArmQuaternion = LEFT_ARM_DEFAULT_QUATERNION;
       return this.state;
     };
@@ -198,7 +198,7 @@ export class PoseMMDRetargeter {
 
     const rightElbowRestDir = rightElbow.restPosition.subtract(rightShoulder.restPosition);
 
-    if (poseRightElbow.visibility < 0.5) {
+    if (poseRightElbow.visibility < 0.75) {
       this.state.rightArmQuaternion = RIGHT_ARM_DEFAULT_QUATERNION;
       return this.state;
     };
