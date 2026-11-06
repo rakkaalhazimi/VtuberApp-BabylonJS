@@ -9,9 +9,9 @@ import { angleBetweenVectors3D, getArmTwistAngle, invertYAxis, invertZAxis, smoo
 
 
 
-const HEAD_PITCH_LIMIT = BABYLON.Angle.FromDegrees(30).radians();
-const HEAD_YAW_LIMIT = BABYLON.Angle.FromDegrees(40).radians();
-const HEAD_ROLL_LIMIT = BABYLON.Angle.FromDegrees(25).radians();
+const HEAD_PITCH_LIMIT = BABYLON.Angle.FromDegrees(45).radians();
+const HEAD_YAW_LIMIT = BABYLON.Angle.FromDegrees(90).radians();
+const HEAD_ROLL_LIMIT = BABYLON.Angle.FromDegrees(45).radians();
 
 const NEUTRAL_SHOULDER_Z = -0.1;
 const ANGLE_THRESHOLD_RADIANS = BABYLON.Angle.FromDegrees(1.5).radians();
