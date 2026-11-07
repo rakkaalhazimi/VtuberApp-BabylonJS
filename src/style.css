@@ -15,6 +15,7 @@ body {
 
 #video,
 #video-canvas,
-#hand-canvas {
+#hand-canvas,
+#face-canvas {
   position: absolute;
 }

@@ -17,6 +17,8 @@ import { VideoCamera } from '@/video/video';
 import { HandLandmarkerWorker } from '@/worker/hand-landmarker-worker';
 import { PoseEstimationWorker } from '@/worker/pose-estimation-worker';
 import { PoseMMDGuider } from './animation/poseMMDGuider';
+import { FaceLandmarkerEstimation } from '@/computer-vision/face-landmarker';
+import { FaceLandmarkerDrawer } from './computer-vision/face-drawer';
 
 
 
@@ -123,9 +125,11 @@ const createScene = async () => {
 
   const videoCanvas = document.getElementById('video-canvas') as HTMLCanvasElement;
   const handCanvas = document.getElementById('hand-canvas') as HTMLCanvasElement;
+  const faceCanvas = document.getElementById('face-canvas') as HTMLCanvasElement;
 
   const ctx = videoCanvas.getContext('2d');
   const handCtx = handCanvas.getContext('2d');
+  const faceCtx = faceCanvas.getContext('2d');
 
 
   // Pose Estimation
@@ -134,6 +138,10 @@ const createScene = async () => {
 
   const handDrawer = new HandLandmarkerDrawer(videoCamera.width, videoCamera.height);
   const handWorker = new HandLandmarkerWorker();
+
+  const faceLandmarker = new FaceLandmarkerEstimation();
+  await faceLandmarker.loadFaceLandmarkerDetector();
+  const faceDrawer = new FaceLandmarkerDrawer(videoCamera.width, videoCamera.height);
 
   const poseEmaFilter = new PoseEMAFilter();
 
@@ -156,31 +164,12 @@ const createScene = async () => {
   const guider = new MMDMovementGuider(mmdModel);
 
   scene.onBeforeRenderObservable.add(async () => {
-    // if (poseWorker.isProcessing) return;
-
-    // if (videoCamera.video.readyState >= 2) {
-    //   try {
-    //     poseWorker.isProcessing = true;
-    //     const poseResult = await poseWorker.post(
-    //       'POSE_ESTIMATION',
-    //       await createImageBitmap(videoCamera.video),
-    //     );
-
-    //     if (!poseResult) return;
-
-    //     const filteredPoseResult = poseEmaFilter.filter(poseResult);
-    //     poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult!);
-    //     guider.guideHeadMovement(poseResult);
-    //     guider.guideUpperBodyMovement(poseResult);
-    //     guider.guideLeftArmMovement(poseResult);
-    //     guider.guideRightArmMovement(poseResult);
-    //     guider.guideLeftElbowMovementHinge(poseResult);
-    //     guider.guideRightElbowMovementHinge(poseResult);
-
-    //   } finally {
-    //     poseWorker.isProcessing = false;
-    //   }
-    // }
+    if (videoCamera.video.readyState >= 2) {
+      const result = await faceLandmarker.estimateFace(videoCamera.video);
+      // console.log('Result: ', result?.faceLandmarks[0]);
+      if (!result) return;
+      faceDrawer.drawFaceLandmarks(faceCtx!, result);
+    }
   });
 
   scene.onBeforeRenderObservable.add(async () => {
