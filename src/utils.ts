@@ -1,6 +1,6 @@
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
-import type { Landmark, NormalizedLandmark } from "@mediapipe/tasks-vision";
+import type { HandLandmarkerResult, Landmark, NormalizedLandmark, PoseLandmarkerResult } from "@mediapipe/tasks-vision";
 
 
 
@@ -241,6 +241,21 @@ export function parseLandmark(landmark: Landmark) {
     z: landmark.z,
     visibility: landmark.visibility,
     position,
+  };
+}
+
+export function parseLandmarkNew(pose: PoseLandmarkerResult | HandLandmarkerResult, index: number) {
+  const landmark = pose.worldLandmarks[0][index];
+  const landmark2D = pose.landmarks[0][index];
+  const position = invertYAxis(landmarkToVector(landmark));
+  const position2D = landmarkToVector(landmark2D);
+  return {
+    x: landmark.x,
+    y: landmark.y,
+    z: landmark.z,
+    visibility: landmark.visibility,
+    position,
+    position2D,
   };
 }
 
