@@ -239,7 +239,13 @@ export class PoseMMDRetargeter {
     const poseUpperArm = poseLeftElbow.position.subtract(poseLeftShoulder.position).normalize();
     const poseLowerArm = poseLeftWrist.position.subtract(poseLeftElbow.position).normalize();
 
-    if (poseLeftElbow.visibility < ELBOW_VISIBILITY_TRESHOLD) {
+    const isElbowWithinFrame = poseLeftElbow.position2D.x > 1 || poseLeftElbow.position2D.y > 1;
+    const isWristVisible = poseLeftWrist.visibility > 0.5;
+
+    if (
+      poseLeftElbow.visibility < ELBOW_VISIBILITY_TRESHOLD
+      || (isElbowWithinFrame && !isWristVisible)
+    ) {
       this.state.leftElbowHingeQuaternion = new BABYLON.Quaternion(0, 0, 0, 1);
       this.state.leftArmTwistQuaternion = new BABYLON.Quaternion(0, 0, 0, 1);
       return this.state;
@@ -287,7 +293,13 @@ export class PoseMMDRetargeter {
     const poseUpperArm = poseRightElbow.position.subtract(poseRightShoulder.position).normalize();
     const poseLowerArm = poseRightWrist.position.subtract(poseRightElbow.position).normalize();
 
-    if (poseRightElbow.visibility < ELBOW_VISIBILITY_TRESHOLD) {
+    const isElbowWithinFrame = poseRightElbow.position2D.x > 1 || poseRightElbow.position2D.y > 1;
+    const isWristVisible = poseRightWrist.visibility > 0.5;
+
+    if (
+      poseRightElbow.visibility < ELBOW_VISIBILITY_TRESHOLD
+      || (isElbowWithinFrame && !isWristVisible)
+    ) {
       this.state.rightElbowHingeQuaternion = new BABYLON.Quaternion(0, 0, 0, 1);
       this.state.rightArmTwistQuaternion = new BABYLON.Quaternion(0, 0, 0, 1);
       return this.state;
