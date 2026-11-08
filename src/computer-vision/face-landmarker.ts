@@ -83,6 +83,7 @@ export class FaceLandmarkerEstimation {
 
     const vision = await FilesetResolver.forVisionTasks(
       options.wasmPath ?? DEFAULT_WASM_PATH,
+      true,
     );
 
     this.landmarker = await FaceLandmarker.createFromOptions(vision, {

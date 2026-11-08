@@ -5,7 +5,9 @@ import * as BABYLONMMD from 'babylon-mmd';
 import 'babylon-mmd/esm/Loader/pmxLoader';
 import * as Kalidokit from 'kalidokit';
 
+import { PoseMMDGuider } from '@/animation/poseMMDGuider';
 import { PoseMMDRetargeter } from '@/animation/poseMMDRetargeter';
+import { FaceLandmarkerDrawer } from '@/computer-vision/face-drawer';
 import { PoseEMAFilter } from '@/computer-vision/pose-ema-filter';
 import { HandLandmarkerDrawer } from '@/computer-vision/hand-drawer';
 import { PoseLandmarkerDrawer } from '@/computer-vision/pose-drawer';
@@ -16,11 +18,9 @@ import { createMMDBoneState } from '@/mmd/mmd-bone-state';
 import { MMDMovementGuider } from '@/mmd/guider';
 import { createMMDMorphController } from '@/mmd/morph-controller';
 import { VideoCamera } from '@/video/video';
+import { FaceLandmarkerWorker } from '@/worker/face-landmarker-worker';
 import { HandLandmarkerWorker } from '@/worker/hand-landmarker-worker';
 import { PoseEstimationWorker } from '@/worker/pose-estimation-worker';
-import { PoseMMDGuider } from './animation/poseMMDGuider';
-import { FaceLandmarkerEstimation } from '@/computer-vision/face-landmarker';
-import { FaceLandmarkerDrawer } from './computer-vision/face-drawer';
 
 
 
@@ -141,8 +141,7 @@ const createScene = async () => {
   const handDrawer = new HandLandmarkerDrawer(videoCamera.width, videoCamera.height);
   const handWorker = new HandLandmarkerWorker();
 
-  const faceLandmarker = new FaceLandmarkerEstimation();
-  await faceLandmarker.loadFaceLandmarkerDetector();
+  const faceWorker = new FaceLandmarkerWorker();
   const faceDrawer = new FaceLandmarkerDrawer(videoCamera.width, videoCamera.height);
 
   const poseEmaFilter = new PoseEMAFilter();
@@ -167,21 +166,40 @@ const createScene = async () => {
   const guider = new MMDMovementGuider(mmdModel);
 
   scene.onBeforeRenderObservable.add(async () => {
-    if (videoCamera.video.readyState >= 2) {
-      const result = await faceLandmarker.estimateFace(videoCamera.video);
-      if (!result) return;
-      faceDrawer.drawFaceLandmarks(faceCtx!, result);
-      const faceLandmarks = result.faceLandmarks[0];
-      const faceRig = Kalidokit.Face.solve(faceLandmarks, {runtime:'mediapipe', video: videoCamera.video});
-      if (!faceRig) return;
-      // console.log(faceRig.eye);
-      poseRetargeter.retargetFaceKalido(faceRig);
-      poseRetargeter.retargetHeadKalido(faceRig);
-      poseRetargeter.retargetMouthKalido(faceRig);
-
+    if (faceWorker.isProcessing) {
       poseGuider.guideFaceKalido(poseRetargeter.state);
       poseGuider.guideMouthKalido(poseRetargeter.state);
       poseGuider.guideHead(poseRetargeter.state);
+      return;
+    }
+
+    if (videoCamera.video.readyState >= 2) {
+      try {
+        faceWorker.isProcessing = true;
+        const faceResult = await faceWorker.post(
+          'FACE_LANDMARK',
+          await createImageBitmap(videoCamera.video),
+        );
+
+        if (!faceResult) return;
+
+        faceDrawer.drawFaceLandmarks(faceCtx!, faceResult);
+        const faceLandmarks = faceResult.faceLandmarks[0];
+        const faceRig = Kalidokit.Face.solve(faceLandmarks, { runtime: 'mediapipe', video: videoCamera.video });
+
+        if (!faceRig) return;
+
+        poseRetargeter.retargetFaceKalido(faceRig);
+        poseRetargeter.retargetHeadKalido(faceRig);
+        poseRetargeter.retargetMouthKalido(faceRig);
+
+        poseGuider.guideFaceKalido(poseRetargeter.state);
+        poseGuider.guideMouthKalido(poseRetargeter.state);
+        poseGuider.guideHead(poseRetargeter.state);
+
+      } finally {
+        faceWorker.isProcessing = false;
+      }
     }
   });
 
