@@ -157,7 +157,7 @@ const createScene = async () => {
   mmdGui.createBoneGUI();
   mmdGui.createMorphGUI();
 
-  const controlGUI = new ControlGUI(videoCamera, poseWorker, handWorker);
+  const controlGUI = new ControlGUI(videoCamera, poseWorker, handWorker, faceWorker);
   controlGUI.createControlGUI();
 
 
