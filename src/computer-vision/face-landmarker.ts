@@ -80,9 +80,6 @@ export class FaceLandmarkerEstimation {
 
   async loadFaceLandmarkerDetector(options: FaceLandmarkerOptions = {}) {
     console.log('Loading face landmarker detector...');
-    for (const conn of faceLandmarkerLipsConnections) {
-      console.log(conn.start, conn.end);
-    }
 
     const vision = await FilesetResolver.forVisionTasks(
       options.wasmPath ?? DEFAULT_WASM_PATH,
