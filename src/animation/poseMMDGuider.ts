@@ -1,12 +1,32 @@
 import * as BABYLON from '@babylonjs/core';
+import * as BABYLONMMD from 'babylon-mmd';
+import * as Kalidokit from 'kalidokit';
 
 import type { GuiderState } from "@/mmd/guider-state";
 import type { MMDBoneState } from "@/mmd/mmd-bone-state";
+import { morphTranslationsNew } from '@/mmd/translation';
 
 
 
 export class PoseMMDGuider {
-  constructor(public mmdBoneState: MMDBoneState) { }
+  constructor(
+    public mmdBoneState: MMDBoneState,
+    public mmdMorphController: BABYLONMMD.MmdMorphController,
+  ) { }
+
+  guideFaceKalido(state: GuiderState) {
+    this.mmdMorphController.setMorphWeight(morphTranslationsNew.BLINKING.localName, state.eyeBlink);
+    this.mmdMorphController.setMorphWeight(morphTranslationsNew.WINK_L.localName, state.eyeLWink);
+    this.mmdMorphController.setMorphWeight(morphTranslationsNew.WINK_R.localName, state.eyeRWink);
+  }
+
+  guideMouthKalido(state: GuiderState) {
+    this.mmdMorphController.setMorphWeight(morphTranslationsNew.VOWEL_A.localName, state.mouthShapeA);
+    this.mmdMorphController.setMorphWeight(morphTranslationsNew.VOWEL_I.localName, state.mouthShapeI);
+    this.mmdMorphController.setMorphWeight(morphTranslationsNew.VOWEL_U.localName, state.mouthShapeU);
+    this.mmdMorphController.setMorphWeight(morphTranslationsNew.VOWEL_E.localName, state.mouthShapeE);
+    this.mmdMorphController.setMorphWeight(morphTranslationsNew.VOWEL_O.localName, state.mouthShapeO);
+  }
 
   guideHead(state: GuiderState) {
     const pitchQ = BABYLON.Quaternion.RotationAxis(

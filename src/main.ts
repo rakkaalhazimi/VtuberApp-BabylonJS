@@ -3,6 +3,7 @@ import '@/style.css';
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import 'babylon-mmd/esm/Loader/pmxLoader';
+import * as Kalidokit from 'kalidokit';
 
 import { PoseMMDRetargeter } from '@/animation/poseMMDRetargeter';
 import { PoseEMAFilter } from '@/computer-vision/pose-ema-filter';
@@ -13,6 +14,7 @@ import { ControlGUI } from '@/gui/control';
 import { MMDGUI } from '@/gui/mmd-gui';
 import { createMMDBoneState } from '@/mmd/mmd-bone-state';
 import { MMDMovementGuider } from '@/mmd/guider';
+import { createMMDMorphController } from '@/mmd/morph-controller';
 import { VideoCamera } from '@/video/video';
 import { HandLandmarkerWorker } from '@/worker/hand-landmarker-worker';
 import { PoseEstimationWorker } from '@/worker/pose-estimation-worker';
@@ -147,8 +149,9 @@ const createScene = async () => {
 
   // MMD Pose Movement
   const boneState = createMMDBoneState(mmdModel);
+  const morphController = createMMDMorphController(mmdModel);
   const poseRetargeter = new PoseMMDRetargeter(boneState);
-  const poseGuider = new PoseMMDGuider(boneState);
+  const poseGuider = new PoseMMDGuider(boneState, morphController);
 
   // GUI
   const mmdGui = new MMDGUI(mmdModel);
@@ -166,9 +169,19 @@ const createScene = async () => {
   scene.onBeforeRenderObservable.add(async () => {
     if (videoCamera.video.readyState >= 2) {
       const result = await faceLandmarker.estimateFace(videoCamera.video);
-      // console.log('Result: ', result?.faceLandmarks[0]);
       if (!result) return;
       faceDrawer.drawFaceLandmarks(faceCtx!, result);
+      const faceLandmarks = result.faceLandmarks[0];
+      const faceRig = Kalidokit.Face.solve(faceLandmarks, {runtime:'mediapipe', video: videoCamera.video});
+      if (!faceRig) return;
+      // console.log(faceRig.eye);
+      poseRetargeter.retargetFaceKalido(faceRig);
+      poseRetargeter.retargetHeadKalido(faceRig);
+      poseRetargeter.retargetMouthKalido(faceRig);
+
+      poseGuider.guideFaceKalido(poseRetargeter.state);
+      poseGuider.guideMouthKalido(poseRetargeter.state);
+      poseGuider.guideHead(poseRetargeter.state);
     }
   });
 

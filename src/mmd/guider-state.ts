@@ -3,6 +3,17 @@ import * as BABYLON from '@babylonjs/core';
 
 
 export class GuiderState {
+
+  public eyeLWink: number = 0;
+  public eyeRWink: number = 0;
+  public eyeBlink: number = 0;
+
+  public mouthShapeA: number = 0;
+  public mouthShapeI: number = 0;
+  public mouthShapeU: number = 0;
+  public mouthShapeE: number = 0;
+  public mouthShapeO: number = 0;
+
   public upperBodyPitch: number = 0;
   public upperBodyYaw: number = 0;
   public upperBodyRoll: number = 0;
