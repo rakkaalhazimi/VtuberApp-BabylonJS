@@ -65,6 +65,56 @@ export class PoseMMDRetargeter {
     return this.state;
   }
 
+  retargetLeftHandKalido(state: Kalidokit.THand<Kalidokit.Side>) {
+    this.state.leftWrist = state.LeftWrist;
+    // console.log('Left Wrist: ', state.LeftWrist);
+
+    this.state.leftRingMCP = state.LeftRingProximal;
+    this.state.leftRingPIP = state.LeftRingIntermediate;
+    this.state.leftRingDIP = state.LeftRingDistal;
+
+    this.state.leftIndexMCP = state.LeftIndexProximal;
+    this.state.leftIndexPIP = state.LeftIndexIntermediate;
+    this.state.leftIndexDIP = state.LeftIndexDistal;
+    // console.log('Index mcp: ', state.LeftIndexProximal);
+
+    this.state.leftMiddleMCP = state.LeftMiddleProximal;
+    this.state.leftMiddlePIP = state.LeftMiddleIntermediate;
+    this.state.leftMiddleDIP = state.LeftMiddleDistal;
+
+    this.state.leftThumbMCP = state.LeftThumbProximal;
+    this.state.leftThumbPIP = state.LeftThumbIntermediate;
+    this.state.leftThumbDIP = state.LeftThumbDistal;
+    // console.log('Left thumb dip: ', this.state.leftThumbDIP);
+
+    this.state.leftLittleMCP = state.LeftLittleProximal;
+    this.state.leftLittlePIP = state.LeftLittleIntermediate;
+    this.state.leftLittleDIP = state.LeftLittleDistal;
+
+    return this.state;
+  }
+
+  retargetRightHandKalido(state: Kalidokit.THand<Kalidokit.Side>) {
+    this.state.rigthWrist = state.RightWrist;
+    this.state.rightRingMCP = state.RightRingProximal;
+    this.state.rightRingPIP = state.RightRingIntermediate;
+    this.state.rightRingDIP = state.RightRingDistal;
+    this.state.rightIndexMCP = state.RightIndexProximal;
+    this.state.rightIndexPIP = state.RightIndexIntermediate;
+    this.state.rightIndexDIP = state.RightIndexDistal;
+    this.state.rightMiddleMCP = state.RightMiddleProximal;
+    this.state.rightMiddlePIP = state.RightMiddleIntermediate;
+    this.state.rightMiddleDIP = state.RightMiddleDistal;
+    this.state.rightThumbMCP = state.RightThumbProximal;
+    this.state.rightThumbPIP = state.RightThumbIntermediate;
+    this.state.rightThumbDIP = state.RightThumbDistal;
+    this.state.rightLittleMCP = state.RightLittleProximal;
+    this.state.rightLittlePIP = state.RightLittleIntermediate;
+    this.state.rightLittleDIP = state.RightLittleDistal;
+
+    return this.state;
+  }
+
   retargetHead() {
     if (!this.poseState) return this.state;
 

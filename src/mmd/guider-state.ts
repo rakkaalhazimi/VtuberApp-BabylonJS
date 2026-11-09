@@ -22,6 +22,40 @@ export class GuiderState {
   public headYaw: number = 0;
   public headRoll: number = 0;
 
+  public rigthWrist = {x: 0, y: 0, z: 0};
+  public rightRingMCP = {x: 0, y: 0, z: 0};
+  public rightRingPIP = {x: 0, y: 0, z: 0};
+  public rightRingDIP = {x: 0, y: 0, z: 0};
+  public rightIndexMCP = {x: 0, y: 0, z: 0};
+  public rightIndexPIP = {x: 0, y: 0, z: 0};
+  public rightIndexDIP = {x: 0, y: 0, z: 0};
+  public rightMiddleMCP = {x: 0, y: 0, z: 0};
+  public rightMiddlePIP = {x: 0, y: 0, z: 0};
+  public rightMiddleDIP = {x: 0, y: 0, z: 0};
+  public rightThumbMCP = {x: 0, y: 0, z: 0};
+  public rightThumbPIP = {x: 0, y: 0, z: 0};
+  public rightThumbDIP = {x: 0, y: 0, z: 0};
+  public rightLittleMCP = {x: 0, y: 0, z: 0};
+  public rightLittlePIP = {x: 0, y: 0, z: 0};
+  public rightLittleDIP = {x: 0, y: 0, z: 0};
+
+  public leftWrist = {x: 0, y: 0, z: 0};
+  public leftRingMCP = {x: 0, y: 0, z: 0};
+  public leftRingPIP = {x: 0, y: 0, z: 0};
+  public leftRingDIP = {x: 0, y: 0, z: 0};
+  public leftIndexMCP = {x: 0, y: 0, z: 0};
+  public leftIndexPIP = {x: 0, y: 0, z: 0};
+  public leftIndexDIP = {x: 0, y: 0, z: 0};
+  public leftMiddleMCP = {x: 0, y: 0, z: 0};
+  public leftMiddlePIP = {x: 0, y: 0, z: 0};
+  public leftMiddleDIP = {x: 0, y: 0, z: 0};
+  public leftThumbMCP = {x: 0, y: 0, z: 0};
+  public leftThumbPIP = {x: 0, y: 0, z: 0};
+  public leftThumbDIP = {x: 0, y: 0, z: 0};
+  public leftLittleMCP = {x: 0, y: 0, z: 0};
+  public leftLittlePIP = {x: 0, y: 0, z: 0};
+  public leftLittleDIP = {x: 0, y: 0, z: 0};
+
   public leftArmQuaternion = new BABYLON.Quaternion();
   public rightArmQuaternion = new BABYLON.Quaternion();
 

@@ -10,6 +10,7 @@ import { PoseMMDRetargeter } from '@/animation/poseMMDRetargeter';
 import { FaceLandmarkerDrawer } from '@/computer-vision/face-drawer';
 import { PoseEMAFilter } from '@/computer-vision/pose-ema-filter';
 import { HandLandmarkerDrawer } from '@/computer-vision/hand-drawer';
+import { HandLandmarkerEstimation } from '@/computer-vision/hand-landmarker';
 import { PoseLandmarkerDrawer } from '@/computer-vision/pose-drawer';
 import { createPoseLandmarkState } from '@/computer-vision/pose-landmark-state';
 import { ControlGUI } from '@/gui/control';
@@ -253,26 +254,45 @@ const createScene = async () => {
   });
 
   scene.onBeforeRenderObservable.add(async () => {
-    // if (handWorker.isProcessing) return;
+    if (handWorker.isProcessing) {
+      poseGuider.guideLeftHandKalido(poseRetargeter.state);
+      poseGuider.guideRightHandKalido(poseRetargeter.state);
+      return;
+    }
 
-    // if (videoCamera.video.readyState >= 2) {
-    //   try {
-    //     handWorker.isProcessing = true;
-    //     const handResult = await handWorker.post(
-    //       'HAND_LANDMARK',
-    //       await createImageBitmap(videoCamera.video),
-    //     );
+    if (videoCamera.video.readyState >= 2) {
+      try {
+        handWorker.isProcessing = true;
+        const handResult = await handWorker.post(
+          'HAND_LANDMARK',
+          await createImageBitmap(videoCamera.video),
+        );
 
-    //     if (!handResult) return;
+        if (!handResult) return;
 
-    //     handDrawer.drawHandLandmarks(handCtx!, handResult);
-    //     guider.guideLeftFingersMovement(handResult);
-    //     guider.guideRightFingersMovement(handResult);
+        handDrawer.drawHandLandmarks(handCtx!, handResult);
 
-    //   } finally {
-    //     handWorker.isProcessing = false;
-    //   }
-    // }
+        const leftHandLandmarks = HandLandmarkerEstimation.GetLeftHand(handResult);
+        const rightHandLandmarks = HandLandmarkerEstimation.GetRightHand(handResult);
+
+        if (!leftHandLandmarks) return;
+
+        const handRigL = Kalidokit.Hand.solve(leftHandLandmarks, 'Left');
+        const handRigR = Kalidokit.Hand.solve(rightHandLandmarks, 'Right');
+
+        if (handRigL) {
+          poseRetargeter.retargetLeftHandKalido(handRigL);
+          poseGuider.guideLeftHandKalido(poseRetargeter.state);
+        };
+        if (handRigR) {
+          poseRetargeter.retargetRightHandKalido(handRigR);
+          poseGuider.guideRightHandKalido(poseRetargeter.state);
+        };
+
+      } finally {
+        handWorker.isProcessing = false;
+      }
+    }
   });
 
   scene.onBeforeRenderObservable.add(async () => {
