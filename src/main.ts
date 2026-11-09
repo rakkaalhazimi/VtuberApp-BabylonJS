@@ -275,10 +275,14 @@ const createScene = async () => {
         const leftHandLandmarks = HandLandmarkerEstimation.GetLeftHand(handResult);
         const rightHandLandmarks = HandLandmarkerEstimation.GetRightHand(handResult);
 
-        if (!leftHandLandmarks) return;
-
-        const handRigL = Kalidokit.Hand.solve(leftHandLandmarks, 'Left');
-        const handRigR = Kalidokit.Hand.solve(rightHandLandmarks, 'Right');
+        let handRigL: Kalidokit.THand<Kalidokit.Side> | undefined;
+        let handRigR: Kalidokit.THand<Kalidokit.Side> | undefined;
+        if (leftHandLandmarks) {
+          handRigL = Kalidokit.Hand.solve(leftHandLandmarks, 'Left');
+        }
+        if (rightHandLandmarks) {
+          handRigR = Kalidokit.Hand.solve(rightHandLandmarks, 'Right');
+        }
 
         if (handRigL) {
           poseRetargeter.retargetLeftHandKalido(handRigL);

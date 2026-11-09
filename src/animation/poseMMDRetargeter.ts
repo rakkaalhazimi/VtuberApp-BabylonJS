@@ -1,12 +1,16 @@
 import * as BABYLON from '@babylonjs/core';
-// import * as BABYLONMMD from 'babylon-mmd';
 import * as Kalidokit from 'kalidokit';
 
 import type { HandLandmarkState } from "@/computer-vision/hand-landmark-state";
 import type { PoseLandmarkState } from "@/computer-vision/pose-landmark-state";
 import { GuiderState } from '@/mmd/guider-state';
 import { type MMDBoneState } from "@/mmd/mmd-bone-state";
-import { angleBetweenVectors3D, getArmTwistAngle, invertYAxis, invertZAxis, smooth } from '@/utils';
+import {
+  angleBetweenVectors3D,
+  getArmTwistAngle,
+  invertZAxis,
+  smooth
+} from '@/utils';
 
 
 
@@ -34,6 +38,20 @@ export class PoseMMDRetargeter {
   }
   updateHandState(state: HandLandmarkState) {
     this.handState = state;
+  }
+
+  // Invert Z Axis for MMD
+  static AdjustKalidoFinger(finger: Kalidokit.XYZ) {
+    return {x: finger.x, y: finger.y, z: -finger.z};
+  }
+
+  static AdjustKalidoFingerDistal(finger: Kalidokit.XYZ) {
+    return {x: finger.x, y: finger.y, z: -finger.z * 0.5};
+  }
+
+  // Invert Y and Z Axis for thumb
+  static AdjustKalidoThumbFinger(finger: Kalidokit.XYZ) {
+    return {x: finger.x, y: -finger.y, z: finger.z};
   }
 
   retargetFaceKalido(state: Kalidokit.TFace) {
@@ -67,50 +85,42 @@ export class PoseMMDRetargeter {
 
   retargetLeftHandKalido(state: Kalidokit.THand<Kalidokit.Side>) {
     this.state.leftWrist = state.LeftWrist;
-    // console.log('Left Wrist: ', state.LeftWrist);
-
-    this.state.leftRingMCP = state.LeftRingProximal;
-    this.state.leftRingPIP = state.LeftRingIntermediate;
-    this.state.leftRingDIP = state.LeftRingDistal;
-
-    this.state.leftIndexMCP = state.LeftIndexProximal;
-    this.state.leftIndexPIP = state.LeftIndexIntermediate;
-    this.state.leftIndexDIP = state.LeftIndexDistal;
-    // console.log('Index mcp: ', state.LeftIndexProximal);
-
-    this.state.leftMiddleMCP = state.LeftMiddleProximal;
-    this.state.leftMiddlePIP = state.LeftMiddleIntermediate;
-    this.state.leftMiddleDIP = state.LeftMiddleDistal;
-
-    this.state.leftThumbMCP = state.LeftThumbProximal;
-    this.state.leftThumbPIP = state.LeftThumbIntermediate;
-    this.state.leftThumbDIP = state.LeftThumbDistal;
-    // console.log('Left thumb dip: ', this.state.leftThumbDIP);
-
-    this.state.leftLittleMCP = state.LeftLittleProximal;
-    this.state.leftLittlePIP = state.LeftLittleIntermediate;
-    this.state.leftLittleDIP = state.LeftLittleDistal;
+    this.state.leftRingMCP = PoseMMDRetargeter.AdjustKalidoFinger(state.LeftRingProximal);
+    this.state.leftRingPIP = PoseMMDRetargeter.AdjustKalidoFinger(state.LeftRingIntermediate);
+    this.state.leftRingDIP = PoseMMDRetargeter.AdjustKalidoFingerDistal(state.LeftRingDistal);
+    this.state.leftIndexMCP = PoseMMDRetargeter.AdjustKalidoFinger(state.LeftIndexProximal);
+    this.state.leftIndexPIP = PoseMMDRetargeter.AdjustKalidoFinger(state.LeftIndexIntermediate);
+    this.state.leftIndexDIP = PoseMMDRetargeter.AdjustKalidoFingerDistal(state.LeftIndexDistal);
+    this.state.leftMiddleMCP = PoseMMDRetargeter.AdjustKalidoFinger(state.LeftMiddleProximal);
+    this.state.leftMiddlePIP = PoseMMDRetargeter.AdjustKalidoFinger(state.LeftMiddleIntermediate);
+    this.state.leftMiddleDIP = PoseMMDRetargeter.AdjustKalidoFingerDistal(state.LeftMiddleDistal);
+    this.state.leftThumbMCP = PoseMMDRetargeter.AdjustKalidoThumbFinger(state.LeftThumbProximal);
+    this.state.leftThumbPIP = PoseMMDRetargeter.AdjustKalidoThumbFinger(state.LeftThumbIntermediate);
+    this.state.leftThumbDIP = PoseMMDRetargeter.AdjustKalidoThumbFinger(state.LeftThumbDistal);
+    this.state.leftLittleMCP = PoseMMDRetargeter.AdjustKalidoFinger(state.LeftLittleProximal);
+    this.state.leftLittlePIP = PoseMMDRetargeter.AdjustKalidoFinger(state.LeftLittleIntermediate);
+    this.state.leftLittleDIP = PoseMMDRetargeter.AdjustKalidoFingerDistal(state.LeftLittleDistal);
 
     return this.state;
   }
 
   retargetRightHandKalido(state: Kalidokit.THand<Kalidokit.Side>) {
-    this.state.rigthWrist = state.RightWrist;
-    this.state.rightRingMCP = state.RightRingProximal;
-    this.state.rightRingPIP = state.RightRingIntermediate;
-    this.state.rightRingDIP = state.RightRingDistal;
-    this.state.rightIndexMCP = state.RightIndexProximal;
-    this.state.rightIndexPIP = state.RightIndexIntermediate;
-    this.state.rightIndexDIP = state.RightIndexDistal;
-    this.state.rightMiddleMCP = state.RightMiddleProximal;
-    this.state.rightMiddlePIP = state.RightMiddleIntermediate;
-    this.state.rightMiddleDIP = state.RightMiddleDistal;
-    this.state.rightThumbMCP = state.RightThumbProximal;
-    this.state.rightThumbPIP = state.RightThumbIntermediate;
-    this.state.rightThumbDIP = state.RightThumbDistal;
-    this.state.rightLittleMCP = state.RightLittleProximal;
-    this.state.rightLittlePIP = state.RightLittleIntermediate;
-    this.state.rightLittleDIP = state.RightLittleDistal;
+    this.state.rigthWrist = PoseMMDRetargeter.AdjustKalidoFinger(state.RightWrist);
+    this.state.rightRingMCP = PoseMMDRetargeter.AdjustKalidoFinger(state.RightRingProximal);
+    this.state.rightRingPIP = PoseMMDRetargeter.AdjustKalidoFinger(state.RightRingIntermediate);
+    this.state.rightRingDIP = PoseMMDRetargeter.AdjustKalidoFingerDistal(state.RightRingDistal);
+    this.state.rightIndexMCP = PoseMMDRetargeter.AdjustKalidoFinger(state.RightIndexProximal);
+    this.state.rightIndexPIP = PoseMMDRetargeter.AdjustKalidoFinger(state.RightIndexIntermediate);
+    this.state.rightIndexDIP = PoseMMDRetargeter.AdjustKalidoFingerDistal(state.RightIndexDistal);
+    this.state.rightMiddleMCP = PoseMMDRetargeter.AdjustKalidoFinger(state.RightMiddleProximal);
+    this.state.rightMiddlePIP = PoseMMDRetargeter.AdjustKalidoFinger(state.RightMiddleIntermediate);
+    this.state.rightMiddleDIP = PoseMMDRetargeter.AdjustKalidoFingerDistal(state.RightMiddleDistal);
+    this.state.rightThumbMCP = PoseMMDRetargeter.AdjustKalidoThumbFinger(state.RightThumbProximal);
+    this.state.rightThumbPIP = PoseMMDRetargeter.AdjustKalidoThumbFinger(state.RightThumbIntermediate);
+    this.state.rightThumbDIP = PoseMMDRetargeter.AdjustKalidoThumbFinger(state.RightThumbDistal);
+    this.state.rightLittleMCP = PoseMMDRetargeter.AdjustKalidoFinger(state.RightLittleProximal);
+    this.state.rightLittlePIP = PoseMMDRetargeter.AdjustKalidoFinger(state.RightLittleIntermediate);
+    this.state.rightLittleDIP = PoseMMDRetargeter.AdjustKalidoFingerDistal(state.RightLittleDistal);
 
     return this.state;
   }

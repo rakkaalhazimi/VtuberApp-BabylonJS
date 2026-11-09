@@ -1,5 +1,6 @@
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
+import * as Kalidokit from 'kalidokit';
 import type { HandLandmarkerResult, Landmark, NormalizedLandmark, PoseLandmarkerResult } from "@mediapipe/tasks-vision";
 
 
