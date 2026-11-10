@@ -222,7 +222,7 @@ export class PoseMMDRetargeter {
     const bodyLean = poseVecMidShoulder.subtract(poseVecMidHip);
     const pitch = Math.atan2(bodyLean.z, bodyLean.y);
     if (Math.abs(pitch) > ANGLE_THRESHOLD_RADIANS) {
-      this.state.upperBodyPitch = smooth(this.state.upperBodyPitch, pitch);  // Exponential Moving Average
+      this.state.upperBody.x = smooth(this.state.upperBody.x, pitch);  // Exponential Moving Average
     }
     const hipVisbility = (this.poseState.LEFT_HIP.visibility + this.poseState.RIGHT_HIP.visibility) / 2;
     if (hipVisbility < 0.5) {
@@ -233,21 +233,21 @@ export class PoseMMDRetargeter {
     const bodyTwist = this.poseState.LEFT_SHOULDER.position.subtract(this.poseState.RIGHT_SHOULDER.position);
     const yaw = Math.atan2(bodyTwist.z, bodyTwist.x);
     if (Math.abs(yaw) > ANGLE_THRESHOLD_RADIANS) {
-      this.state.upperBodyYaw = smooth(this.state.upperBodyYaw, -yaw); // Flip horizontal
+      this.state.upperBody.y = smooth(this.state.upperBody.y, -yaw); // Flip horizontal
     }
     const shoulderVisbility = (this.poseState.LEFT_SHOULDER.visibility + this.poseState.RIGHT_SHOULDER.visibility) / 2;
     if (shoulderVisbility < 0.5) {
-      this.state.upperBodyYaw = 0;
+      this.state.upperBody.y = 0;
     }
 
     // Roll (Rotation around forward axis, lateral / sideways tilt)
     const bodyTilt = poseVecMidShoulder.subtract(poseVecMidHip);
     const roll = Math.atan2(bodyTilt.x, bodyTilt.y);
     if (Math.abs(roll) > ANGLE_THRESHOLD_RADIANS) {
-      this.state.upperBodyRoll = smooth(this.state.upperBodyRoll, roll);
+      this.state.upperBody.z = smooth(this.state.upperBody.z, roll);
     }
     if (shoulderVisbility < 0.5) {
-      this.state.upperBodyRoll = 0;
+      this.state.upperBody.z = 0;
     }
 
     return this.state;

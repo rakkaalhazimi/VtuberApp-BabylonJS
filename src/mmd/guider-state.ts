@@ -14,9 +14,7 @@ export class GuiderState {
   public mouthShapeE: number = 0;
   public mouthShapeO: number = 0;
 
-  public upperBodyPitch: number = 0;
-  public upperBodyYaw: number = 0;
-  public upperBodyRoll: number = 0;
+  public upperBody = {x: 0, y: 0, z: 0};
 
   public headPitch: number = 0;
   public headYaw: number = 0;
