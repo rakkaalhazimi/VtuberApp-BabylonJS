@@ -23,7 +23,7 @@ export class PoseMMDGuider {
     );
   }
 
-  guideFaceKalido(state: GuiderState) {
+  guideEyeBlinkKalido(state: GuiderState) {
     this.mmdMorphController.setMorphWeight(morphTranslationsNew.BLINKING.localName, state.eyeBlink);
     this.mmdMorphController.setMorphWeight(morphTranslationsNew.WINK_L.localName, state.eyeLWink);
     this.mmdMorphController.setMorphWeight(morphTranslationsNew.WINK_R.localName, state.eyeRWink);

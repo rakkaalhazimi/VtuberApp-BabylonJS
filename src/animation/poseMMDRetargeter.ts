@@ -54,7 +54,7 @@ export class PoseMMDRetargeter {
     return {x: finger.x, y: -finger.y, z: finger.z};
   }
 
-  retargetFaceKalido(state: Kalidokit.TFace) {
+  retargetEyeBlinkKalido(state: Kalidokit.TFace) {
     if (state.eye.l < 1 && state.eye.r < 1) {
       this.state.eyeBlink = 1;
     } else {

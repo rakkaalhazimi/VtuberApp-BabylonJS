@@ -168,7 +168,7 @@ const createScene = async () => {
 
   scene.onBeforeRenderObservable.add(async () => {
     if (faceWorker.isProcessing) {
-      poseGuider.guideFaceKalido(poseRetargeter.state);
+      poseGuider.guideEyeBlinkKalido(poseRetargeter.state);
       poseGuider.guideMouthKalido(poseRetargeter.state);
       poseGuider.guideHead(poseRetargeter.state);
       return;
@@ -190,11 +190,11 @@ const createScene = async () => {
 
         if (!faceRig) return;
 
-        poseRetargeter.retargetFaceKalido(faceRig);
+        poseRetargeter.retargetEyeBlinkKalido(faceRig);
         poseRetargeter.retargetHeadKalido(faceRig);
         poseRetargeter.retargetMouthKalido(faceRig);
 
-        poseGuider.guideFaceKalido(poseRetargeter.state);
+        poseGuider.guideEyeBlinkKalido(poseRetargeter.state);
         poseGuider.guideMouthKalido(poseRetargeter.state);
         poseGuider.guideHead(poseRetargeter.state);
 
