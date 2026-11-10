@@ -153,6 +153,12 @@ const createScene = async () => {
   const poseRetargeter = new PoseMMDRetargeter(boneState);
   const poseGuider = new PoseMMDGuider(boneState, morphController);
 
+  // Lower the arms at start
+  poseRetargeter.retargetLeftArm();
+  poseRetargeter.retargetRightArm();
+  poseGuider.guideLeftArm(poseRetargeter.state);
+  poseGuider.guideRightArm(poseRetargeter.state);
+
   // GUI
   const mmdGui = new MMDGUI(mmdModel);
   mmdGui.createBoneGUI();
