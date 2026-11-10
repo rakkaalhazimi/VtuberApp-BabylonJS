@@ -3,14 +3,23 @@ import '@/style.css';
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import 'babylon-mmd/esm/Loader/pmxLoader';
+import * as Kalidokit from 'kalidokit';
 
+import { PoseMMDGuider } from '@/animation/poseMMDGuider';
+import { PoseMMDRetargeter } from '@/animation/poseMMDRetargeter';
+import { FaceLandmarkerDrawer } from '@/computer-vision/face-drawer';
 import { PoseEMAFilter } from '@/computer-vision/pose-ema-filter';
 import { HandLandmarkerDrawer } from '@/computer-vision/hand-drawer';
+import { HandLandmarkerEstimation } from '@/computer-vision/hand-landmarker';
 import { PoseLandmarkerDrawer } from '@/computer-vision/pose-drawer';
+import { createPoseLandmarkState } from '@/computer-vision/pose-landmark-state';
 import { ControlGUI } from '@/gui/control';
 import { MMDGUI } from '@/gui/mmd-gui';
+import { createMMDBoneState } from '@/mmd/mmd-bone-state';
 import { MMDMovementGuider } from '@/mmd/guider';
+import { createMMDMorphController } from '@/mmd/morph-controller';
 import { VideoCamera } from '@/video/video';
+import { FaceLandmarkerWorker } from '@/worker/face-landmarker-worker';
 import { HandLandmarkerWorker } from '@/worker/hand-landmarker-worker';
 import { PoseEstimationWorker } from '@/worker/pose-estimation-worker';
 
@@ -119,9 +128,11 @@ const createScene = async () => {
 
   const videoCanvas = document.getElementById('video-canvas') as HTMLCanvasElement;
   const handCanvas = document.getElementById('hand-canvas') as HTMLCanvasElement;
+  const faceCanvas = document.getElementById('face-canvas') as HTMLCanvasElement;
 
   const ctx = videoCanvas.getContext('2d');
   const handCtx = handCanvas.getContext('2d');
+  const faceCtx = faceCanvas.getContext('2d');
 
 
   // Pose Estimation
@@ -131,15 +142,29 @@ const createScene = async () => {
   const handDrawer = new HandLandmarkerDrawer(videoCamera.width, videoCamera.height);
   const handWorker = new HandLandmarkerWorker();
 
+  const faceWorker = new FaceLandmarkerWorker();
+  const faceDrawer = new FaceLandmarkerDrawer(videoCamera.width, videoCamera.height);
+
   const poseEmaFilter = new PoseEMAFilter();
 
+  // MMD Pose Movement
+  const boneState = createMMDBoneState(mmdModel);
+  const morphController = createMMDMorphController(mmdModel);
+  const poseRetargeter = new PoseMMDRetargeter(boneState);
+  const poseGuider = new PoseMMDGuider(boneState, morphController);
+
+  // Lower the arms at start
+  poseRetargeter.retargetLeftArm();
+  poseRetargeter.retargetRightArm();
+  poseGuider.guideLeftArm(poseRetargeter.state);
+  poseGuider.guideRightArm(poseRetargeter.state);
 
   // GUI
   const mmdGui = new MMDGUI(mmdModel);
   mmdGui.createBoneGUI();
   mmdGui.createMorphGUI();
 
-  const controlGUI = new ControlGUI(videoCamera, poseWorker, handWorker);
+  const controlGUI = new ControlGUI(videoCamera, poseWorker, handWorker, faceWorker);
   controlGUI.createControlGUI();
 
 
@@ -148,7 +173,58 @@ const createScene = async () => {
   const guider = new MMDMovementGuider(mmdModel);
 
   scene.onBeforeRenderObservable.add(async () => {
-    if (poseWorker.isProcessing) return;
+    if (faceWorker.isProcessing) {
+      poseGuider.guideEyeBlinkKalido(poseRetargeter.state);
+      poseGuider.guideEyeMovementKalido(poseRetargeter.state);
+      poseGuider.guideMouthKalido(poseRetargeter.state);
+      poseGuider.guideHead(poseRetargeter.state);
+      return;
+    }
+
+    if (videoCamera.video.readyState >= 2) {
+      try {
+        faceWorker.isProcessing = true;
+        const faceResult = await faceWorker.post(
+          'FACE_LANDMARK',
+          await createImageBitmap(videoCamera.video),
+        );
+
+        if (!faceResult) return;
+
+        faceDrawer.drawFaceLandmarks(faceCtx!, faceResult);
+        const faceLandmarks = faceResult.faceLandmarks[0];
+        const faceRig = Kalidokit.Face.solve(faceLandmarks, { runtime: 'mediapipe', video: videoCamera.video });
+
+        if (!faceRig) return;
+
+        poseRetargeter.retargetEyeBlinkKalido(faceRig);
+        poseRetargeter.retargetEyeMovement(faceRig);
+        poseRetargeter.retargetHeadKalido(faceRig);
+        poseRetargeter.retargetMouthKalido(faceRig);
+
+        poseGuider.guideEyeBlinkKalido(poseRetargeter.state);
+        poseGuider.guideEyeMovementKalido(poseRetargeter.state);
+        poseGuider.guideMouthKalido(poseRetargeter.state);
+        poseGuider.guideHead(poseRetargeter.state);
+
+      } finally {
+        faceWorker.isProcessing = false;
+      }
+    }
+  });
+
+  scene.onBeforeRenderObservable.add(async () => {
+    if (poseWorker.isProcessing) {
+      poseGuider.guideUpperBody(poseRetargeter.state);
+      poseGuider.guideLeftArm(poseRetargeter.state);
+      poseGuider.guideRightArm(poseRetargeter.state);
+      poseGuider.guideLeftArmTwist(poseRetargeter.state);
+      poseGuider.guideLeftElbowHinge(poseRetargeter.state);
+      poseGuider.guideRightArmTwist(poseRetargeter.state);
+      poseGuider.guideRightElbowHinge(poseRetargeter.state);
+
+      return;
+    };
 
     if (videoCamera.video.readyState >= 2) {
       try {
@@ -162,12 +238,33 @@ const createScene = async () => {
 
         const filteredPoseResult = poseEmaFilter.filter(poseResult);
         poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult!);
-        guider.guideHeadMovement(poseResult);
-        guider.guideUpperBodyMovement(poseResult);
-        guider.guideLeftArmMovement(poseResult);
-        guider.guideRightArmMovement(poseResult);
-        guider.guideLeftElbowMovementHinge(poseResult);
-        guider.guideRightElbowMovementHinge(poseResult);
+
+        const poseState = createPoseLandmarkState(poseResult);
+        poseRetargeter.updatePoseState(poseState);
+
+        poseRetargeter.retargetUpperBody();
+        poseRetargeter.retargetLeftArm();
+        poseRetargeter.retargetRightArm();
+        poseRetargeter.retargetLeftElbow();
+        poseRetargeter.retargetRightElbow();
+
+        poseGuider.guideUpperBody(poseRetargeter.state);
+        poseGuider.guideLeftArm(poseRetargeter.state);
+        poseGuider.guideRightArm(poseRetargeter.state);
+        poseGuider.guideLeftArmTwist(poseRetargeter.state);
+        poseGuider.guideLeftElbowHinge(poseRetargeter.state);
+        poseGuider.guideRightArmTwist(poseRetargeter.state);
+        poseGuider.guideRightElbowHinge(poseRetargeter.state);
+
+        // const worldLandmarks = poseResult.worldLandmarks[0];
+        // const landmarks = poseResult.landmarks[0];
+        // const poseRig = Kalidokit.Pose.solve(worldLandmarks, landmarks, {
+        //   runtime: 'mediapipe',
+        //   video: videoCamera.video,
+        // });
+
+        // if (!poseRig) return;
+
 
       } finally {
         poseWorker.isProcessing = false;
@@ -176,7 +273,11 @@ const createScene = async () => {
   });
 
   scene.onBeforeRenderObservable.add(async () => {
-    if (handWorker.isProcessing) return;
+    if (handWorker.isProcessing) {
+      poseGuider.guideLeftHandKalido(poseRetargeter.state);
+      poseGuider.guideRightHandKalido(poseRetargeter.state);
+      return;
+    }
 
     if (videoCamera.video.readyState >= 2) {
       try {
@@ -189,51 +290,37 @@ const createScene = async () => {
         if (!handResult) return;
 
         handDrawer.drawHandLandmarks(handCtx!, handResult);
-        guider.guideLeftFingersMovement(handResult);
-        guider.guideRightFingersMovement(handResult);
+
+        // const leftHandState = createHandLandmarkState(handResult, false);
+        // poseRetargeter.updateHandState(leftHandState);
+        // poseRetargeter.retargetLeftWristTwist();
+
+        const leftHandLandmarks = HandLandmarkerEstimation.GetLeftHand(handResult);
+        const rightHandLandmarks = HandLandmarkerEstimation.GetRightHand(handResult);
+
+        let handRigL: Kalidokit.THand<Kalidokit.Side> | undefined;
+        let handRigR: Kalidokit.THand<Kalidokit.Side> | undefined;
+        if (leftHandLandmarks) {
+          handRigL = Kalidokit.Hand.solve(leftHandLandmarks, 'Left');
+        }
+        if (rightHandLandmarks) {
+          handRigR = Kalidokit.Hand.solve(rightHandLandmarks, 'Right');
+        }
+
+        if (handRigL) {
+          poseRetargeter.retargetLeftHandKalido(handRigL);
+          poseGuider.guideLeftHandKalido(poseRetargeter.state);
+        };
+        if (handRigR) {
+          poseRetargeter.retargetRightHandKalido(handRigR);
+          poseGuider.guideRightHandKalido(poseRetargeter.state);
+        };
 
       } finally {
         handWorker.isProcessing = false;
       }
     }
   });
-
-  scene.onBeforeRenderObservable.add(async () => {
-    // const poseResult = await pose.estimatePose(videoCamera.video);
-    // const filteredPoseResult = poseEmaFilter.filter(poseResult);
-    // const handResult = await hand.estimateHand(videoCamera.video);
-
-    // if (filteredPoseResult) {
-    // poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult);
-    // }
-
-    // if (poseResult) {
-    // guider.guideHeadMovement(poseResult);
-    // guider.guideUpperBodyMovement(poseResult);
-    // guider.guideLeftArmMovement(poseResult);
-    // guider.guideRightArmMovement(poseResult);
-    // guider.guideLeftElbowMovementHinge(poseResult);
-    // guider.guideRightElbowMovementHinge(poseResult);
-    // };
-
-    // if (handResult) {
-    // hand.drawHandLandmarks(handCtx!, handResult);
-    // guider.guideLeftFingersMovement(handResult);
-    // guider.guideRightFingersMovement(handResult);
-    // };
-
-    // if (poseResult && handResult) {
-    // guider.guideLeftForearmTwist(poseResult, handResult);
-    // guider.guideRightForearmTwist(poseResult, handResult);
-    // }
-  });
-
-  scene.onBeforeRenderObservable.add(async () => {
-    // const handResult = await hand.estimateHand(videoCamera.video);
-    // if (!handResult) return;
-    // hand.drawHandLandmarks(handCtx!, handResult);
-  });
-
 
   return scene;
 };

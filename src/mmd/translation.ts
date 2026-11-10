@@ -181,3 +181,54 @@ export const morphTranslations = {
   "えー": "Eh",
   "にやり": "Grin",
 };
+
+export const morphTranslationsNew = {
+  // Base
+  BASE: { localName: "base", globalName: "Base" },
+
+  // Eyes & Blinking
+  BLINKING: { localName: "まばたき", globalName: "Blinking" },
+  LAUGHING: { localName: "笑い", globalName: "Laughing" },
+  WINK_L: { localName: "ウィンク", globalName: "Wink" },
+  WINK_2_L: { localName: "ウィンク２", globalName: "Wink 2" },
+  WINK_R: { localName: "ウィンク右", globalName: "Right wink" },
+  WINK_2_R: { localName: "ｳｨﾝｸ２右", globalName: "Right wink 2" },
+  GLARE: { localName: "じと目", globalName: "Glare" },
+  ASTONISHED: { localName: "びっくり", globalName: "Astonished" },
+  PUPILS_SMALL: { localName: "瞳小", globalName: "Small pupils" },
+  NO_HIGHLIGHT: { localName: "ハイライト消", globalName: "No Highlight" },
+  TEARS: { localName: "涙", globalName: "Tears" },
+
+  // Eyebrows
+  SERIOUS: { localName: "真面目", globalName: "Serious" },
+  TROUBLED: { localName: "困る", globalName: "Troubled" },
+  ANGER: { localName: "怒り", globalName: "Anger" },
+  UP: { localName: "上", globalName: "Up" },
+  DOWN: { localName: "下", globalName: "Down" },
+  BROWS_UP: { localName: "まゆ上", globalName: "Brows Up" },
+  BROWS_DOWN: { localName: "まゆ下", globalName: "Brows Down" },
+  BROWS_PINCH: { localName: "寄せ", globalName: "Brows Pinch" },
+
+  // Emotions & Expressions
+  SMILING: { localName: "にこり", globalName: "Smiling" },
+  CALM: { localName: "なごみ", globalName: "Calm" },
+  SURPRISED: { localName: "はぅ", globalName: "Surprised" },
+  WHAT: { localName: "なぬ！", globalName: "What!" },
+  HUFF: { localName: "はんっ！", globalName: "Huff!" },
+  TONGUE_OUT: { localName: "ぺろっ", globalName: "Tongue out" },
+  EH: { localName: "えー", globalName: "Eh" },
+  GRIN: { localName: "にやり", globalName: "Grin" },
+  TEHEPERO: { localName: "てへぺろ", globalName: "Tehepero" },
+  SHARP: { localName: "キリッ", globalName: "Sharp" },
+
+  // Mouth / Lip-Sync / Vowels
+  VOWEL_A: { localName: "あ", globalName: "A" },
+  VOWEL_I: { localName: "い", globalName: "I" },
+  VOWEL_U: { localName: "う", globalName: "U" },
+  VOWEL_E: { localName: "え", globalName: "E" },
+  VOWEL_O: { localName: "お", globalName: "O" },
+  TRIANGLE: { localName: "▲", globalName: "Triangle" },
+  CARET: { localName: "∧", globalName: "Caret" },
+  OMEGA: { localName: "ω", globalName: "Omega" },
+  OMEGA_SQUARE: { localName: "ω□", globalName: "Omega square" },
+};
