@@ -206,7 +206,6 @@ const createScene = async () => {
 
   scene.onBeforeRenderObservable.add(async () => {
     if (poseWorker.isProcessing) {
-      poseGuider.guideHead(poseRetargeter.state);
       poseGuider.guideUpperBody(poseRetargeter.state);
       poseGuider.guideLeftArm(poseRetargeter.state);
       poseGuider.guideRightArm(poseRetargeter.state);
@@ -252,6 +251,45 @@ const createScene = async () => {
       }
     }
   });
+
+  // scene.onBeforeRenderObservable.add(async () => {
+  //   if (poseWorker.isProcessing) {
+  //     poseGuider.guideLeftArmKalido(poseRetargeter.state);
+  //     return;
+  //   };
+
+  //   if (videoCamera.video.readyState >= 2) {
+  //     try {
+  //       poseWorker.isProcessing = true;
+  //       const poseResult = await poseWorker.post(
+  //         'POSE_ESTIMATION',
+  //         await createImageBitmap(videoCamera.video),
+  //       );
+
+  //       if (!poseResult) return;
+
+  //       poseDrawer.drawPoseLandmarks(ctx!, poseResult!);
+
+  //       const worldLandmarks = poseResult.worldLandmarks[0];
+  //       const landmarks = poseResult.landmarks[0];
+
+  //       const poseRig = Kalidokit.Pose.solve(worldLandmarks, landmarks, {
+  //         runtime: 'mediapipe',
+  //         video: videoCamera.video,
+
+  //       });
+
+  //       if (!poseRig) return;
+
+  //       poseRetargeter.retargetLeftArmKalido(poseRig);
+  //       poseGuider.guideLeftArmKalido(poseRetargeter.state);
+
+
+  //     } finally {
+  //       poseWorker.isProcessing = false;
+  //     }
+  //   }
+  // });
 
   scene.onBeforeRenderObservable.add(async () => {
     if (handWorker.isProcessing) {
