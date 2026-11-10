@@ -77,9 +77,7 @@ export class PoseMMDRetargeter {
   }
 
   retargetHeadKalido(state: Kalidokit.TFace) {
-    this.state.headPitch = state.head.x;
-    this.state.headYaw = state.head.y;
-    this.state.headRoll = state.head.z;
+    this.state.head = state.head;
     return this.state;
   }
 
@@ -125,88 +123,10 @@ export class PoseMMDRetargeter {
     return this.state;
   }
 
-  retargetHead() {
-    if (!this.poseState) return this.state;
-
-    const poseNose = this.poseState.NOSE;
-    const poseLeftEar = this.poseState.LEFT_EAR;
-    const poseRightEar = this.poseState.RIGHT_EAR;
-    const poseMouthLeft = this.poseState.MOUTH_LEFT;
-    const poseMouthRight = this.poseState.MOUTH_RIGHT;
-
-    const earVisibility = ((poseLeftEar.visibility ?? 1) + (poseRightEar.visibility ?? 1)) / 2;
-    const noseVisibility = poseNose.visibility ?? 1;
-    const mouthVisibility = ((poseMouthLeft.visibility ?? 1) + (poseMouthRight.visibility ?? 1)) / 2;
-    if (earVisibility < 0.5 && noseVisibility < 0.5) {
-      // Face lost: ease back to neutral
-      this.state.headPitch *= 0.9;
-      this.state.headYaw *= 0.9;
-      this.state.headRoll *= 0.9;
-      return this.state;
-    }
-
-    const poseVecMidEar = BABYLON.Vector3.Center(poseLeftEar.position, poseRightEar.position);
-    const poseVecMidMouth = BABYLON.Vector3.Center(poseMouthLeft.position, poseMouthRight.position);
-
-    // Face width as a scale reference (guard against degenerate landmarks)
-    const earDist = Math.max(poseLeftEar.position.subtract(poseRightEar.position).length(), 1e-4);
-
-    // Yaw (rotation around vertical Y axis, turning left/right)
-    // Nose lateral offset from mid-ear line, normalized by face width.
-    // Negated to flip MediaPipe horizontal into Babylon space (same convention as upper body).
-    // const noseDx = poseNose.x - poseVecMidEar.x;
-    // const yawTarget = BABYLON.Scalar.Clamp(
-    //   -(noseDx / earDist) * 1.5,
-    //   -HEAD_YAW_LIMIT,
-    //   HEAD_YAW_LIMIT,
-    // );
-    // if (Math.abs(yawTarget) > ANGLE_THRESHOLD_RADIANS) {
-    //   this.state.headYaw = smooth(this.state.headYaw, yawTarget);
-    // }
-    // if (earVisibility < 0.5) {
-    //   this.state.headYaw *= 0.9;
-    // }
-    const poseHorizontalEar = poseLeftEar.position.subtract(poseRightEar.position);
-    const yaw = poseHorizontalEar.z / poseHorizontalEar.x;
-    this.state.headYaw = yaw;
-
-    // Pitch (rotation around horizontal X axis, nodding up/down)
-    // Raw MediaPipe +y points down, so noseDrop > 0 at neutral and grows when looking down.
-    // Calibrate neutral on first valid frame, then map the delta to a pitch angle.
-    // const noseDrop = poseNose.y - poseVecMidEar.y;
-    // if (this.state.neutralNoseDrop === null && noseVisibility >= 0.5) {
-    //   this.state.neutralNoseDrop = noseDrop;
-    // }
-    // const neutralDrop = this.state.neutralNoseDrop ?? noseDrop;
-
-    // Looking down increases noseDrop -> negative X rotation nods the MMD head down
-    // (model faces -Z, so -X tips the face downward).
-    // const pitchTarget = BABYLON.Scalar.Clamp(
-    //   -((noseDrop - neutralDrop) / earDist) * 2.0,
-    //   -HEAD_PITCH_LIMIT,
-    //   HEAD_PITCH_LIMIT,
-    // );
-    // if (Math.abs(pitchTarget) > ANGLE_THRESHOLD_RADIANS) {
-    //   this.state.headPitch = smooth(this.state.headPitch, pitchTarget);
-    // }
-    // if (noseVisibility < 0.5) {
-    //   this.state.headPitch *= 0.9;
-    // }
-
-    // Roll (rotation around forward Z axis, sideways tilt)
-    // Same pattern as upper body: up-vector of the face, atan2(x, y) is ~0 at neutral.
-    // const faceUp = invertYAxis(poseVecMidEar.subtract(poseVecMidMouth));
-    // const rollTarget = BABYLON.Scalar.Clamp(
-    //   Math.atan2(faceUp.x, Math.max(faceUp.y, 1e-4)),
-    //   -HEAD_ROLL_LIMIT,
-    //   HEAD_ROLL_LIMIT,
-    // );
-    // if (Math.abs(rollTarget) > ANGLE_THRESHOLD_RADIANS) {
-    //   this.state.headRoll = smooth(this.state.headRoll, rollTarget);
-    // }
-    // if (mouthVisibility < 0.5) {
-    //   this.state.headRoll = 0.9;
-    // }
+  retargetLeftArmKalido(state: Kalidokit.TPose) {
+    this.state.leftUpperArm = state.LeftUpperArm;
+    console.log('Left Upper Arm: ', state.LeftUpperArm);
+    this.state.leftLowerArm = state.LeftLowerArm;
 
     return this.state;
   }

@@ -19,6 +19,7 @@ export class GuiderState {
   public headPitch: number = 0;
   public headYaw: number = 0;
   public headRoll: number = 0;
+  public head = {x: 0, y: 0, z: 0};
 
   public rigthWrist = {x: 0, y: 0, z: 0};
   public rightRingMCP = {x: 0, y: 0, z: 0};
@@ -53,6 +54,9 @@ export class GuiderState {
   public leftLittleMCP = {x: 0, y: 0, z: 0};
   public leftLittlePIP = {x: 0, y: 0, z: 0};
   public leftLittleDIP = {x: 0, y: 0, z: 0};
+
+  public leftUpperArm = {x: 0, y: 0, z: 0};
+  public leftLowerArm = {x: 0, y: 0, z: 0};
 
   public leftArmQuaternion = new BABYLON.Quaternion();
   public rightArmQuaternion = new BABYLON.Quaternion();
