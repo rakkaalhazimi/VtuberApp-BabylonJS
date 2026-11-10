@@ -54,6 +54,11 @@ export class PoseMMDRetargeter {
     return {x: finger.x, y: -finger.y, z: finger.z};
   }
 
+  static AdjustKalidoPupil(pupil: {x: number, y: number, z: number}) {
+    const yaw = BABYLON.Clamp(-pupil.y, -0.4, 0.4);
+    return {x: 0, y: yaw};
+  }
+
   retargetEyeBlinkKalido(state: Kalidokit.TFace) {
     if (state.eye.l < 1 && state.eye.r < 1) {
       this.state.eyeBlink = 1;
@@ -65,6 +70,10 @@ export class PoseMMDRetargeter {
       this.state.eyeRWink = BABYLON.Scalar.Clamp(eyeRWink, 0, 1);
     }
     return this.state;
+  }
+
+  retargetEyeMovement(state: Kalidokit.TFace) {
+    this.state.pupil = PoseMMDRetargeter.AdjustKalidoPupil(state.head);
   }
 
   retargetMouthKalido(state: Kalidokit.TFace) {

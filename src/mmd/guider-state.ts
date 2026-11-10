@@ -8,6 +8,8 @@ export class GuiderState {
   public eyeRWink: number = 0;
   public eyeBlink: number = 0;
 
+  public pupil = {x: 0, y: 0};
+
   public mouthShapeA: number = 0;
   public mouthShapeI: number = 0;
   public mouthShapeU: number = 0;

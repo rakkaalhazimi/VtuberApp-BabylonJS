@@ -29,6 +29,11 @@ export class PoseMMDGuider {
     this.mmdMorphController.setMorphWeight(morphTranslationsNew.WINK_R.localName, state.eyeRWink);
   }
 
+  guideEyeMovementKalido(state: GuiderState) {
+    const bothEyes = this.mmdBoneState.BOTH_EYES!;
+    this.RotateBone(bothEyes.bone, { x: state.pupil.x, y: state.pupil.y, z: 0 });
+  }
+
   guideMouthKalido(state: GuiderState) {
     this.mmdMorphController.setMorphWeight(morphTranslationsNew.VOWEL_A.localName, state.mouthShapeA);
     this.mmdMorphController.setMorphWeight(morphTranslationsNew.VOWEL_I.localName, state.mouthShapeI);
