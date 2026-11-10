@@ -213,6 +213,7 @@ const createScene = async () => {
       poseGuider.guideLeftElbowHinge(poseRetargeter.state);
       poseGuider.guideRightArmTwist(poseRetargeter.state);
       poseGuider.guideRightElbowHinge(poseRetargeter.state);
+
       return;
     };
 
@@ -246,6 +247,16 @@ const createScene = async () => {
         poseGuider.guideRightArmTwist(poseRetargeter.state);
         poseGuider.guideRightElbowHinge(poseRetargeter.state);
 
+        // const worldLandmarks = poseResult.worldLandmarks[0];
+        // const landmarks = poseResult.landmarks[0];
+        // const poseRig = Kalidokit.Pose.solve(worldLandmarks, landmarks, {
+        //   runtime: 'mediapipe',
+        //   video: videoCamera.video,
+        // });
+
+        // if (!poseRig) return;
+
+
       } finally {
         poseWorker.isProcessing = false;
       }
@@ -270,6 +281,10 @@ const createScene = async () => {
         if (!handResult) return;
 
         handDrawer.drawHandLandmarks(handCtx!, handResult);
+
+        // const leftHandState = createHandLandmarkState(handResult, false);
+        // poseRetargeter.updateHandState(leftHandState);
+        // poseRetargeter.retargetLeftWristTwist();
 
         const leftHandLandmarks = HandLandmarkerEstimation.GetLeftHand(handResult);
         const rightHandLandmarks = HandLandmarkerEstimation.GetRightHand(handResult);

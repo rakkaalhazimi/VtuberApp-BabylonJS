@@ -131,6 +131,33 @@ export class PoseMMDRetargeter {
     return this.state;
   }
 
+  retargetLeftHandPoseKalido(state: Kalidokit.TPose) {
+    this.state.leftWrist = state.LeftHand;
+    return this.state;
+  }
+
+  retargetLeftWristTwist() {
+    if (!this.handState) return;
+    if (!this.poseState) return;
+
+    const poseLeftIndexMCP = this.handState.INDEX_FINGER_MCP;
+    const poseLeftLittleMCP = this.handState.PINKY_MCP;
+    const poseLeftWrist = this.handState.WRIST;
+
+    const leftIndexMCP = this.mmdBoneState.LEFT_INDEX_FINGER_1!;
+    const leftLittleMCP = this.mmdBoneState.LEFT_LITTLE_FINGER_1!;
+    const leftWrist = this.mmdBoneState.LEFT_WRIST!;
+
+    const palmHorizontal = leftLittleMCP.restPosition.subtract(leftIndexMCP.restPosition);
+    const palmVertical = leftWrist.restPosition.subtract(leftIndexMCP.restPosition);
+    const palmDirection = BABYLON.Vector3.Cross(palmHorizontal, palmVertical);
+    // console.log('Palm direction: ', palmDirection.toString());
+
+    const posePalmHorizontal = poseLeftLittleMCP.position.subtract(poseLeftIndexMCP.position);
+    const posePalmVertical = poseLeftWrist.position.subtract(poseLeftIndexMCP.position);
+    const posePalmDirection = BABYLON.Vector3.Cross(posePalmHorizontal, posePalmVertical);
+  }
+
   retargetUpperBody() {
     if (!this.poseState) return this.state;
 

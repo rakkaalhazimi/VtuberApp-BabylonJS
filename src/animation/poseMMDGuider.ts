@@ -42,6 +42,11 @@ export class PoseMMDGuider {
     this.RotateBone(head.bone, state.head);
   }
 
+  guideLeftWristKalido(state: GuiderState) {
+    const leftWrist = this.mmdBoneState.LEFT_WRIST!;
+    this.RotateBone(leftWrist.bone, state.leftWrist);
+  }
+
   guideLeftHandKalido(state: GuiderState) {
     // const leftWrist = this.mmdBoneState.LEFT_WRIST!;
     // this.RotateBone(leftWrist.bone, state.leftWrist);
@@ -120,6 +125,13 @@ export class PoseMMDGuider {
     this.RotateBone(rightLittlePIP.bone, state.rightLittlePIP);
     const rightLittleMCP = this.mmdBoneState.RIGHT_LITTLE_FINGER_1!;
     this.RotateBone(rightLittleMCP.bone, state.rightLittleMCP);
+  }
+
+  guideLeftArmKalido(state: GuiderState) {
+    const leftUpperArm = this.mmdBoneState.LEFT_ARM!;
+    this.RotateBone(leftUpperArm.bone, state.leftUpperArm);
+    const leftLowerArm = this.mmdBoneState.LEFT_ELBOW!;
+    this.RotateBone(leftLowerArm.bone, state.leftLowerArm);
   }
 
   guideUpperBody(state: GuiderState) {
