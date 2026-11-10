@@ -55,8 +55,9 @@ export class PoseMMDRetargeter {
   }
 
   static AdjustKalidoPupil(pupil: {x: number, y: number, z: number}) {
+    const pitch = BABYLON.Clamp(pupil.x, -0.2, 0.2);
     const yaw = BABYLON.Clamp(-pupil.y, -0.4, 0.4);
-    return {x: 0, y: yaw};
+    return {x: pitch, y: yaw};
   }
 
   retargetEyeBlinkKalido(state: Kalidokit.TFace) {
@@ -210,7 +211,10 @@ export class PoseMMDRetargeter {
   }
 
   retargetLeftArm() {
-    if (!this.poseState) return this.state;
+    if (!this.poseState) {
+      this.state.leftArmQuaternion = LEFT_ARM_DEFAULT_QUATERNION;
+      return this.state;
+    };
 
     const leftShoulder = this.mmdBoneState.LEFT_SHOULDER!;
     const leftElbow = this.mmdBoneState.LEFT_ELBOW!;
@@ -239,7 +243,10 @@ export class PoseMMDRetargeter {
   }
 
   retargetRightArm() {
-    if (!this.poseState) return this.state;
+    if (!this.poseState) {
+      this.state.rightArmQuaternion = RIGHT_ARM_DEFAULT_QUATERNION;
+      return this.state;
+    };
 
     const rightShoulder = this.mmdBoneState.RIGHT_SHOULDER!;
     const rightElbow = this.mmdBoneState.RIGHT_ELBOW!;
