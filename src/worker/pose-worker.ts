@@ -1,4 +1,4 @@
-import { PoseLandmarkerEstimation } from "@/computer-vision/pose-estimation";
+import { PoseLandmarkerEstimation } from "@/computer-vision/pose-landmarker";
 
 
 
