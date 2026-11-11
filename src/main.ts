@@ -8,12 +8,12 @@ import * as Kalidokit from 'kalidokit';
 
 import { PoseMMDGuider } from '@/animation/poseMMDGuider';
 import { PoseMMDRetargeter } from '@/animation/poseMMDRetargeter';
-import { FaceLandmarkerDrawer } from '@/computer-vision/face-drawer';
 import { PoseEMAFilter } from '@/computer-vision/pose-ema-filter';
-import { HandLandmarkerDrawer } from '@/computer-vision/hand-drawer';
 import { HandLandmarkerEstimation } from '@/computer-vision/hand-landmarker';
-import { PoseLandmarkerDrawer } from '@/computer-vision/pose-drawer';
 import { createPoseLandmarkState } from '@/computer-vision/pose-landmark-state';
+import { FaceLandmarkerDrawer } from '@/drawer/face-drawer';
+import { HandLandmarkerDrawer } from '@/drawer/hand-drawer';
+import { PoseLandmarkerDrawer } from '@/drawer/pose-drawer';
 import { ControlGUI } from '@/gui/control';
 import { MMDGUI } from '@/gui/mmd-gui';
 import { PoseGUI } from '@/gui/pose-gui';
