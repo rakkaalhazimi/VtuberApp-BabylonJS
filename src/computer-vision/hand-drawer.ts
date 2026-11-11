@@ -1,8 +1,27 @@
 import type { HandLandmarkerResult } from "@mediapipe/tasks-vision";
 
-import { HAND_CONFIDENCE_SCORE, handLandmarkerConnections } from "./hand-landmarker";
+import { HAND_CONFIDENCE_SCORE } from "@/computer-vision/hand-landmarker";
+import type { VideoCamera } from "@/video/video";
 
 
+
+// Hand Landmarker keypoint pairs to connect for drawing the hand skeleton (21 landmarks,
+// same order as the Hand Landmarker model, see
+// https://developers.google.com/edge/mediapipe/solutions/vision/hand_landmarker/index#models).
+export const handLandmarkerConnections: Array<[number, number]> = [
+  // Thumb
+  [0, 1], [1, 2], [2, 3], [3, 4],
+  // Index finger
+  [0, 5], [5, 6], [6, 7], [7, 8],
+  // Middle finger + palm link to index
+  [5, 9], [9, 10], [10, 11], [11, 12],
+  // Ring finger + palm link to middle
+  [9, 13], [13, 14], [14, 15], [15, 16],
+  // Pinky finger + palm link to ring
+  [13, 17], [17, 18], [18, 19], [19, 20],
+  // Palm base
+  [0, 17],
+];
 
 export class HandLandmarkerDrawer {
   constructor(

@@ -1,18 +1,20 @@
+import { FaceLandmarker } from '@mediapipe/tasks-vision';
 import type { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
-import {
-  faceLandmarkerContourConnections,
-  faceLandmarkerFaceOvalConnections,
-  faceLandmarkerLeftEyebrowConnections,
-  faceLandmarkerLeftEyeConnections,
-  faceLandmarkerLeftIrisConnections,
-  faceLandmarkerLipsConnections,
-  faceLandmarkerRightEyebrowConnections,
-  faceLandmarkerRightEyeConnections,
-  faceLandmarkerRightIrisConnections,
-  faceLandmarkerTesselationConnections,
-} from "./face-landmarker";
 
 
+// Face Landmarker keypoint connections (468/478 landmarks, same order as the Face
+// Landmarker model). The static arrays are provided by the MediaPipe SDK, see
+// https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker#models.
+const faceLandmarkerLipsConnections = FaceLandmarker.FACE_LANDMARKS_LIPS;
+const faceLandmarkerLeftEyeConnections = FaceLandmarker.FACE_LANDMARKS_LEFT_EYE;
+const faceLandmarkerRightEyeConnections = FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE;
+const faceLandmarkerLeftEyebrowConnections = FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW;
+const faceLandmarkerRightEyebrowConnections = FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW;
+const faceLandmarkerLeftIrisConnections = FaceLandmarker.FACE_LANDMARKS_LEFT_IRIS;
+const faceLandmarkerRightIrisConnections = FaceLandmarker.FACE_LANDMARKS_RIGHT_IRIS;
+const faceLandmarkerFaceOvalConnections = FaceLandmarker.FACE_LANDMARKS_FACE_OVAL;
+const faceLandmarkerContourConnections = FaceLandmarker.FACE_LANDMARKS_CONTOURS;
+const faceLandmarkerTesselationConnections = FaceLandmarker.FACE_LANDMARKS_TESSELATION;
 
 const faceConnections = [
   faceLandmarkerLipsConnections,

@@ -1,7 +1,24 @@
 import type { PoseLandmarkerResult } from "@mediapipe/tasks-vision";
-import { POSE_CONFIDENCE_SCORE, poseLandmarkerConnections } from "./pose-estimation";
+
+import { POSE_CONFIDENCE_SCORE } from "@/computer-vision/pose-estimation";
 
 
+
+// Pose Landmarker keypoint pairs to connect for drawing the skeleton (33 landmarks, same
+// order as the Pose Landmarker / BlazePose model).
+export const poseLandmarkerConnections = [
+  // Head and Face
+  [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8],
+  [9, 10],
+  // Upper Body
+  [11, 12], [11, 23], [23, 25], [25, 27], [27, 29], [29, 31],
+  [12, 24], [24, 26], [26, 28], [28, 30], [30, 32],
+  // Arms
+  [11, 13], [13, 15], [12, 14], [14, 16],
+  // Hands and Fingers
+  [15, 17], [15, 19], [15, 21],
+  [16, 18], [16, 20], [16, 22],
+];
 
 export class PoseLandmarkerDrawer {
   constructor(

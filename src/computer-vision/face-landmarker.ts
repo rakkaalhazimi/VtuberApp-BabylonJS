@@ -4,29 +4,6 @@ import type {
   NormalizedLandmark,
 } from '@mediapipe/tasks-vision';
 
-// Face Landmarker keypoint connections (468/478 landmarks, same order as the Face
-// Landmarker model). The static arrays are provided by the MediaPipe SDK, see
-// https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker#models.
-export const faceLandmarkerLipsConnections =
-  FaceLandmarker.FACE_LANDMARKS_LIPS;
-export const faceLandmarkerLeftEyeConnections =
-  FaceLandmarker.FACE_LANDMARKS_LEFT_EYE;
-export const faceLandmarkerRightEyeConnections =
-  FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE;
-export const faceLandmarkerLeftEyebrowConnections =
-  FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW;
-export const faceLandmarkerRightEyebrowConnections =
-  FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW;
-export const faceLandmarkerLeftIrisConnections =
-  FaceLandmarker.FACE_LANDMARKS_LEFT_IRIS;
-export const faceLandmarkerRightIrisConnections =
-  FaceLandmarker.FACE_LANDMARKS_RIGHT_IRIS;
-export const faceLandmarkerFaceOvalConnections =
-  FaceLandmarker.FACE_LANDMARKS_FACE_OVAL;
-export const faceLandmarkerContourConnections =
-  FaceLandmarker.FACE_LANDMARKS_CONTOURS;
-export const faceLandmarkerTesselationConnections =
-  FaceLandmarker.FACE_LANDMARKS_TESSELATION;
 
 // A small subset of the most frequently used face landmark indices. For the full
 // 478 point map, see the keypoints reference linked above.
