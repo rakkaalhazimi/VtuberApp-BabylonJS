@@ -1,6 +1,6 @@
 import type { PoseLandmarkerResult } from "@mediapipe/tasks-vision";
 
-import { PoseLandmarkerPoint } from "./pose-estimation";
+import { PoseLandmarkerPoint } from "./pose-landmarker";
 import { parseLandmark, parseLandmarkNew } from "@/utils";
 
 

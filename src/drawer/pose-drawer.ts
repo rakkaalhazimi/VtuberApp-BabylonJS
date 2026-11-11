@@ -1,6 +1,6 @@
 import type { PoseLandmarkerResult } from "@mediapipe/tasks-vision";
 
-import { POSE_CONFIDENCE_SCORE } from "@/computer-vision/pose-estimation";
+import { POSE_CONFIDENCE_SCORE } from "@/computer-vision/pose-landmarker";
 
 
 
