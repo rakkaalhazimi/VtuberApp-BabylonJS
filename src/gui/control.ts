@@ -9,7 +9,6 @@ import type { PoseEstimationWorker } from '@/worker/pose-estimation-worker';
 
 
 export class ControlGUI {
-  private gui: dat.GUI;
 
   constructor(
     private scene: BABYLON.Scene,
@@ -17,9 +16,8 @@ export class ControlGUI {
     private poseWorker: PoseEstimationWorker,
     private handWorker: HandLandmarkerWorker,
     private faceWorker: FaceLandmarkerWorker,
-  ) {
-    this.gui = new dat.GUI();
-  }
+    private gui: dat.GUI = new dat.GUI(),
+  ) {}
 
   createChangeBgColorGUI(folder: dat.GUI = this.gui) {
     const options = {
@@ -85,14 +83,13 @@ export class ControlGUI {
       : this.faceWorker.disableWorker());
   }
 
-  createControlGUI() {
-    const controlFolder = this.gui.addFolder('Control');
-    this.createChangeBgColorGUI(controlFolder);
-    this.createEnableCameraGUI(controlFolder);
-    this.createHideCameraGUI(controlFolder);
-    this.createPoseEstimationGUI(controlFolder);
-    this.createHandEstimationGUI(controlFolder);
-    this.createFaceEstimationGUI(controlFolder);
-    controlFolder.open();
+  createControlGUI(folder: dat.GUI = this.gui.addFolder('Control')) {
+    this.createChangeBgColorGUI(folder);
+    this.createEnableCameraGUI(folder);
+    this.createHideCameraGUI(folder);
+    this.createPoseEstimationGUI(folder);
+    this.createHandEstimationGUI(folder);
+    this.createFaceEstimationGUI(folder);
+    folder.open();
   }
 }

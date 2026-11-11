@@ -6,17 +6,13 @@ import { boneTranslations, morphTranslations } from '@/mmd/translation';
 
 export class MMDGUI {
 
-  private gui: dat.GUI;
-
   constructor(
     private model: BABYLONMMD.MmdModel,
-  ) {
-    this.gui = new dat.GUI();
-  };
+    private gui: dat.GUI = new dat.GUI(),
+  ) {};
 
-
-  createBoneGUI() {
-    const boneFolder = this.gui.addFolder('Bone');
+  createBoneGUI(folder: dat.GUI = this.gui) {
+    const boneFolder = folder.addFolder('Bone');
     for (const value of Object.values(boneTranslations)) {
       const bone = this.model.runtimeBones.find(b => b.name === value.localName);
 
@@ -43,8 +39,8 @@ export class MMDGUI {
     }
   }
 
-  createMorphGUI() {
-    const morphFolder = this.gui.addFolder('Morph');
+  createMorphGUI(folder: dat.GUI = this.gui) {
+    const morphFolder = folder.addFolder('Morph');
     const options: Record<string, number> = {};
     for (const [localName, globalName] of Object.entries(morphTranslations)) {
       const morphController = this.model.morph;
@@ -57,6 +53,12 @@ export class MMDGUI {
         morphController.setMorphWeight(localName, value);
       });
     }
+  }
+
+  createMMDGUI(folder: dat.GUI = this.gui.addFolder('MMD')) {
+    this.createBoneGUI(folder);
+    this.createMorphGUI(folder);
+    folder.open();
   }
 
 };

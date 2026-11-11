@@ -3,6 +3,7 @@ import '@/style.css';
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import 'babylon-mmd/esm/Loader/pmxLoader';
+import * as dat from 'dat.gui';
 import * as Kalidokit from 'kalidokit';
 
 import { PoseMMDGuider } from '@/animation/poseMMDGuider';
@@ -164,18 +165,19 @@ const createScene = async () => {
   poseGuider.guideRightArm(poseRetargeter.state);
 
   // GUI
-  const mmdGui = new MMDGUI(mmdModel);
-  mmdGui.createBoneGUI();
-  mmdGui.createMorphGUI();
-
+  const settingsFolder = new dat.GUI().addFolder('Settings');
+  settingsFolder.open();
+  const mmdGUI = new MMDGUI(mmdModel, settingsFolder);
   const controlGUI = new ControlGUI(
     scene,
     videoCamera,
     poseWorker,
     handWorker,
     faceWorker,
+    settingsFolder,
   );
   controlGUI.createControlGUI();
+  mmdGUI.createMMDGUI();
 
 
   // const poseResult = await pose.estimatePose(videoCamera.video);
