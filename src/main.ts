@@ -16,6 +16,7 @@ import { PoseLandmarkerDrawer } from '@/computer-vision/pose-drawer';
 import { createPoseLandmarkState } from '@/computer-vision/pose-landmark-state';
 import { ControlGUI } from '@/gui/control';
 import { MMDGUI } from '@/gui/mmd-gui';
+import { PoseGUI } from '@/gui/pose-gui';
 import { createMMDBoneState } from '@/mmd/mmd-bone-state';
 import { MMDMovementGuider } from '@/mmd/guider';
 import { createMMDMorphController } from '@/mmd/morph-controller';
@@ -167,15 +168,23 @@ const createScene = async () => {
   // GUI
   const settingsFolder = new dat.GUI().addFolder('Settings');
   settingsFolder.open();
-  const mmdGUI = new MMDGUI(mmdModel, settingsFolder);
-  const controlGUI = new ControlGUI(
-    scene,
-    videoCamera,
+
+  const poseGUI = new PoseGUI(
     poseWorker,
     handWorker,
     faceWorker,
     settingsFolder,
   );
+
+  const mmdGUI = new MMDGUI(mmdModel, settingsFolder);
+
+  const controlGUI = new ControlGUI(
+    scene,
+    videoCamera,
+    settingsFolder,
+  );
+
+  poseGUI.createPoseGUI();
   controlGUI.createControlGUI();
   mmdGUI.createMMDGUI();
 
