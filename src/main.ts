@@ -36,7 +36,7 @@ const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engi
 const createScene = async () => {
   // Creates a basic Babylon Scene object
   const scene = new BABYLON.Scene(engine);
-  scene.clearColor = new BABYLON.Color4(0.95, 0.95, 0.95, 1.0);
+  scene.clearColor = BABYLON.Color4.FromHexString('#009933');
   scene.ambientColor = new BABYLON.Color3(0.5, 0.5, 0.5);
 
   // Creates and positions a free camera
@@ -168,7 +168,13 @@ const createScene = async () => {
   mmdGui.createBoneGUI();
   mmdGui.createMorphGUI();
 
-  const controlGUI = new ControlGUI(videoCamera, poseWorker, handWorker, faceWorker);
+  const controlGUI = new ControlGUI(
+    scene,
+    videoCamera,
+    poseWorker,
+    handWorker,
+    faceWorker,
+  );
   controlGUI.createControlGUI();
 
 

@@ -1,3 +1,4 @@
+import * as BABYLON from '@babylonjs/core';
 import dat from 'dat.gui';
 
 import type { VideoCamera } from '@/video/video';
@@ -11,12 +12,26 @@ export class ControlGUI {
   private gui: dat.GUI;
 
   constructor(
+    private scene: BABYLON.Scene,
     public videoCamera: VideoCamera,
     private poseWorker: PoseEstimationWorker,
     private handWorker: HandLandmarkerWorker,
     private faceWorker: FaceLandmarkerWorker,
   ) {
     this.gui = new dat.GUI();
+  }
+
+  createChangeBgColorGUI(folder: dat.GUI = this.gui) {
+    const options = {
+      background: '',
+    };
+    const colors = {
+      white: '#ffffff',
+      black: '#000000',
+      green: '#009933',
+    };
+    folder.add(options, 'background', colors)
+      .onChange((color) => this.scene.clearColor = BABYLON.Color4.FromHexString(color));
   }
 
   createEnableCameraGUI(folder: dat.GUI = this.gui) {
@@ -72,6 +87,7 @@ export class ControlGUI {
 
   createControlGUI() {
     const controlFolder = this.gui.addFolder('Control');
+    this.createChangeBgColorGUI(controlFolder);
     this.createEnableCameraGUI(controlFolder);
     this.createHideCameraGUI(controlFolder);
     this.createPoseEstimationGUI(controlFolder);
