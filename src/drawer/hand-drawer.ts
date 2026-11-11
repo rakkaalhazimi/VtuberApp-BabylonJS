@@ -24,6 +24,8 @@ export const handLandmarkerConnections: Array<[number, number]> = [
 ];
 
 export class HandLandmarkerDrawer {
+  public isEnabled = false;
+
   constructor(
     public videoWidth: number,
     public videoHeight: number) {}
@@ -32,10 +34,12 @@ export class HandLandmarkerDrawer {
     ctx: CanvasRenderingContext2D,
     result: HandLandmarkerResult,
   ) {
-    const allHands = result.landmarks;
-
     // Clear previous drawings
     ctx.clearRect(0, 0, this.videoWidth, this.videoHeight);
+
+    if (!this.isEnabled) return;
+
+    const allHands = result.landmarks;
 
     if (!allHands || allHands.length === 0) {
       return;
@@ -89,5 +93,13 @@ export class HandLandmarkerDrawer {
         ctx.stroke();
       }
     }
+  }
+
+  enableDrawer() {
+    this.isEnabled = true;
+  }
+
+  disableDrawer() {
+    this.isEnabled = false;
   }
 }

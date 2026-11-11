@@ -21,6 +21,8 @@ export const poseLandmarkerConnections = [
 ];
 
 export class PoseLandmarkerDrawer {
+  public isEnabled = false;
+
   constructor(
     public videoWidth: number,
     public videoHeight: number) {}
@@ -29,14 +31,14 @@ export class PoseLandmarkerDrawer {
     ctx: CanvasRenderingContext2D,
     result: PoseLandmarkerResult,
   ) {
-    const landmarks = result.landmarks[0];
-
-    if (!landmarks) {
-      return;
-    }
-
     // Clear previous drawings
     ctx.clearRect(0, 0, this.videoWidth, this.videoHeight);
+
+    if (!this.isEnabled) return;
+
+    const landmarks = result.landmarks[0];
+
+    if (!landmarks) return;
 
     // Normalized landmarks are scaled to the video dimensions
     const toCanvasX = (x: number) => x * this.videoWidth;
@@ -76,5 +78,13 @@ export class PoseLandmarkerDrawer {
       ctx.lineWidth = 2;
       ctx.stroke();
     }
+  }
+
+  enableDrawer() {
+    this.isEnabled = true;
+  }
+
+  disableDrawer() {
+    this.isEnabled = false;
   }
 }

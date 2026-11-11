@@ -30,6 +30,8 @@ const faceConnections = [
 ];
 
 export class FaceLandmarkerDrawer {
+  public isEnabled = false;
+
   constructor(
     public videoWidth: number,
     public videoHeight: number) { }
@@ -38,10 +40,12 @@ export class FaceLandmarkerDrawer {
     ctx: CanvasRenderingContext2D,
     result: FaceLandmarkerResult,
   ) {
-    const faceLandmarks = result.faceLandmarks[0];
-
     // Clear previous drawings
     ctx.clearRect(0, 0, this.videoWidth, this.videoHeight);
+
+    if (!this.isEnabled) return;
+
+    const faceLandmarks = result.faceLandmarks[0];
 
     // Normalized landmarks are scaled to the video dimensions
     const toCanvasX = (x: number) => x * this.videoWidth;
@@ -62,5 +66,13 @@ export class FaceLandmarkerDrawer {
         ctx.stroke();
       }
     }
+  }
+
+  enableDrawer() {
+    this.isEnabled = true;
+  }
+
+  disableDrawer() {
+    this.isEnabled = false;
   }
 }

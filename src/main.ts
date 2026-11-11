@@ -15,6 +15,7 @@ import { FaceLandmarkerDrawer } from '@/drawer/face-drawer';
 import { HandLandmarkerDrawer } from '@/drawer/hand-drawer';
 import { PoseLandmarkerDrawer } from '@/drawer/pose-drawer';
 import { ControlGUI } from '@/gui/control';
+import { DrawerGUI } from '@/gui/drawer-gui';
 import { MMDGUI } from '@/gui/mmd-gui';
 import { PoseGUI } from '@/gui/pose-gui';
 import { createMMDBoneState } from '@/mmd/mmd-bone-state';
@@ -184,8 +185,16 @@ const createScene = async () => {
     settingsFolder,
   );
 
+  const drawerGUI = new DrawerGUI(
+    faceDrawer,
+    poseDrawer,
+    handDrawer,
+    settingsFolder,
+  );
+
   poseGUI.createPoseGUI();
   controlGUI.createControlGUI();
+  drawerGUI.createDrawerGUI();
   mmdGUI.createMMDGUI();
 
 
