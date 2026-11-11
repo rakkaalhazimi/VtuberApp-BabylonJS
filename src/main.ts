@@ -69,13 +69,17 @@ const createScene = async () => {
   shadowGenerator.filteringQuality = BABYLON.ShadowGenerator.QUALITY_MEDIUM;
   shadowGenerator.frustumEdgeFalloff = 0.1;
 
-  const sphere = BABYLON.MeshBuilder.CreateSphere('sphere', { diameter: 2, segments: 32 }, scene);
-  sphere.position.y = 1;
-  sphere.receiveShadows = true;
-  shadowGenerator.addShadowCaster(sphere);
+  // const sphere = BABYLON.MeshBuilder.CreateSphere('sphere', { diameter: 2, segments: 32 }, scene);
+  // sphere.position.y = 1;
+  // sphere.receiveShadows = true;
+  // shadowGenerator.addShadowCaster(sphere);
 
-  const ground = BABYLON.MeshBuilder.CreateGround('ground1', { width: 100, height: 100, subdivisions: 2, updatable: false }, scene);
-  ground.receiveShadows = true;
+  // const ground = BABYLON.MeshBuilder.CreateGround('ground1', { width: 100, height: 100, subdivisions: 2, updatable: false }, scene);
+  // ground.receiveShadows = true;
+  // const groundMat = new BABYLON.StandardMaterial('groundMat', scene);
+  // groundMat.diffuseColor = BABYLON.Color3.FromHexString('#009933');
+  // ground.material = groundMat;
+
 
   // Physics
   const wasmInstance = await BABYLONMMD.GetMmdWasmInstance(new BABYLONMMD.MmdWasmInstanceTypeMPR());
