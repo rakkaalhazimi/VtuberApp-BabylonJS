@@ -18,7 +18,8 @@ export class PoseMMDAnimation {
 
   constructor() { }
 
-  useMmdModel(mmdModel: BABYLONMMD.MmdModel) {
+  useMmdModel(mmdModel: BABYLONMMD.MmdModel | null) {
+    if (!mmdModel) return;
     const boneState = createMMDBoneState(mmdModel);
     const morphController = createMMDMorphController(mmdModel);
     this.poseRetargeter = new PoseMMDRetargeter(boneState);

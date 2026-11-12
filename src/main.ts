@@ -18,9 +18,7 @@ import { ControlGUI } from '@/gui/control';
 import { DrawerGUI } from '@/gui/drawer-gui';
 import { MMDGUI } from '@/gui/mmd-gui';
 import { PoseGUI } from '@/gui/pose-gui';
-import { createMMDBoneState } from '@/mmd/mmd-bone-state';
-import { MMDMovementGuider } from '@/mmd/guider';
-import { createMMDMorphController } from '@/mmd/morph-controller';
+import { MMDLoader } from '@/mmd/mmd-loader';
 import { VideoCamera } from '@/video/video';
 import { FaceLandmarkerWorker } from '@/worker/face-landmarker-worker';
 import { HandLandmarkerWorker } from '@/worker/hand-landmarker-worker';
@@ -105,28 +103,9 @@ const createScene = async () => {
       '/vmd/walk.vmd',
     ]);
 
-  // Model
-  const mmdMesh = await BABYLON.LoadAssetContainerAsync(
-    '/models/feixiao/星穹铁道—飞霄.pmx',
-    scene,
-
-  ).then((result) => {
-    result.addAllToScene();
-    return result.rootNodes[0] as BABYLONMMD.MmdMesh;
-  });
-
-
-  const cameraAnimationHandle = mmdCamera.createRuntimeAnimation(mmdAnimation);
-  mmdCamera.setRuntimeAnimation(cameraAnimationHandle);
-  mmdRuntime.addAnimatable(mmdCamera);
-
-  for (const mesh of mmdMesh.metadata.meshes) {
-    mesh.receiveShadows = true;
-  };
-  shadowGenerator.addShadowCaster(mmdMesh);
-  const mmdModel = mmdRuntime.createMmdModel(mmdMesh);
-  const modelAnimationHandle = mmdModel.createRuntimeAnimation(mmdAnimation);
-  mmdModel.setRuntimeAnimation(modelAnimationHandle);
+  // MMD Loader
+  const mmdLoader = new MMDLoader(scene);
+  const mmdModel = await mmdLoader.loadModel(mmdRuntime, '/models/female_rover/Female Rover1.01.pmx');
 
 
   // Video Camera
@@ -157,18 +136,6 @@ const createScene = async () => {
   // MMD Pose Animation
   const poseMMDAnimation = new PoseMMDAnimation();
   poseMMDAnimation.useMmdModel(mmdModel);
-
-  // MMD Pose Movement
-  const boneState = createMMDBoneState(mmdModel);
-  const morphController = createMMDMorphController(mmdModel);
-  const poseRetargeter = new PoseMMDRetargeter(boneState);
-  const poseGuider = new PoseMMDGuider(boneState, morphController);
-
-  // Lower the arms at start
-  poseRetargeter.retargetLeftArm();
-  poseRetargeter.retargetRightArm();
-  poseGuider.guideLeftArm(poseRetargeter.state);
-  poseGuider.guideRightArm(poseRetargeter.state);
 
   // GUI
   const settingsFolder = new dat.GUI().addFolder('Settings');
@@ -204,7 +171,7 @@ const createScene = async () => {
 
   // const poseResult = await pose.estimatePose(videoCamera.video);
   // console.log(poseResult);
-  const guider = new MMDMovementGuider(mmdModel);
+  // const guider = new MMDMovementGuider(mmdModel);
 
   scene.onBeforeRenderObservable.add(async () => {
     if (faceWorker.isProcessing) {
