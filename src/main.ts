@@ -6,11 +6,11 @@ import 'babylon-mmd/esm/Loader/pmxLoader';
 import * as dat from 'dat.gui';
 import * as Kalidokit from 'kalidokit';
 
+import { PoseMMDAnimation } from '@/animation/poseMMDAnimation';
 import { PoseMMDGuider } from '@/animation/poseMMDGuider';
 import { PoseMMDRetargeter } from '@/animation/poseMMDRetargeter';
 import { PoseEMAFilter } from '@/computer-vision/pose-ema-filter';
 import { HandLandmarkerEstimation } from '@/computer-vision/hand-landmarker';
-import { createPoseLandmarkState } from '@/computer-vision/pose-landmark-state';
 import { FaceLandmarkerDrawer } from '@/drawer/face-drawer';
 import { HandLandmarkerDrawer } from '@/drawer/hand-drawer';
 import { PoseLandmarkerDrawer } from '@/drawer/pose-drawer';
@@ -154,6 +154,10 @@ const createScene = async () => {
 
   const poseEmaFilter = new PoseEMAFilter();
 
+  // MMD Pose Animation
+  const poseMMDAnimation = new PoseMMDAnimation();
+  poseMMDAnimation.useMmdModel(mmdModel);
+
   // MMD Pose Movement
   const boneState = createMMDBoneState(mmdModel);
   const morphController = createMMDMorphController(mmdModel);
@@ -204,10 +208,7 @@ const createScene = async () => {
 
   scene.onBeforeRenderObservable.add(async () => {
     if (faceWorker.isProcessing) {
-      poseGuider.guideEyeBlinkKalido(poseRetargeter.state);
-      poseGuider.guideEyeMovementKalido(poseRetargeter.state);
-      poseGuider.guideMouthKalido(poseRetargeter.state);
-      poseGuider.guideHead(poseRetargeter.state);
+      poseMMDAnimation.guideFaceKalido();
       return;
     }
 
@@ -227,15 +228,8 @@ const createScene = async () => {
 
         if (!faceRig) return;
 
-        poseRetargeter.retargetEyeBlinkKalido(faceRig);
-        poseRetargeter.retargetEyeMovement(faceRig);
-        poseRetargeter.retargetHeadKalido(faceRig);
-        poseRetargeter.retargetMouthKalido(faceRig);
-
-        poseGuider.guideEyeBlinkKalido(poseRetargeter.state);
-        poseGuider.guideEyeMovementKalido(poseRetargeter.state);
-        poseGuider.guideMouthKalido(poseRetargeter.state);
-        poseGuider.guideHead(poseRetargeter.state);
+        poseMMDAnimation.retargetFaceKalido(faceRig);
+        poseMMDAnimation.guideFaceKalido();
 
       } finally {
         faceWorker.isProcessing = false;
@@ -245,13 +239,7 @@ const createScene = async () => {
 
   scene.onBeforeRenderObservable.add(async () => {
     if (poseWorker.isProcessing) {
-      poseGuider.guideUpperBody(poseRetargeter.state);
-      poseGuider.guideLeftArm(poseRetargeter.state);
-      poseGuider.guideRightArm(poseRetargeter.state);
-      poseGuider.guideLeftArmTwist(poseRetargeter.state);
-      poseGuider.guideLeftElbowHinge(poseRetargeter.state);
-      poseGuider.guideRightArmTwist(poseRetargeter.state);
-      poseGuider.guideRightElbowHinge(poseRetargeter.state);
+      poseMMDAnimation.guidePose();
 
       return;
     };
@@ -269,22 +257,8 @@ const createScene = async () => {
         const filteredPoseResult = poseEmaFilter.filter(poseResult);
         poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult!);
 
-        const poseState = createPoseLandmarkState(poseResult);
-        poseRetargeter.updatePoseState(poseState);
-
-        poseRetargeter.retargetUpperBody();
-        poseRetargeter.retargetLeftArm();
-        poseRetargeter.retargetRightArm();
-        poseRetargeter.retargetLeftElbow();
-        poseRetargeter.retargetRightElbow();
-
-        poseGuider.guideUpperBody(poseRetargeter.state);
-        poseGuider.guideLeftArm(poseRetargeter.state);
-        poseGuider.guideRightArm(poseRetargeter.state);
-        poseGuider.guideLeftArmTwist(poseRetargeter.state);
-        poseGuider.guideLeftElbowHinge(poseRetargeter.state);
-        poseGuider.guideRightArmTwist(poseRetargeter.state);
-        poseGuider.guideRightElbowHinge(poseRetargeter.state);
+        poseMMDAnimation.retargetPose(poseResult);
+        poseMMDAnimation.guidePose();
 
         // const worldLandmarks = poseResult.worldLandmarks[0];
         // const landmarks = poseResult.landmarks[0];
@@ -304,8 +278,7 @@ const createScene = async () => {
 
   scene.onBeforeRenderObservable.add(async () => {
     if (handWorker.isProcessing) {
-      poseGuider.guideLeftHandKalido(poseRetargeter.state);
-      poseGuider.guideRightHandKalido(poseRetargeter.state);
+      poseMMDAnimation.guideHandKalido();
       return;
     }
 
@@ -321,10 +294,6 @@ const createScene = async () => {
 
         handDrawer.drawHandLandmarks(handCtx!, handResult);
 
-        // const leftHandState = createHandLandmarkState(handResult, false);
-        // poseRetargeter.updateHandState(leftHandState);
-        // poseRetargeter.retargetLeftWristTwist();
-
         const leftHandLandmarks = HandLandmarkerEstimation.GetLeftHand(handResult);
         const rightHandLandmarks = HandLandmarkerEstimation.GetRightHand(handResult);
 
@@ -337,14 +306,8 @@ const createScene = async () => {
           handRigR = Kalidokit.Hand.solve(rightHandLandmarks, 'Right');
         }
 
-        if (handRigL) {
-          poseRetargeter.retargetLeftHandKalido(handRigL);
-          poseGuider.guideLeftHandKalido(poseRetargeter.state);
-        };
-        if (handRigR) {
-          poseRetargeter.retargetRightHandKalido(handRigR);
-          poseGuider.guideRightHandKalido(poseRetargeter.state);
-        };
+        poseMMDAnimation.retargetHandKalido(handRigL, handRigR);
+        poseMMDAnimation.guideHandKalido();
 
       } finally {
         handWorker.isProcessing = false;
