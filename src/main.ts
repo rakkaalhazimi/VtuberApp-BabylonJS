@@ -105,7 +105,8 @@ const createScene = async () => {
 
   // MMD Loader
   const mmdLoader = new MMDLoader(scene);
-  const mmdModel = await mmdLoader.loadModel(mmdRuntime, '/models/female_rover/Female Rover1.01.pmx');
+  const mmdModel = await mmdLoader.loadModel(mmdRuntime, '/models/feixiao/星穹铁道—飞霄.pmx');
+  // await mmdLoader.loadModel(mmdRuntime, '/models/feixiao/星穹铁道—飞霄.pmx');
 
 
   // Video Camera

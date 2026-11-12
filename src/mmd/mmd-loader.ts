@@ -20,6 +20,7 @@ export class MMDLoader {
 
   async loadModel(mmdRuntime: BABYLONMMD.MmdRuntime, path: string) {
     if (this.currentContainer) {
+      mmdRuntime.destroyMmdModel(this.currentMmdModel!);
       this.currentContainer.dispose(); // This removes meshes, skeletons, and materials from memory
       this.currentContainer = null;
       this.currentMmdMesh = null;
