@@ -30,10 +30,7 @@ export class MMDGUI {
     const options = {path: ''};
     const paths = Object.fromEntries(pmxFolders);
     folder.add(options, 'path', paths)
-      .onChange(path => {
-        console.log('Path: ', path);
-        mmdLoader.loadModel(mmdRuntime, path);
-      });
+      .onChange(path => mmdLoader.loadModel(mmdRuntime, path));
   }
 
   createBoneGUI(folder: dat.GUI = this.gui) {
