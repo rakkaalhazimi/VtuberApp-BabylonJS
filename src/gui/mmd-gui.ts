@@ -2,6 +2,7 @@ import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import * as dat from 'dat.gui';
 
+import type { PoseMMDAnimation } from '@/animation/poseMMDAnimation';
 import type { MMDLoader } from '@/mmd/mmd-loader';
 import { boneTranslations, morphTranslations } from '@/mmd/translation';
 
@@ -17,26 +18,42 @@ const pmxFolders = Object.keys(allPmx).map(path => {
 });
 
 export class MMDGUI {
+  private boneFolder: dat.GUI | null = null;
+  private morphFolder: dat.GUI | null = null;
+  private mmdFolder: dat.GUI;
+
   constructor(
-    private model: BABYLONMMD.MmdModel,
     private gui: dat.GUI = new dat.GUI(),
-  ) { };
+  ) {
+    this.mmdFolder = this.gui.addFolder('MMD');
+  };
 
   createChangeMMDModelGUI(
     mmdLoader: MMDLoader,
     mmdRuntime: BABYLONMMD.MmdRuntime,
-    folder: dat.GUI = this.gui,
+    poseMMD: PoseMMDAnimation,
+    folder: dat.GUI = this.mmdFolder,
   ) {
-    const options = {path: ''};
+    const options = { path: '' };
     const paths = Object.fromEntries(pmxFolders);
-    folder.add(options, 'path', paths)
-      .onChange(path => mmdLoader.loadModel(mmdRuntime, path));
+    const loaderFolder = folder.addFolder('Loader');
+    loaderFolder.add(options, 'path', paths)
+      .onChange(async (path) => {
+        const mmdModel = await mmdLoader.loadModel(mmdRuntime, path);
+        this.createMMDGUI(mmdModel);
+        poseMMD.useMmdModel(mmdModel);
+      });
   }
 
-  createBoneGUI(folder: dat.GUI = this.gui) {
-    const boneFolder = folder.addFolder('Bone');
+  createBoneGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mmdFolder) {
+    if (this.boneFolder) {
+      console.log('Remove folder');
+      folder.removeFolder(this.boneFolder);
+    }
+    this.boneFolder = folder.addFolder('Bone');
+
     for (const value of Object.values(boneTranslations)) {
-      const bone = this.model.runtimeBones.find(b => b.name === value.localName);
+      const bone = mmdModel.runtimeBones.find(b => b.name === value.localName);
 
       if (!bone) continue;
 
@@ -45,7 +62,7 @@ export class MMDGUI {
         'y': 0,
         'z': 0,
       };
-      const nameFolder = boneFolder.addFolder(value.globalName);
+      const nameFolder = this.boneFolder.addFolder(value.globalName);
       nameFolder.add(options, 'x', -Math.PI, Math.PI, 0.1).onChange((value) => {
         const targetQuaternion = BABYLON.Quaternion.FromEulerAngles(value, options.y, options.z);
         bone.linkedBone.rotationQuaternion = targetQuaternion;
@@ -61,25 +78,29 @@ export class MMDGUI {
     }
   }
 
-  createMorphGUI(folder: dat.GUI = this.gui) {
-    const morphFolder = folder.addFolder('Morph');
+  createMorphGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mmdFolder) {
+    if (this.morphFolder) {
+      folder.removeFolder(this.morphFolder);
+    }
+    this.morphFolder = folder.addFolder('Morph');
+
     const options: Record<string, number> = {};
     for (const [localName, globalName] of Object.entries(morphTranslations)) {
-      const morphController = this.model.morph;
+      const morphController = mmdModel.morph;
       const morph = morphController.morphs.find(m => m.name === localName);
 
       if (!morph) continue;
 
       options[globalName] = 0;
-      morphFolder.add(options, globalName, 0, 1, 0.1).onChange((value) => {
+      this.morphFolder.add(options, globalName, 0, 1, 0.1).onChange((value) => {
         morphController.setMorphWeight(localName, value);
       });
     }
   }
 
-  createMMDGUI(folder: dat.GUI = this.gui.addFolder('MMD')) {
-    this.createBoneGUI(folder);
-    this.createMorphGUI(folder);
+  createMMDGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mmdFolder) {
+    this.createBoneGUI(mmdModel, folder);
+    this.createMorphGUI(mmdModel, folder);
     folder.open();
   }
 

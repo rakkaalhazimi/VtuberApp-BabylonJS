@@ -149,7 +149,7 @@ const createScene = async () => {
     settingsFolder,
   );
 
-  const mmdGUI = new MMDGUI(mmdModel, settingsFolder);
+  const mmdGUI = new MMDGUI(settingsFolder);
 
   const controlGUI = new ControlGUI(
     scene,
@@ -167,8 +167,8 @@ const createScene = async () => {
   poseGUI.createPoseGUI();
   controlGUI.createControlGUI();
   drawerGUI.createDrawerGUI();
-  mmdGUI.createChangeMMDModelGUI(mmdLoader, mmdRuntime);
-  mmdGUI.createMMDGUI();
+  mmdGUI.createChangeMMDModelGUI(mmdLoader, mmdRuntime, poseMMDAnimation);
+  mmdGUI.createMMDGUI(mmdModel);
 
 
   // const poseResult = await pose.estimatePose(videoCamera.video);
