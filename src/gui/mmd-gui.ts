@@ -43,6 +43,7 @@ export class MMDGUI {
         this.createMMDGUI(mmdModel);
         poseMMD.useMmdModel(mmdModel);
       });
+    loaderFolder.open();
   }
 
   createBoneGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mmdFolder) {
