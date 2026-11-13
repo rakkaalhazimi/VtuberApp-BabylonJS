@@ -24,7 +24,7 @@ export class ControlGUI {
     };
     folder.add(options, 'background', colors)
       .onChange((color) => this.scene.clearColor = BABYLON.Color4.FromHexString(color))
-      .setValue(colors.green);
+      .setValue(colors.black);
   }
 
   createEnableCameraGUI(folder: dat.GUI = this.gui) {
