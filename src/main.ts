@@ -142,31 +142,22 @@ const createScene = async () => {
   const settingsFolder = new dat.GUI().addFolder('Settings');
   settingsFolder.open();
 
-  const poseGUI = new PoseGUI(
-    poseWorker,
-    handWorker,
-    faceWorker,
-    settingsFolder,
-  );
+  const controlGUI = new ControlGUI(settingsFolder);
+  controlGUI.createChangeBgColorGUI(scene);
+  controlGUI.createEnableCameraGUI(videoCamera);
+  controlGUI.createHideCameraGUI(videoCamera);
+
+  const poseGUI = new PoseGUI(settingsFolder);
+  poseGUI.createFaceEstimationGUI(faceWorker);
+  poseGUI.createPoseEstimationGUI(poseWorker);
+  poseGUI.createHandEstimationGUI(handWorker);
+
+  const drawerGUI = new DrawerGUI(settingsFolder);
+  drawerGUI.createFaceEstimationGUI(faceDrawer);
+  drawerGUI.createPoseEstimationGUI(poseDrawer);
+  drawerGUI.createHandEstimationGUI(handDrawer);
 
   const mmdGUI = new MMDGUI(settingsFolder);
-
-  const controlGUI = new ControlGUI(
-    scene,
-    videoCamera,
-    settingsFolder,
-  );
-
-  const drawerGUI = new DrawerGUI(
-    faceDrawer,
-    poseDrawer,
-    handDrawer,
-    settingsFolder,
-  );
-
-  poseGUI.createPoseGUI();
-  controlGUI.createControlGUI();
-  drawerGUI.createDrawerGUI();
   mmdGUI.createChangeMMDModelGUI(mmdLoader, mmdRuntime, poseMMDAnimation);
   mmdGUI.createMMDGUI(mmdModel);
 

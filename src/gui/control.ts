@@ -8,15 +8,12 @@ import type { VideoCamera } from '@/video/video';
 export class ControlGUI {
   private mainFolder: dat.GUI;
 
-  constructor(
-    private scene: BABYLON.Scene,
-    public videoCamera: VideoCamera,
-    private gui: dat.GUI = new dat.GUI(),
-  ) {
-    this.mainFolder = gui.addFolder('Control');
+  constructor(private gui: dat.GUI = new dat.GUI()) {
+    this.mainFolder = this.gui.addFolder('Control');
+    this.mainFolder.open();
   }
 
-  createChangeBgColorGUI(folder: dat.GUI = this.gui) {
+  createChangeBgColorGUI(scene: BABYLON.Scene, folder: dat.GUI = this.mainFolder) {
     const options = {
       background: '',
     };
@@ -26,21 +23,21 @@ export class ControlGUI {
       green: '#009933',
     };
     folder.add(options, 'background', colors)
-      .onChange((color) => this.scene.clearColor = BABYLON.Color4.FromHexString(color))
+      .onChange((color) => scene.clearColor = BABYLON.Color4.FromHexString(color))
       .setValue(colors.black);
   }
 
-  createEnableCameraGUI(folder: dat.GUI = this.gui) {
+  createEnableCameraGUI(videoCamera: VideoCamera, folder: dat.GUI = this.mainFolder) {
     const options = {
-      enableCamera: this.videoCamera.isEnable,
+      enableCamera: videoCamera.isEnable,
     };
     folder.add(options, 'enableCamera')
       .onChange((value: boolean) => value
-        ? this.videoCamera.enableCamera()
-        : this.videoCamera.disableCamera());
+        ? videoCamera.enableCamera()
+        : videoCamera.disableCamera());
   }
 
-  createHideCameraGUI(folder: dat.GUI = this.gui) {
+  createHideCameraGUI(videoCamera: VideoCamera, folder: dat.GUI = this.mainFolder) {
     const options = {
       hideCamera: true,
     };
@@ -52,12 +49,5 @@ export class ControlGUI {
         video.style.visibility = 'visible';
       }
     }).setValue(true);
-  }
-
-  createControlGUI(folder: dat.GUI = this.mainFolder) {
-    this.createChangeBgColorGUI(folder);
-    this.createEnableCameraGUI(folder);
-    this.createHideCameraGUI(folder);
-    folder.open();
   }
 }

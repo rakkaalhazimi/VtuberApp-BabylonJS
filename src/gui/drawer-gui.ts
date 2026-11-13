@@ -9,45 +9,36 @@ export class DrawerGUI {
   private mainFolder: dat.GUI;
 
   constructor(
-    private faceDrawer: FaceLandmarkerDrawer,
-    private poseDrawer: PoseLandmarkerDrawer,
-    private handDrawer: HandLandmarkerDrawer,
     private gui: dat.GUI = new dat.GUI(),
   ) {
-    this.mainFolder = gui.addFolder('Drawer');
+    this.mainFolder = this.gui.addFolder('Drawer');
+    this.mainFolder.open();
   }
 
-  createPoseEstimationGUI(folder: dat.GUI = this.gui) {
+  createPoseEstimationGUI(poseDrawer: PoseLandmarkerDrawer, folder: dat.GUI = this.mainFolder) {
     const options = {
-      poseDrawer: this.poseDrawer.isEnabled,
+      poseDrawer: poseDrawer.isEnabled,
     };
     folder.add(options, 'poseDrawer').onChange((value: boolean) => value
-      ? this.poseDrawer.enableDrawer()
-      : this.poseDrawer.disableDrawer());
+      ? poseDrawer.enableDrawer()
+      : poseDrawer.disableDrawer());
   }
 
-  createFaceEstimationGUI(folder: dat.GUI = this.gui) {
+  createFaceEstimationGUI(faceDrawer: FaceLandmarkerDrawer, folder: dat.GUI = this.mainFolder) {
     const options = {
-      faceDrawer: this.faceDrawer.isEnabled,
+      faceDrawer: faceDrawer.isEnabled,
     };
     folder.add(options, 'faceDrawer').onChange((value: boolean) => value
-      ? this.faceDrawer.enableDrawer()
-      : this.faceDrawer.disableDrawer());
+      ? faceDrawer.enableDrawer()
+      : faceDrawer.disableDrawer());
   }
 
-  createHandEstimationGUI(folder: dat.GUI = this.gui) {
+  createHandEstimationGUI(handDrawer: HandLandmarkerDrawer, folder: dat.GUI = this.mainFolder) {
     const options = {
-      handDrawer: this.handDrawer.isEnabled,
+      handDrawer: handDrawer.isEnabled,
     };
     folder.add(options, 'handDrawer').onChange((value: boolean) => value
-      ? this.handDrawer.enableDrawer()
-      : this.handDrawer.disableDrawer());
-  }
-
-  createDrawerGUI(folder: dat.GUI = this.mainFolder) {
-    this.createPoseEstimationGUI(folder);
-    this.createFaceEstimationGUI(folder);
-    this.createHandEstimationGUI(folder);
-    folder.close();
+      ? handDrawer.enableDrawer()
+      : handDrawer.disableDrawer());
   }
 }

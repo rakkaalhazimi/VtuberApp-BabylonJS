@@ -9,46 +9,35 @@ import type { PoseEstimationWorker } from '@/worker/pose-estimation-worker';
 export class PoseGUI {
   private mainFolder: dat.GUI;
 
-  constructor(
-    private poseWorker: PoseEstimationWorker,
-    private handWorker: HandLandmarkerWorker,
-    private faceWorker: FaceLandmarkerWorker,
-    private gui: dat.GUI = new dat.GUI(),
-  ) {
+  constructor(private gui: dat.GUI = new dat.GUI()) {
     this.mainFolder = this.gui.addFolder('Pose');
+    this.mainFolder.open();
   }
 
-  createPoseEstimationGUI(folder: dat.GUI = this.gui) {
+  createPoseEstimationGUI(poseWorker: PoseEstimationWorker, folder: dat.GUI = this.mainFolder) {
     const options = {
-      enablePoseEstimation: this.poseWorker.isEnabled,
+      enablePoseEstimation: poseWorker.isEnabled,
     };
     folder.add(options, 'enablePoseEstimation').onChange((value: boolean) => value
-      ? this.poseWorker.enableWorker()
-      : this.poseWorker.disableWorker());
+      ? poseWorker.enableWorker()
+      : poseWorker.disableWorker());
   }
 
-  createHandEstimationGUI(folder: dat.GUI = this.gui) {
+  createHandEstimationGUI(handWorker: HandLandmarkerWorker, folder: dat.GUI = this.mainFolder) {
     const options = {
-      enableHandEstimation: this.handWorker.isEnabled,
+      enableHandEstimation: handWorker.isEnabled,
     };
     folder.add(options, 'enableHandEstimation').onChange((value: boolean) => value
-      ? this.handWorker.enableWorker()
-      : this.handWorker.disableWorker());
+      ? handWorker.enableWorker()
+      : handWorker.disableWorker());
   }
 
-  createFaceEstimationGUI(folder: dat.GUI = this.gui) {
+  createFaceEstimationGUI(faceWorker: FaceLandmarkerWorker, folder: dat.GUI = this.mainFolder) {
     const options = {
-      enableFaceEstimation: this.faceWorker.isEnabled,
+      enableFaceEstimation: faceWorker.isEnabled,
     };
     folder.add(options, 'enableFaceEstimation').onChange((value: boolean) => value
-      ? this.faceWorker.enableWorker()
-      : this.faceWorker.disableWorker());
-  }
-
-  createPoseGUI(folder: dat.GUI = this.mainFolder) {
-    this.createFaceEstimationGUI(folder);
-    this.createPoseEstimationGUI(folder);
-    this.createHandEstimationGUI(folder);
-    folder.open();
+      ? faceWorker.enableWorker()
+      : faceWorker.disableWorker());
   }
 }
