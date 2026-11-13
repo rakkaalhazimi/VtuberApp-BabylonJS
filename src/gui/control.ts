@@ -6,12 +6,15 @@ import type { VideoCamera } from '@/video/video';
 
 
 export class ControlGUI {
+  private mainFolder: dat.GUI;
 
   constructor(
     private scene: BABYLON.Scene,
     public videoCamera: VideoCamera,
     private gui: dat.GUI = new dat.GUI(),
-  ) {}
+  ) {
+    this.mainFolder = gui.addFolder('Control');
+  }
 
   createChangeBgColorGUI(folder: dat.GUI = this.gui) {
     const options = {
@@ -51,7 +54,7 @@ export class ControlGUI {
     }).setValue(true);
   }
 
-  createControlGUI(folder: dat.GUI = this.gui.addFolder('Control')) {
+  createControlGUI(folder: dat.GUI = this.mainFolder) {
     this.createChangeBgColorGUI(folder);
     this.createEnableCameraGUI(folder);
     this.createHideCameraGUI(folder);

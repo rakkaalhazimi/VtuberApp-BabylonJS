@@ -18,21 +18,21 @@ const pmxFolders = Object.keys(allPmx).map(path => {
 });
 
 export class MMDGUI {
+  private mainFolder: dat.GUI;
   private boneFolder: dat.GUI | null = null;
   private morphFolder: dat.GUI | null = null;
-  private mmdFolder: dat.GUI;
 
   constructor(
     private gui: dat.GUI = new dat.GUI(),
   ) {
-    this.mmdFolder = this.gui.addFolder('MMD');
+    this.mainFolder = this.gui.addFolder('MMD');
   };
 
   createChangeMMDModelGUI(
     mmdLoader: MMDLoader,
     mmdRuntime: BABYLONMMD.MmdRuntime,
     poseMMD: PoseMMDAnimation,
-    folder: dat.GUI = this.mmdFolder,
+    folder: dat.GUI = this.mainFolder,
   ) {
     const options = { path: '' };
     const paths = Object.fromEntries(pmxFolders);
@@ -46,7 +46,7 @@ export class MMDGUI {
     loaderFolder.open();
   }
 
-  createBoneGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mmdFolder) {
+  createBoneGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mainFolder) {
     if (this.boneFolder) {
       console.log('Remove folder');
       folder.removeFolder(this.boneFolder);
@@ -79,7 +79,7 @@ export class MMDGUI {
     }
   }
 
-  createMorphGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mmdFolder) {
+  createMorphGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mainFolder) {
     if (this.morphFolder) {
       folder.removeFolder(this.morphFolder);
     }
@@ -99,7 +99,7 @@ export class MMDGUI {
     }
   }
 
-  createMMDGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mmdFolder) {
+  createMMDGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mainFolder) {
     this.createBoneGUI(mmdModel, folder);
     this.createMorphGUI(mmdModel, folder);
     folder.open();

@@ -7,13 +7,16 @@ import type { PoseEstimationWorker } from '@/worker/pose-estimation-worker';
 
 
 export class PoseGUI {
+  private mainFolder: dat.GUI;
 
   constructor(
     private poseWorker: PoseEstimationWorker,
     private handWorker: HandLandmarkerWorker,
     private faceWorker: FaceLandmarkerWorker,
     private gui: dat.GUI = new dat.GUI(),
-  ) { }
+  ) {
+    this.mainFolder = this.gui.addFolder('Pose');
+  }
 
   createPoseEstimationGUI(folder: dat.GUI = this.gui) {
     const options = {
@@ -42,7 +45,7 @@ export class PoseGUI {
       : this.faceWorker.disableWorker());
   }
 
-  createPoseGUI(folder: dat.GUI = this.gui.addFolder('Pose')) {
+  createPoseGUI(folder: dat.GUI = this.mainFolder) {
     this.createFaceEstimationGUI(folder);
     this.createPoseEstimationGUI(folder);
     this.createHandEstimationGUI(folder);

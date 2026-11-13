@@ -6,12 +6,16 @@ import * as dat from 'dat.gui';
 
 
 export class DrawerGUI {
+  private mainFolder: dat.GUI;
+
   constructor(
     private faceDrawer: FaceLandmarkerDrawer,
     private poseDrawer: PoseLandmarkerDrawer,
     private handDrawer: HandLandmarkerDrawer,
     private gui: dat.GUI = new dat.GUI(),
-  ) { }
+  ) {
+    this.mainFolder = gui.addFolder('Drawer');
+  }
 
   createPoseEstimationGUI(folder: dat.GUI = this.gui) {
     const options = {
@@ -40,7 +44,7 @@ export class DrawerGUI {
       : this.handDrawer.disableDrawer());
   }
 
-  createDrawerGUI(folder: dat.GUI = this.gui.addFolder('Drawer')) {
+  createDrawerGUI(folder: dat.GUI = this.mainFolder) {
     this.createPoseEstimationGUI(folder);
     this.createFaceEstimationGUI(folder);
     this.createHandEstimationGUI(folder);
