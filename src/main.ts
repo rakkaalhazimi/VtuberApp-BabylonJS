@@ -14,7 +14,7 @@ import { HandLandmarkerEstimation } from '@/computer-vision/hand-landmarker';
 import { FaceLandmarkerDrawer } from '@/drawer/face-drawer';
 import { HandLandmarkerDrawer } from '@/drawer/hand-drawer';
 import { PoseLandmarkerDrawer } from '@/drawer/pose-drawer';
-import { ControlGUI } from '@/gui/control';
+import { ControlGUI } from '@/gui/control-gui';
 import { DrawerGUI } from '@/gui/drawer-gui';
 import { MMDGUI } from '@/gui/mmd-gui';
 import { PoseGUI } from '@/gui/pose-gui';
