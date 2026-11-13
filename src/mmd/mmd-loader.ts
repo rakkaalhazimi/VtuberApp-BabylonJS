@@ -18,17 +18,24 @@ export class MMDLoader {
 
   }
 
-  async loadModel(mmdRuntime: BABYLONMMD.MmdRuntime, path: string) {
+  destroyModel(mmdRuntime: BABYLONMMD.MmdRuntime) {
     if (this.currentContainer) {
       mmdRuntime.destroyMmdModel(this.currentMmdModel!);
       this.currentContainer.dispose(); // This removes meshes, skeletons, and materials from memory
       this.currentContainer = null;
       this.currentMmdMesh = null;
     }
+  }
 
-    this.currentContainer = await BABYLON.LoadAssetContainerAsync(path, this.scene);
+  async loadModel(mmdRuntime: BABYLONMMD.MmdRuntime, path: string) {
+    const newContainer = await BABYLON.LoadAssetContainerAsync(path, this.scene);
+    const newMmdMesh = newContainer.rootNodes[0] as BABYLONMMD.MmdMesh;
+
+    this.destroyModel(mmdRuntime);
+
+    this.currentContainer = newContainer;
+    this.currentMmdMesh = newMmdMesh;
     this.currentContainer.addAllToScene();
-    this.currentMmdMesh = this.currentContainer.rootNodes[0] as BABYLONMMD.MmdMesh;
 
     this.currentMmdModel = mmdRuntime.createMmdModel(this.currentMmdMesh);
 
