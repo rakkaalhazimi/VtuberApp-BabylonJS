@@ -167,6 +167,7 @@ const createScene = async () => {
   poseGUI.createPoseGUI();
   controlGUI.createControlGUI();
   drawerGUI.createDrawerGUI();
+  mmdGUI.createChangeMMDModelGUI(mmdLoader, mmdRuntime);
   mmdGUI.createMMDGUI();
 
 

@@ -2,14 +2,39 @@ import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import * as dat from 'dat.gui';
 
+import type { MMDLoader } from '@/mmd/mmd-loader';
 import { boneTranslations, morphTranslations } from '@/mmd/translation';
 
-export class MMDGUI {
 
+
+const allPmx = import.meta.glob('/public/models/**/*.pmx');
+const pmxFolders = Object.keys(allPmx).map(path => {
+  const parts = path.split('/');
+  const folderName = parts.at(-2)!; // "miku"
+  const runtimeUrl = path.replace('/public', ''); // "/models/miku/miku_v2.pmx"
+
+  return [folderName, runtimeUrl];
+});
+
+export class MMDGUI {
   constructor(
     private model: BABYLONMMD.MmdModel,
     private gui: dat.GUI = new dat.GUI(),
-  ) {};
+  ) { };
+
+  createChangeMMDModelGUI(
+    mmdLoader: MMDLoader,
+    mmdRuntime: BABYLONMMD.MmdRuntime,
+    folder: dat.GUI = this.gui,
+  ) {
+    const options = {path: ''};
+    const paths = Object.fromEntries(pmxFolders);
+    folder.add(options, 'path', paths)
+      .onChange(path => {
+        console.log('Path: ', path);
+        mmdLoader.loadModel(mmdRuntime, path);
+      });
+  }
 
   createBoneGUI(folder: dat.GUI = this.gui) {
     const boneFolder = folder.addFolder('Bone');
