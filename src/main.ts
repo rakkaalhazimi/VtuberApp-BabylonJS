@@ -7,8 +7,6 @@ import * as dat from 'dat.gui';
 import * as Kalidokit from 'kalidokit';
 
 import { PoseMMDAnimation } from '@/animation/poseMMDAnimation';
-import { PoseMMDGuider } from '@/animation/poseMMDGuider';
-import { PoseMMDRetargeter } from '@/animation/poseMMDRetargeter';
 import { PoseEMAFilter } from '@/computer-vision/pose-ema-filter';
 import { HandLandmarkerEstimation } from '@/computer-vision/hand-landmarker';
 import { FaceLandmarkerDrawer } from '@/drawer/face-drawer';
