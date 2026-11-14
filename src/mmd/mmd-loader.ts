@@ -3,9 +3,9 @@ import * as BABYLONMMD from 'babylon-mmd';
 
 
 export class MMDLoader {
-  public currentContainer: BABYLON.AssetContainer | null = null;
-  public currentMmdMesh: BABYLONMMD.MmdMesh | null = null;
-  public currentMmdModel: BABYLONMMD.MmdModel | null = null;
+  public container: BABYLON.AssetContainer | null = null;
+  public mmdMesh: BABYLONMMD.MmdMesh | null = null;
+  public mmdModel: BABYLONMMD.MmdModel | null = null;
   public mmdCamera: BABYLONMMD.MmdCamera;
   public vmdLoader: BABYLONMMD.VmdLoader;
 
@@ -19,11 +19,11 @@ export class MMDLoader {
   }
 
   destroyModel(mmdRuntime: BABYLONMMD.MmdRuntime) {
-    if (this.currentContainer) {
-      mmdRuntime.destroyMmdModel(this.currentMmdModel!);
-      this.currentContainer.dispose(); // This removes meshes, skeletons, and materials from memory
-      this.currentContainer = null;
-      this.currentMmdMesh = null;
+    if (this.container) {
+      mmdRuntime.destroyMmdModel(this.mmdModel!);
+      this.container.dispose(); // This removes meshes, skeletons, and materials from memory
+      this.container = null;
+      this.mmdMesh = null;
     }
   }
 
@@ -33,13 +33,13 @@ export class MMDLoader {
 
     this.destroyModel(mmdRuntime);
 
-    this.currentContainer = newContainer;
-    this.currentMmdMesh = newMmdMesh;
-    this.currentContainer.addAllToScene();
+    this.container = newContainer;
+    this.mmdMesh = newMmdMesh;
+    this.container.addAllToScene();
 
-    this.currentMmdModel = mmdRuntime.createMmdModel(this.currentMmdMesh);
+    this.mmdModel = mmdRuntime.createMmdModel(this.mmdMesh);
 
-    return this.currentMmdModel;
+    return this.mmdModel;
 
     // const cameraAnimationHandle = this.mmdCamera.createRuntimeAnimation(mmdAnimation);
     // mmdCamera.setRuntimeAnimation(cameraAnimationHandle);
@@ -55,6 +55,6 @@ export class MMDLoader {
   }
 
   getMMDModel() {
-    return this.currentMmdModel;
+    return this.mmdModel;
   }
 }
