@@ -1,6 +1,9 @@
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 
+import { createMMDBoneState } from '@/mmd/mmd-bone-state';
+
+
 
 export class MMDLoader {
   public container: BABYLON.AssetContainer | null = null;
@@ -9,7 +12,7 @@ export class MMDLoader {
   public mmdCamera: BABYLONMMD.MmdCamera;
   public vmdLoader: BABYLONMMD.VmdLoader;
 
-  constructor(public scene: BABYLON.Scene) {
+  constructor(public scene: BABYLON.Scene, public camera: BABYLON.Camera) {
     this.mmdCamera = new BABYLONMMD.MmdCamera('MmdCamera', new BABYLON.Vector3(0, 10, 0), scene);
     this.vmdLoader = new BABYLONMMD.VmdLoader(scene);
   }
@@ -27,6 +30,14 @@ export class MMDLoader {
     }
   }
 
+  moveCameraToHead(mmdModel: BABYLONMMD.MmdModel) {
+    const boneState = createMMDBoneState(mmdModel);
+    const head = boneState.HEAD;
+    if (!head) return;
+    const headPos = head.restPosition;
+    this.camera.position = new BABYLON.Vector3(0, headPos.y, -15);
+  }
+
   async loadModel(mmdRuntime: BABYLONMMD.MmdRuntime, path: string) {
     const newContainer = await BABYLON.LoadAssetContainerAsync(path, this.scene);
     const newMmdMesh = newContainer.rootNodes[0] as BABYLONMMD.MmdMesh;
@@ -38,6 +49,7 @@ export class MMDLoader {
     this.container.addAllToScene();
 
     this.mmdModel = mmdRuntime.createMmdModel(this.mmdMesh);
+    this.moveCameraToHead(this.mmdModel);
 
     return this.mmdModel;
 
