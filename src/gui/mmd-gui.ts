@@ -30,7 +30,6 @@ export class MMDGUI {
 
   createChangeMMDModelGUI(
     mmdLoader: MMDLoader,
-    mmdRuntime: BABYLONMMD.MmdRuntime,
     poseMMD: PoseMMDAnimation,
     folder: dat.GUI = this.mainFolder,
   ) {
@@ -39,7 +38,7 @@ export class MMDGUI {
     const loaderFolder = folder.addFolder('Loader');
     loaderFolder.add(options, 'path', paths)
       .onChange(async (path) => {
-        const mmdModel = await mmdLoader.loadModel(mmdRuntime, path);
+        const mmdModel = await mmdLoader.loadModel(path);
         this.createMMDGUI(mmdModel);
         poseMMD.useMmdModel(mmdModel);
       });
@@ -99,7 +98,11 @@ export class MMDGUI {
     }
   }
 
-  createMMDGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mainFolder) {
+  createMMDGUI(mmdModel: BABYLONMMD.MmdModel | null, folder: dat.GUI = this.mainFolder) {
+    if (!mmdModel) {
+      console.warn('No MMD Model found, cancel GUI creation.');
+      return;
+    }
     this.createBoneGUI(mmdModel, folder);
     this.createMorphGUI(mmdModel, folder);
     folder.open();

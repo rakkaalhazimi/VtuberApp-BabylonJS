@@ -102,8 +102,10 @@ const createScene = async () => {
     ]);
 
   // MMD Loader
-  const mmdLoader = new MMDLoader(scene, camera);
-  const mmdModel = await mmdLoader.loadModel(mmdRuntime, '/models/feixiao/星穹铁道—飞霄.pmx');
+  const mmdLoader = new MMDLoader(scene);
+  mmdLoader.setCamera(camera);
+  mmdLoader.setMMDRuntime(mmdRuntime);
+  const mmdModel = await mmdLoader.loadModel('/models/feixiao/星穹铁道—飞霄.pmx');
   // await mmdLoader.loadModel(mmdRuntime, '/models/feixiao/星穹铁道—飞霄.pmx');
 
 
@@ -156,7 +158,7 @@ const createScene = async () => {
   drawerGUI.createHandEstimationGUI(handDrawer);
 
   const mmdGUI = new MMDGUI(settingsFolder);
-  mmdGUI.createChangeMMDModelGUI(mmdLoader, mmdRuntime, poseMMDAnimation);
+  mmdGUI.createChangeMMDModelGUI(mmdLoader, poseMMDAnimation);
   mmdGUI.createMMDGUI(mmdModel);
 
 

@@ -9,12 +9,21 @@ export class MMDLoader {
   public container: BABYLON.AssetContainer | null = null;
   public mmdMesh: BABYLONMMD.MmdMesh | null = null;
   public mmdModel: BABYLONMMD.MmdModel | null = null;
-  public mmdCamera: BABYLONMMD.MmdCamera;
+  public mmdCamera: BABYLONMMD.MmdCamera | null = null;
+  public mmdRuntime: BABYLONMMD.MmdRuntime | null = null;
+  public camera: BABYLON.Camera | null = null;
   public vmdLoader: BABYLONMMD.VmdLoader;
 
-  constructor(public scene: BABYLON.Scene, public camera: BABYLON.Camera) {
-    this.mmdCamera = new BABYLONMMD.MmdCamera('MmdCamera', new BABYLON.Vector3(0, 10, 0), scene);
+  constructor(public scene: BABYLON.Scene) {
     this.vmdLoader = new BABYLONMMD.VmdLoader(scene);
+  }
+
+  setCamera(camera: BABYLON.Camera) {
+    this.camera = camera;
+  }
+
+  setMMDRuntime(mmdRuntime: BABYLONMMD.MmdRuntime) {
+    this.mmdRuntime = mmdRuntime;
   }
 
   addAnimation() {
@@ -31,24 +40,35 @@ export class MMDLoader {
   }
 
   moveCameraToHead(mmdModel: BABYLONMMD.MmdModel) {
+    if (!this.camera) {
+      console.warn('No camera found after load model.');
+      return;
+    };
     const boneState = createMMDBoneState(mmdModel);
     const head = boneState.HEAD;
-    if (!head) return;
+    if (!head) {
+      console.warn(`Head bone isn't found.`);
+      return;
+    };
     const headPos = head.restPosition;
     this.camera.position = new BABYLON.Vector3(0, headPos.y, -15);
   }
 
-  async loadModel(mmdRuntime: BABYLONMMD.MmdRuntime, path: string) {
+  async loadModel(path: string) {
+    if (!this.mmdRuntime) {
+      console.warn(`MMDRuntime isn't set, cancel model loading.`);
+      return null;
+    }
     const newContainer = await BABYLON.LoadAssetContainerAsync(path, this.scene);
     const newMmdMesh = newContainer.rootNodes[0] as BABYLONMMD.MmdMesh;
 
-    this.destroyModel(mmdRuntime);
+    this.destroyModel(this.mmdRuntime);
 
     this.container = newContainer;
     this.mmdMesh = newMmdMesh;
     this.container.addAllToScene();
 
-    this.mmdModel = mmdRuntime.createMmdModel(this.mmdMesh);
+    this.mmdModel = this.mmdRuntime.createMmdModel(this.mmdMesh);
     this.moveCameraToHead(this.mmdModel);
 
     return this.mmdModel;
