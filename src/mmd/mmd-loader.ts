@@ -12,6 +12,7 @@ export class MMDLoader {
   public mmdCamera: BABYLONMMD.MmdCamera | null = null;
   public mmdRuntime: BABYLONMMD.MmdRuntime | null = null;
   public camera: BABYLON.Camera | null = null;
+  public shadowGenerator: BABYLON.ShadowGenerator | null = null;
   public vmdLoader: BABYLONMMD.VmdLoader;
 
   constructor(public scene: BABYLON.Scene) {
@@ -24,6 +25,10 @@ export class MMDLoader {
 
   setMMDRuntime(mmdRuntime: BABYLONMMD.MmdRuntime) {
     this.mmdRuntime = mmdRuntime;
+  }
+
+  setShadowGenerator(shadowGenerator: BABYLON.ShadowGenerator) {
+    this.shadowGenerator = shadowGenerator;
   }
 
   addAnimation() {
@@ -54,6 +59,20 @@ export class MMDLoader {
     this.camera.position = new BABYLON.Vector3(0, headPos.y, -15);
   }
 
+  enableModelShadow(mmdMesh: BABYLONMMD.MmdMesh) {
+    if (!this.shadowGenerator) {
+      console.warn('No shadow generator found for MMD Model.');
+      return;
+    }
+    for (const mesh of mmdMesh.metadata.meshes) {
+      mesh.receiveShadows = true;
+    };
+    this.shadowGenerator.addShadowCaster(mmdMesh);
+    // const mmdModel = mmdRuntime.createMmdModel(mmdMesh);
+    // const modelAnimationHandle = mmdModel.createRuntimeAnimation(mmdAnimation);
+    // mmdModel.setRuntimeAnimation(modelAnimationHandle);
+  }
+
   async loadModel(path: string) {
     if (!this.mmdRuntime) {
       console.warn(`MMDRuntime isn't set, cancel model loading.`);
@@ -66,6 +85,7 @@ export class MMDLoader {
 
     this.container = newContainer;
     this.mmdMesh = newMmdMesh;
+    this.enableModelShadow(this.mmdMesh);
     this.container.addAllToScene();
 
     this.mmdModel = this.mmdRuntime.createMmdModel(this.mmdMesh);

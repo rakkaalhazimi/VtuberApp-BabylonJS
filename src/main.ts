@@ -105,6 +105,7 @@ const createScene = async () => {
   const mmdLoader = new MMDLoader(scene);
   mmdLoader.setCamera(camera);
   mmdLoader.setMMDRuntime(mmdRuntime);
+  mmdLoader.setShadowGenerator(shadowGenerator);
   const mmdModel = await mmdLoader.loadModel('/models/feixiao/星穹铁道—飞霄.pmx');
   // await mmdLoader.loadModel(mmdRuntime, '/models/feixiao/星穹铁道—飞霄.pmx');
 
