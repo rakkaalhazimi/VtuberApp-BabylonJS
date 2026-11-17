@@ -1,6 +1,6 @@
 import type { Landmark, NormalizedLandmark, PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 
-import { PoseLandmarkerPoint } from '@/computer-vision/pose-estimation';
+import { PoseLandmarkerPoint } from '@/computer-vision/pose-landmarker';
 
 
 

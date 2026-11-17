@@ -10,7 +10,7 @@ export default tseslint.config(
       '@stylistic': stylistic,
     },
     rules: {
-      '@stylistic/indent': ['error', 2],
+      '@stylistic/indent': ['warn', 2],
       '@stylistic/semi': ['error', 'always'],
       '@stylistic/comma-dangle': ['warn', 'always-multiline'],
       '@stylistic/no-trailing-spaces': 'warn',

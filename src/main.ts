@@ -3,21 +3,21 @@ import '@/style.css';
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import 'babylon-mmd/esm/Loader/pmxLoader';
+import * as dat from 'dat.gui';
 import * as Kalidokit from 'kalidokit';
 
-import { PoseMMDGuider } from '@/animation/poseMMDGuider';
-import { PoseMMDRetargeter } from '@/animation/poseMMDRetargeter';
-import { FaceLandmarkerDrawer } from '@/computer-vision/face-drawer';
+import { PoseMMDAnimation } from '@/animation/poseMMDAnimation';
 import { PoseEMAFilter } from '@/computer-vision/pose-ema-filter';
-import { HandLandmarkerDrawer } from '@/computer-vision/hand-drawer';
 import { HandLandmarkerEstimation } from '@/computer-vision/hand-landmarker';
-import { PoseLandmarkerDrawer } from '@/computer-vision/pose-drawer';
-import { createPoseLandmarkState } from '@/computer-vision/pose-landmark-state';
-import { ControlGUI } from '@/gui/control';
+import { FaceLandmarkerDrawer } from '@/drawer/face-drawer';
+import { HandLandmarkerDrawer } from '@/drawer/hand-drawer';
+import { PoseLandmarkerDrawer } from '@/drawer/pose-drawer';
+import { ControlGUI } from '@/gui/control-gui';
+import { DrawerGUI } from '@/gui/drawer-gui';
+import { LightGUI } from '@/gui/light-gui';
 import { MMDGUI } from '@/gui/mmd-gui';
-import { createMMDBoneState } from '@/mmd/mmd-bone-state';
-import { MMDMovementGuider } from '@/mmd/guider';
-import { createMMDMorphController } from '@/mmd/morph-controller';
+import { PoseGUI } from '@/gui/pose-gui';
+import { MMDLoader } from '@/mmd/mmd-loader';
 import { VideoCamera } from '@/video/video';
 import { FaceLandmarkerWorker } from '@/worker/face-landmarker-worker';
 import { HandLandmarkerWorker } from '@/worker/hand-landmarker-worker';
@@ -36,15 +36,15 @@ const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engi
 const createScene = async () => {
   // Creates a basic Babylon Scene object
   const scene = new BABYLON.Scene(engine);
-  scene.clearColor = new BABYLON.Color4(0.95, 0.95, 0.95, 1.0);
+  scene.clearColor = BABYLON.Color4.FromHexString('#009933');
   scene.ambientColor = new BABYLON.Color3(0.5, 0.5, 0.5);
 
   // Creates and positions a free camera
   const camera = new BABYLON.FreeCamera('camera1', new BABYLON.Vector3(0, 5, -10), scene);
   const mmdCamera = new BABYLONMMD.MmdCamera('MmdCamera', new BABYLON.Vector3(0, 10, 0), scene);
   // Targets the camera to scene origin
-  camera.setTarget(new BABYLON.Vector3(0, 17, 100));
-  camera.position = new BABYLON.Vector3(0, 17, -15);
+  // camera.setTarget(new BABYLON.Vector3(0, 17, 50));
+  // camera.position = new BABYLON.Vector3(0, 17, -15);
   // This attaches the camera to the canvas
   camera.attachControl(canvas, true);
   camera.keysUp.push(87);    // 'W' key
@@ -53,29 +53,54 @@ const createScene = async () => {
   camera.keysRight.push(68); // 'D' key
 
 
+  // const directionalLight = new BABYLON.DirectionalLight(
+  //   'DirectionalLight',
+  //   new BABYLON.Vector3(0.5, -1, 1),
+  //   scene,
+  // );
+  // directionalLight.intensity = 1.0;
+  // directionalLight.autoCalcShadowZBounds = true;
+
+  const pointLight = new BABYLON.PointLight('pointLight', new BABYLON.Vector3(0, 30, 0), scene);
+  pointLight.intensity = 0;
+
   const directionalLight = new BABYLON.DirectionalLight(
-    'DirectionalLight',
-    new BABYLON.Vector3(0.5, -1, 1),
+    'directionalLight',
+    new BABYLON.Vector3(0, 1, 0),
     scene,
   );
-  directionalLight.intensity = 1.0;
-  directionalLight.autoCalcShadowZBounds = true;
+  directionalLight.intensity = 1;
+
+  const spotLight = new BABYLON.SpotLight(
+    'spotLight',
+    new BABYLON.Vector3(0, 30, -10),
+    new BABYLON.Vector3(0, -1, 0),
+    Math.PI / 3, 2, scene,
+  );
+  spotLight.intensity = 0;
+
+  const hemiLight = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+  hemiLight.intensity = 0;
 
 
   const shadowGenerator = new BABYLON.ShadowGenerator(1024, directionalLight, true);
-  shadowGenerator.transparencyShadow = true;
-  shadowGenerator.usePercentageCloserFiltering = true;
-  shadowGenerator.forceBackFacesOnly = true;
-  shadowGenerator.filteringQuality = BABYLON.ShadowGenerator.QUALITY_MEDIUM;
-  shadowGenerator.frustumEdgeFalloff = 0.1;
+  // shadowGenerator.transparencyShadow = true;
+  // shadowGenerator.usePercentageCloserFiltering = true;
+  // shadowGenerator.forceBackFacesOnly = true;
+  // shadowGenerator.filteringQuality = BABYLON.ShadowGenerator.QUALITY_MEDIUM;
+  // shadowGenerator.frustumEdgeFalloff = 0.1;
 
-  const sphere = BABYLON.MeshBuilder.CreateSphere('sphere', { diameter: 2, segments: 32 }, scene);
-  sphere.position.y = 1;
-  sphere.receiveShadows = true;
-  shadowGenerator.addShadowCaster(sphere);
+  // const sphere = BABYLON.MeshBuilder.CreateSphere('sphere', { diameter: 2, segments: 32 }, scene);
+  // sphere.position.y = 1;
+  // sphere.receiveShadows = true;
+  // shadowGenerator.addShadowCaster(sphere);
 
-  const ground = BABYLON.MeshBuilder.CreateGround('ground1', { width: 100, height: 100, subdivisions: 2, updatable: false }, scene);
-  ground.receiveShadows = true;
+  // const ground = BABYLON.MeshBuilder.CreateGround('ground1', { width: 100, height: 100, subdivisions: 2, updatable: false }, scene);
+  // ground.receiveShadows = true;
+  // const groundMat = new BABYLON.StandardMaterial('groundMat', scene);
+  // groundMat.diffuseColor = BABYLON.Color3.FromHexString('#009933');
+  // ground.material = groundMat;
+
 
   // Physics
   const wasmInstance = await BABYLONMMD.GetMmdWasmInstance(new BABYLONMMD.MmdWasmInstanceTypeMPR());
@@ -98,28 +123,13 @@ const createScene = async () => {
       '/vmd/walk.vmd',
     ]);
 
-  // Model
-  const mmdMesh = await BABYLON.LoadAssetContainerAsync(
-    '/models/feixiao/星穹铁道—飞霄.pmx',
-    scene,
-
-  ).then((result) => {
-    result.addAllToScene();
-    return result.rootNodes[0] as BABYLONMMD.MmdMesh;
-  });
-
-
-  const cameraAnimationHandle = mmdCamera.createRuntimeAnimation(mmdAnimation);
-  mmdCamera.setRuntimeAnimation(cameraAnimationHandle);
-  mmdRuntime.addAnimatable(mmdCamera);
-
-  for (const mesh of mmdMesh.metadata.meshes) {
-    mesh.receiveShadows = true;
-  };
-  shadowGenerator.addShadowCaster(mmdMesh);
-  const mmdModel = mmdRuntime.createMmdModel(mmdMesh);
-  const modelAnimationHandle = mmdModel.createRuntimeAnimation(mmdAnimation);
-  mmdModel.setRuntimeAnimation(modelAnimationHandle);
+  // MMD Loader
+  const mmdLoader = new MMDLoader(scene);
+  mmdLoader.setCamera(camera);
+  mmdLoader.setMMDRuntime(mmdRuntime);
+  mmdLoader.setShadowGenerator(shadowGenerator);
+  const mmdModel = await mmdLoader.loadModel('/models/feixiao/星穹铁道—飞霄.pmx');
+  // await mmdLoader.loadModel(mmdRuntime, '/models/feixiao/星穹铁道—飞霄.pmx');
 
 
   // Video Camera
@@ -147,37 +157,47 @@ const createScene = async () => {
 
   const poseEmaFilter = new PoseEMAFilter();
 
-  // MMD Pose Movement
-  const boneState = createMMDBoneState(mmdModel);
-  const morphController = createMMDMorphController(mmdModel);
-  const poseRetargeter = new PoseMMDRetargeter(boneState);
-  const poseGuider = new PoseMMDGuider(boneState, morphController);
-
-  // Lower the arms at start
-  poseRetargeter.retargetLeftArm();
-  poseRetargeter.retargetRightArm();
-  poseGuider.guideLeftArm(poseRetargeter.state);
-  poseGuider.guideRightArm(poseRetargeter.state);
+  // MMD Pose Animation
+  const poseMMDAnimation = new PoseMMDAnimation();
+  poseMMDAnimation.useMmdModel(mmdModel);
 
   // GUI
-  const mmdGui = new MMDGUI(mmdModel);
-  mmdGui.createBoneGUI();
-  mmdGui.createMorphGUI();
+  const settingsFolder = new dat.GUI().addFolder('Settings');
+  settingsFolder.open();
 
-  const controlGUI = new ControlGUI(videoCamera, poseWorker, handWorker, faceWorker);
-  controlGUI.createControlGUI();
+  const controlGUI = new ControlGUI(settingsFolder);
+  controlGUI.createChangeBgColorGUI(scene);
+  controlGUI.createEnableCameraGUI(videoCamera);
+  controlGUI.createHideCameraGUI(videoCamera);
+
+  const lightGUI = new LightGUI(settingsFolder);
+  lightGUI.createPointLightGUI(pointLight);
+  lightGUI.createDirectionalLightGUI(directionalLight);
+  lightGUI.createSpotLightGUI(spotLight);
+  lightGUI.createHemisphericLightGUI(hemiLight);
+
+  const poseGUI = new PoseGUI(settingsFolder);
+  poseGUI.createFaceEstimationGUI(faceWorker);
+  poseGUI.createPoseEstimationGUI(poseWorker);
+  poseGUI.createHandEstimationGUI(handWorker);
+
+  const drawerGUI = new DrawerGUI(settingsFolder);
+  drawerGUI.createFaceEstimationGUI(faceDrawer);
+  drawerGUI.createPoseEstimationGUI(poseDrawer);
+  drawerGUI.createHandEstimationGUI(handDrawer);
+
+  const mmdGUI = new MMDGUI(settingsFolder);
+  mmdGUI.createChangeMMDModelGUI(mmdLoader, poseMMDAnimation);
+  mmdGUI.createMMDGUI(mmdModel);
 
 
   // const poseResult = await pose.estimatePose(videoCamera.video);
   // console.log(poseResult);
-  const guider = new MMDMovementGuider(mmdModel);
+  // const guider = new MMDMovementGuider(mmdModel);
 
   scene.onBeforeRenderObservable.add(async () => {
     if (faceWorker.isProcessing) {
-      poseGuider.guideEyeBlinkKalido(poseRetargeter.state);
-      poseGuider.guideEyeMovementKalido(poseRetargeter.state);
-      poseGuider.guideMouthKalido(poseRetargeter.state);
-      poseGuider.guideHead(poseRetargeter.state);
+      poseMMDAnimation.guideFaceKalido();
       return;
     }
 
@@ -197,15 +217,8 @@ const createScene = async () => {
 
         if (!faceRig) return;
 
-        poseRetargeter.retargetEyeBlinkKalido(faceRig);
-        poseRetargeter.retargetEyeMovement(faceRig);
-        poseRetargeter.retargetHeadKalido(faceRig);
-        poseRetargeter.retargetMouthKalido(faceRig);
-
-        poseGuider.guideEyeBlinkKalido(poseRetargeter.state);
-        poseGuider.guideEyeMovementKalido(poseRetargeter.state);
-        poseGuider.guideMouthKalido(poseRetargeter.state);
-        poseGuider.guideHead(poseRetargeter.state);
+        poseMMDAnimation.retargetFaceKalido(faceRig);
+        poseMMDAnimation.guideFaceKalido();
 
       } finally {
         faceWorker.isProcessing = false;
@@ -215,13 +228,7 @@ const createScene = async () => {
 
   scene.onBeforeRenderObservable.add(async () => {
     if (poseWorker.isProcessing) {
-      poseGuider.guideUpperBody(poseRetargeter.state);
-      poseGuider.guideLeftArm(poseRetargeter.state);
-      poseGuider.guideRightArm(poseRetargeter.state);
-      poseGuider.guideLeftArmTwist(poseRetargeter.state);
-      poseGuider.guideLeftElbowHinge(poseRetargeter.state);
-      poseGuider.guideRightArmTwist(poseRetargeter.state);
-      poseGuider.guideRightElbowHinge(poseRetargeter.state);
+      poseMMDAnimation.guidePose();
 
       return;
     };
@@ -239,22 +246,8 @@ const createScene = async () => {
         const filteredPoseResult = poseEmaFilter.filter(poseResult);
         poseDrawer.drawPoseLandmarks(ctx!, filteredPoseResult!);
 
-        const poseState = createPoseLandmarkState(poseResult);
-        poseRetargeter.updatePoseState(poseState);
-
-        poseRetargeter.retargetUpperBody();
-        poseRetargeter.retargetLeftArm();
-        poseRetargeter.retargetRightArm();
-        poseRetargeter.retargetLeftElbow();
-        poseRetargeter.retargetRightElbow();
-
-        poseGuider.guideUpperBody(poseRetargeter.state);
-        poseGuider.guideLeftArm(poseRetargeter.state);
-        poseGuider.guideRightArm(poseRetargeter.state);
-        poseGuider.guideLeftArmTwist(poseRetargeter.state);
-        poseGuider.guideLeftElbowHinge(poseRetargeter.state);
-        poseGuider.guideRightArmTwist(poseRetargeter.state);
-        poseGuider.guideRightElbowHinge(poseRetargeter.state);
+        poseMMDAnimation.retargetPose(poseResult);
+        poseMMDAnimation.guidePose();
 
         // const worldLandmarks = poseResult.worldLandmarks[0];
         // const landmarks = poseResult.landmarks[0];
@@ -274,8 +267,7 @@ const createScene = async () => {
 
   scene.onBeforeRenderObservable.add(async () => {
     if (handWorker.isProcessing) {
-      poseGuider.guideLeftHandKalido(poseRetargeter.state);
-      poseGuider.guideRightHandKalido(poseRetargeter.state);
+      poseMMDAnimation.guideHandKalido();
       return;
     }
 
@@ -291,10 +283,6 @@ const createScene = async () => {
 
         handDrawer.drawHandLandmarks(handCtx!, handResult);
 
-        // const leftHandState = createHandLandmarkState(handResult, false);
-        // poseRetargeter.updateHandState(leftHandState);
-        // poseRetargeter.retargetLeftWristTwist();
-
         const leftHandLandmarks = HandLandmarkerEstimation.GetLeftHand(handResult);
         const rightHandLandmarks = HandLandmarkerEstimation.GetRightHand(handResult);
 
@@ -307,14 +295,8 @@ const createScene = async () => {
           handRigR = Kalidokit.Hand.solve(rightHandLandmarks, 'Right');
         }
 
-        if (handRigL) {
-          poseRetargeter.retargetLeftHandKalido(handRigL);
-          poseGuider.guideLeftHandKalido(poseRetargeter.state);
-        };
-        if (handRigR) {
-          poseRetargeter.retargetRightHandKalido(handRigR);
-          poseGuider.guideRightHandKalido(poseRetargeter.state);
-        };
+        poseMMDAnimation.retargetHandKalido(handRigL, handRigR);
+        poseMMDAnimation.guideHandKalido();
 
       } finally {
         handWorker.isProcessing = false;

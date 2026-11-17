@@ -3,7 +3,7 @@ import * as BABYLONMMD from 'babylon-mmd';
 import type { HandLandmarkerResult, PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 
 import { HandLandmarkerPoint, HandLandmarkerEstimation } from '@/computer-vision/hand-landmarker';
-import { PoseLandmarkerPoint } from '@/computer-vision/pose-estimation';
+import { PoseLandmarkerPoint } from '@/computer-vision/pose-landmarker';
 import { MMDBoneManager } from '@/mmd/bone-manager';
 import { GuiderState } from '@/mmd/guider-state';
 import { boneTranslations } from '@/mmd/translation';
