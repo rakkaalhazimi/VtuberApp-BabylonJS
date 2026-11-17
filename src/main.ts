@@ -14,6 +14,7 @@ import { HandLandmarkerDrawer } from '@/drawer/hand-drawer';
 import { PoseLandmarkerDrawer } from '@/drawer/pose-drawer';
 import { ControlGUI } from '@/gui/control-gui';
 import { DrawerGUI } from '@/gui/drawer-gui';
+import { LightGUI } from '@/gui/light-gui';
 import { MMDGUI } from '@/gui/mmd-gui';
 import { PoseGUI } from '@/gui/pose-gui';
 import { MMDLoader } from '@/mmd/mmd-loader';
@@ -52,21 +53,37 @@ const createScene = async () => {
   camera.keysRight.push(68); // 'D' key
 
 
+  // const directionalLight = new BABYLON.DirectionalLight(
+  //   'DirectionalLight',
+  //   new BABYLON.Vector3(0.5, -1, 1),
+  //   scene,
+  // );
+  // directionalLight.intensity = 1.0;
+  // directionalLight.autoCalcShadowZBounds = true;
+
+  const pointLight = new BABYLON.PointLight('pointLight', new BABYLON.Vector3(0, 30, 0), scene);
+  pointLight.intensity = 0;
   const directionalLight = new BABYLON.DirectionalLight(
-    'DirectionalLight',
-    new BABYLON.Vector3(0.5, -1, 1),
+    'directionalLight',
+    new BABYLON.Vector3(0, 1, 0),
     scene,
   );
-  directionalLight.intensity = 1.0;
-  directionalLight.autoCalcShadowZBounds = true;
+  directionalLight.intensity = 1;
+  const spotLight = new BABYLON.SpotLight(
+    'spotLight',
+    new BABYLON.Vector3(0, 30, -10),
+    new BABYLON.Vector3(0, -1, 0),
+    Math.PI / 3, 2, scene,
+  );
+  spotLight.intensity = 0;
 
 
   const shadowGenerator = new BABYLON.ShadowGenerator(1024, directionalLight, true);
-  shadowGenerator.transparencyShadow = true;
-  shadowGenerator.usePercentageCloserFiltering = true;
-  shadowGenerator.forceBackFacesOnly = true;
-  shadowGenerator.filteringQuality = BABYLON.ShadowGenerator.QUALITY_MEDIUM;
-  shadowGenerator.frustumEdgeFalloff = 0.1;
+  // shadowGenerator.transparencyShadow = true;
+  // shadowGenerator.usePercentageCloserFiltering = true;
+  // shadowGenerator.forceBackFacesOnly = true;
+  // shadowGenerator.filteringQuality = BABYLON.ShadowGenerator.QUALITY_MEDIUM;
+  // shadowGenerator.frustumEdgeFalloff = 0.1;
 
   // const sphere = BABYLON.MeshBuilder.CreateSphere('sphere', { diameter: 2, segments: 32 }, scene);
   // sphere.position.y = 1;
@@ -147,6 +164,11 @@ const createScene = async () => {
   controlGUI.createChangeBgColorGUI(scene);
   controlGUI.createEnableCameraGUI(videoCamera);
   controlGUI.createHideCameraGUI(videoCamera);
+
+  const lightGUI = new LightGUI(settingsFolder);
+  lightGUI.createPointLightGUI(pointLight);
+  lightGUI.createDirectionalLightGUI(directionalLight);
+  lightGUI.createSpotLightGUI(spotLight);
 
   const poseGUI = new PoseGUI(settingsFolder);
   poseGUI.createFaceEstimationGUI(faceWorker);
