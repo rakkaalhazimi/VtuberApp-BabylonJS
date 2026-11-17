@@ -3,7 +3,7 @@ import * as BABYLONMMD from 'babylon-mmd';
 import * as dat from 'dat.gui';
 
 import type { PoseMMDAnimation } from '@/animation/poseMMDAnimation';
-import type { MMDLoader } from '@/mmd/mmd-loader';
+import type { MMDAvatarController } from '@/mmd/mmd-avatar-controller';
 import { boneTranslations, morphTranslations } from '@/mmd/translation';
 
 
@@ -29,7 +29,7 @@ export class MMDGUI {
   };
 
   createChangeMMDModelGUI(
-    mmdLoader: MMDLoader,
+    mmdAvatarController: MMDAvatarController,
     poseMMD: PoseMMDAnimation,
     folder: dat.GUI = this.mainFolder,
   ) {
@@ -38,9 +38,9 @@ export class MMDGUI {
     const loaderFolder = folder.addFolder('Loader');
     loaderFolder.add(options, 'path', paths)
       .onChange(async (path) => {
-        const mmdModel = await mmdLoader.loadModel(path);
-        this.createMMDGUI(mmdModel);
-        poseMMD.useMmdModel(mmdModel);
+        const mmdAvatarModel = await mmdAvatarController.loadCharacter(path);
+        this.createMMDGUI(mmdAvatarModel.mmdModel);
+        poseMMD.useMmdModel(mmdAvatarModel.mmdModel);
       });
     loaderFolder.open();
   }

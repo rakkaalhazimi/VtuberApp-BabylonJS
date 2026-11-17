@@ -17,7 +17,7 @@ import { DrawerGUI } from '@/gui/drawer-gui';
 import { LightGUI } from '@/gui/light-gui';
 import { MMDGUI } from '@/gui/mmd-gui';
 import { PoseGUI } from '@/gui/pose-gui';
-import { MMDLoader } from '@/mmd/mmd-loader';
+import { MMDAvatarController } from '@/mmd/mmd-avatar-controller';
 import { VideoCamera } from '@/video/video';
 import { FaceLandmarkerWorker } from '@/worker/face-landmarker-worker';
 import { HandLandmarkerWorker } from '@/worker/hand-landmarker-worker';
@@ -123,14 +123,10 @@ const createScene = async () => {
       '/vmd/walk.vmd',
     ]);
 
-  // MMD Loader
-  const mmdLoader = new MMDLoader(scene);
-  mmdLoader.setCamera(camera);
-  mmdLoader.setMMDRuntime(mmdRuntime);
-  mmdLoader.setShadowGenerator(shadowGenerator);
-  const mmdModel = await mmdLoader.loadModel('/models/feixiao/星穹铁道—飞霄.pmx');
-  // await mmdLoader.loadModel(mmdRuntime, '/models/feixiao/星穹铁道—飞霄.pmx');
 
+  // MMD Controller
+  const mmdAvatarController = new MMDAvatarController(scene, camera, mmdRuntime);
+  const mmdAvatarModel = await mmdAvatarController.loadCharacter('/models/feixiao/星穹铁道—飞霄.pmx');
 
   // Video Camera
   const videoCamera = new VideoCamera('video');
@@ -159,7 +155,7 @@ const createScene = async () => {
 
   // MMD Pose Animation
   const poseMMDAnimation = new PoseMMDAnimation();
-  poseMMDAnimation.useMmdModel(mmdModel);
+  poseMMDAnimation.useMmdModel(mmdAvatarModel.mmdModel);
 
   // GUI
   const settingsFolder = new dat.GUI().addFolder('Settings');
@@ -187,8 +183,8 @@ const createScene = async () => {
   drawerGUI.createHandEstimationGUI(handDrawer);
 
   const mmdGUI = new MMDGUI(settingsFolder);
-  mmdGUI.createChangeMMDModelGUI(mmdLoader, poseMMDAnimation);
-  mmdGUI.createMMDGUI(mmdModel);
+  mmdGUI.createChangeMMDModelGUI(mmdAvatarController, poseMMDAnimation);
+  mmdGUI.createMMDGUI(mmdAvatarModel.mmdModel);
 
 
   // const poseResult = await pose.estimatePose(videoCamera.video);
