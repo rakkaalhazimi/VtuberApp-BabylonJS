@@ -63,12 +63,14 @@ const createScene = async () => {
 
   const pointLight = new BABYLON.PointLight('pointLight', new BABYLON.Vector3(0, 30, 0), scene);
   pointLight.intensity = 0;
+
   const directionalLight = new BABYLON.DirectionalLight(
     'directionalLight',
     new BABYLON.Vector3(0, 1, 0),
     scene,
   );
   directionalLight.intensity = 1;
+
   const spotLight = new BABYLON.SpotLight(
     'spotLight',
     new BABYLON.Vector3(0, 30, -10),
@@ -76,6 +78,9 @@ const createScene = async () => {
     Math.PI / 3, 2, scene,
   );
   spotLight.intensity = 0;
+
+  const hemiLight = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+  hemiLight.intensity = 0;
 
 
   const shadowGenerator = new BABYLON.ShadowGenerator(1024, directionalLight, true);
@@ -169,6 +174,7 @@ const createScene = async () => {
   lightGUI.createPointLightGUI(pointLight);
   lightGUI.createDirectionalLightGUI(directionalLight);
   lightGUI.createSpotLightGUI(spotLight);
+  lightGUI.createHemisphericLightGUI(hemiLight);
 
   const poseGUI = new PoseGUI(settingsFolder);
   poseGUI.createFaceEstimationGUI(faceWorker);

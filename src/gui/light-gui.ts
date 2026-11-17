@@ -66,4 +66,21 @@ export class LightGUI {
     lightFolder.add(light, 'exponent', 0, 128, 1);
     lightFolder.close();
   }
+
+  createHemisphericLightGUI(light: BABYLON.HemisphericLight, folder: dat.GUI = this.mainFolder) {
+    const lightFolder = this.createLightGUI(light, folder);
+    const directionFolder = lightFolder.addFolder('Direction');
+    const options = {
+      groundColor: light.groundColor.toHexString(),
+    };
+
+    directionFolder.add(light.direction, 'x', -1, 1, 0.01);
+    directionFolder.add(light.direction, 'y', -1, 1, 0.01);
+    directionFolder.add(light.direction, 'z', -1, 1, 0.01);
+    directionFolder.open();
+
+    lightFolder.addColor(options, 'groundColor')
+      .onChange((color: string) => light.groundColor = BABYLON.Color3.FromHexString(color));
+    lightFolder.close();
+  }
 }
