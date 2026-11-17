@@ -26,10 +26,10 @@ export class PoseMMDAnimation {
     this.poseGuider = new PoseMMDGuider(boneState, morphController);
 
     // Lower arm at start
-    this.poseRetargeter.retargetLeftArm();
-    this.poseRetargeter.retargetRightArm();
-    this.poseGuider.guideLeftArm(this.poseRetargeter.state);
-    this.poseGuider.guideRightArm(this.poseRetargeter.state);
+    // this.poseRetargeter.retargetLeftArm();
+    // this.poseRetargeter.retargetRightArm();
+    // this.poseGuider.guideLeftArm(this.poseRetargeter.state);
+    // this.poseGuider.guideRightArm(this.poseRetargeter.state);
   }
 
   retargetFaceKalido(faceRig: Kalidokit.TFace) {

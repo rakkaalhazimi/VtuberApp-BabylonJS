@@ -2,6 +2,9 @@ import * as BABYLON from '@babylonjs/core';
 
 
 
+export const LEFT_ARM_DEFAULT_QUATERNION = BABYLON.Quaternion.FromEulerAngles(0, 0, -0.6);
+export const RIGHT_ARM_DEFAULT_QUATERNION = BABYLON.Quaternion.FromEulerAngles(0, 0, 0.6);
+
 export class GuiderState {
 
   public eyeLWink: number = 0;
@@ -60,8 +63,8 @@ export class GuiderState {
   public leftUpperArm = {x: 0, y: 0, z: 0};
   public leftLowerArm = {x: 0, y: 0, z: 0};
 
-  public leftArmQuaternion = new BABYLON.Quaternion();
-  public rightArmQuaternion = new BABYLON.Quaternion();
+  public leftArmQuaternion = LEFT_ARM_DEFAULT_QUATERNION;
+  public rightArmQuaternion = RIGHT_ARM_DEFAULT_QUATERNION;
 
   public leftArmTwistQuaternion = new BABYLON.Quaternion();
   public leftElbowHingeQuaternion = new BABYLON.Quaternion();

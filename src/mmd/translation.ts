@@ -148,6 +148,13 @@ export const boneTranslations = {
   RIGHT_LEG_IK_TIP: { localName: "右足ＩＫ先", globalName: "Right leg IK tip" },
 } satisfies Record<string, BoneName>;
 
+export type BoneKeyType = keyof typeof boneTranslations;
+
+export const BoneKey = Object.fromEntries(
+  Object.keys(boneTranslations).map((k) => [k, k]),
+) as { [K in BoneKeyType]: K };
+
+
 export const morphTranslations = {
   // "base": "Base",
   "真面目": "Serious",
