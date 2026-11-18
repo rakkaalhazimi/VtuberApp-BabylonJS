@@ -1,21 +1,22 @@
 import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 
+import { EyeGlowEffect } from '@/mmd-effect/eye-glow-effect';
 import {
   LEFT_ARM_DEFAULT_QUATERNION,
   RIGHT_ARM_DEFAULT_QUATERNION,
 } from '@/mmd/guider-state';
 import { MMDAvatarLoader } from '@/mmd/mmd-avatar-loader';
 import { MMDAvatarModel } from '@/mmd/mmd-avatar-model';
+import { MMDEffectManager } from '@/mmd-effect/mmd-effect-manager';
 import { BoneKey } from '@/mmd/translation';
 
 
 
 export class MMDAvatarController {
   private loader: MMDAvatarLoader;
-  private avatarModel: MMDAvatarModel | null = null;
-  // public effects = new EffectManager();
-  // public eyeGlow = new EyeGlowEffect(); // GUI sliders can bind directly to this!
+  public avatarModel: MMDAvatarModel | null = null;
+  public effects = new MMDEffectManager();
 
   constructor(
     private scene: BABYLON.Scene,
@@ -24,18 +25,19 @@ export class MMDAvatarController {
     shadowGenerator?: BABYLON.ShadowGenerator,
   ) {
     this.loader = new MMDAvatarLoader(this.scene, mmdRuntime, shadowGenerator);
-    // this.effects.register(this.eyeGlow);
+
+    const eyeGlow = new EyeGlowEffect();
+    this.effects.register('Eye Glow', eyeGlow);
   }
 
   public async loadCharacter(path: string): Promise<MMDAvatarModel> {
     const { model, mesh } = await this.loader.load(path);
+    const materials = mesh.metadata.materials as BABYLONMMD.MmdStandardMaterial[];
     this.avatarModel = new MMDAvatarModel(model, mesh);
-
-    // const materials = mesh.metadata.materials as BABYLONMMD.MmdStandardMaterial[];
-    // this.effects.applyAll(this.scene, materials);
 
     this.restArms(this.avatarModel);
     this.focusCameraOnHead(this.avatarModel);
+    this.effects.applyAll(this.scene, materials);
 
     return this.avatarModel;
   }

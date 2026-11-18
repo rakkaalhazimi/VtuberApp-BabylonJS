@@ -7,14 +7,13 @@ import { type BoneKeyType } from '@/mmd/translation';
 
 
 export class MMDAvatarModel {
-  public readonly mmdModel: BABYLONMMD.MmdModel;
-  public readonly mmdMesh: BABYLONMMD.MmdMesh;
   public readonly boneState: MMDBoneState;
   public readonly morphController: BABYLONMMD.MmdMorphController;
 
-  constructor(mmdModel: BABYLONMMD.MmdModel, mmdMesh: BABYLONMMD.MmdMesh) {
-    this.mmdModel = mmdModel;
-    this.mmdMesh = mmdMesh;
+  constructor(
+    public readonly mmdModel: BABYLONMMD.MmdModel,
+    public readonly mmdMesh: BABYLONMMD.MmdMesh,
+  ) {
     // Automatically created and bound once on instantiation
     this.boneState = createMMDBoneState(mmdModel);
     this.morphController = mmdModel.morph;

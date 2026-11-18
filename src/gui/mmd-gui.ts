@@ -4,6 +4,7 @@ import * as dat from 'dat.gui';
 
 import type { PoseMMDAnimation } from '@/animation/poseMMDAnimation';
 import type { MMDAvatarController } from '@/mmd/mmd-avatar-controller';
+import { EyeGlowEffect } from '@/mmd-effect/eye-glow-effect';
 import { boneTranslations, morphTranslations } from '@/mmd/translation';
 
 
@@ -28,24 +29,55 @@ export class MMDGUI {
     this.mainFolder = this.gui.addFolder('MMD');
   };
 
-  createChangeMMDModelGUI(
-    mmdAvatarController: MMDAvatarController,
+  public createChangeMMDModelGUI(
+    avatarController: MMDAvatarController,
     poseMMD: PoseMMDAnimation,
     folder: dat.GUI = this.mainFolder,
   ) {
     const options = { path: '' };
     const paths = Object.fromEntries(pmxFolders);
     const loaderFolder = folder.addFolder('Loader');
+
     loaderFolder.add(options, 'path', paths)
       .onChange(async (path) => {
-        const mmdAvatarModel = await mmdAvatarController.loadCharacter(path);
-        this.createMMDGUI(mmdAvatarModel.mmdModel);
-        poseMMD.useMmdModel(mmdAvatarModel.mmdModel);
+        const avatarModel = await avatarController.loadCharacter(path);
+        this.createEffectGUI(avatarController);
+        this.createMMDGUI(avatarModel.mmdModel);
+        poseMMD.useMmdModel(avatarModel.mmdModel);
       });
     loaderFolder.open();
   }
 
-  createBoneGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mainFolder) {
+
+  public createEyeGlowEffectGUI(avatarController: MMDAvatarController, folder: dat.GUI = this.mainFolder) {
+    const eyeGlow = avatarController.effects.getAllEffects()
+      .find((item) => item.effect instanceof EyeGlowEffect);
+
+    if (!eyeGlow) return;
+
+    const name = eyeGlow.name;
+    const effect = eyeGlow.effect as EyeGlowEffect;
+    const config = effect.getConfig();
+    const eyeGlowFolder = folder.addFolder(name);
+
+    eyeGlowFolder.add(effect, 'isEnabled').onChange((value: boolean) => value
+      ? effect.enable()
+      : effect.disable());
+
+    eyeGlowFolder.addColor(config, 'emissiveColor')
+      .onChange((color: string) => effect.updateConfig({emissiveColor: color}));
+
+    eyeGlowFolder.add(config, 'glowIntensity', 0, 1, 0.1)
+      .onChange((value: number) => effect.updateConfig({glowIntensity: value}));
+  }
+
+  public createEffectGUI(avatarController: MMDAvatarController, folder: dat.GUI = this.mainFolder) {
+    const effectFolder = folder.addFolder('Effect');
+    this.createEyeGlowEffectGUI(avatarController, effectFolder);
+    effectFolder.open();
+  }
+
+  private createBoneGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mainFolder) {
     if (this.boneFolder) {
       console.log('Remove folder');
       folder.removeFolder(this.boneFolder);
@@ -78,7 +110,7 @@ export class MMDGUI {
     }
   }
 
-  createMorphGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mainFolder) {
+  private createMorphGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mainFolder) {
     if (this.morphFolder) {
       folder.removeFolder(this.morphFolder);
     }
@@ -98,7 +130,7 @@ export class MMDGUI {
     }
   }
 
-  createMMDGUI(mmdModel: BABYLONMMD.MmdModel | null, folder: dat.GUI = this.mainFolder) {
+  public createMMDGUI(mmdModel: BABYLONMMD.MmdModel | null, folder: dat.GUI = this.mainFolder) {
     if (!mmdModel) {
       console.warn('No MMD Model found, cancel GUI creation.');
       return;

@@ -184,6 +184,7 @@ const createScene = async () => {
 
   const mmdGUI = new MMDGUI(settingsFolder);
   mmdGUI.createChangeMMDModelGUI(mmdAvatarController, poseMMDAnimation);
+  mmdGUI.createEffectGUI(mmdAvatarController);
   mmdGUI.createMMDGUI(mmdAvatarModel.mmdModel);
 
 
