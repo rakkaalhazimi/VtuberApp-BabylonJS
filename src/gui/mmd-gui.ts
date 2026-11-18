@@ -22,6 +22,7 @@ export class MMDGUI {
   private mainFolder: dat.GUI;
   private boneFolder: dat.GUI | null = null;
   private morphFolder: dat.GUI | null = null;
+  private effectFolder: dat.GUI | null = null;
 
   constructor(
     private gui: dat.GUI = new dat.GUI(),
@@ -72,9 +73,12 @@ export class MMDGUI {
   }
 
   public createEffectGUI(avatarController: MMDAvatarController, folder: dat.GUI = this.mainFolder) {
-    const effectFolder = folder.addFolder('Effect');
-    this.createEyeGlowEffectGUI(avatarController, effectFolder);
-    effectFolder.open();
+    if (this.effectFolder) {
+      folder.removeFolder(this.effectFolder);
+    }
+    this.effectFolder = folder.addFolder('Effect');
+    this.createEyeGlowEffectGUI(avatarController, this.effectFolder);
+    this.effectFolder.open();
   }
 
   private createBoneGUI(mmdModel: BABYLONMMD.MmdModel, folder: dat.GUI = this.mainFolder) {
