@@ -7,7 +7,7 @@ import { PoseMMDGuider } from '@/animation/poseMMDGuider';
 import { PoseMMDRetargeter } from '@/animation/poseMMDRetargeter';
 import { createPoseLandmarkState } from '@/computer-vision/pose-landmark-state';
 import { createMMDBoneState } from '@/mmd/mmd-bone-state';
-import { createMMDMorphController } from '@/mmd/morph-controller';
+import { createMMDMorphController } from '@/mmd/mmd-morph-controller';
 
 
 export class PoseMMDAnimation {
