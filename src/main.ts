@@ -66,7 +66,7 @@ const createScene = async () => {
 
   const directionalLight = new BABYLON.DirectionalLight(
     'directionalLight',
-    new BABYLON.Vector3(0, 1, 0),
+    new BABYLON.Vector3(0.5, -1, 1),
     scene,
   );
   directionalLight.intensity = 1;
