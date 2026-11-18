@@ -1,6 +1,6 @@
 import * as BABYLONMMD from 'babylon-mmd';
 
-import { MMDBoneManager } from '@/mmd/bone-manager';
+import { MMDBoneManager } from '@/mmd/mmd-bone-manager';
 import { boneTranslations } from '@/mmd/translation';
 
 

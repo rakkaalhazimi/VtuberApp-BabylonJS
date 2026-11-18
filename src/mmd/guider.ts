@@ -4,7 +4,7 @@ import type { HandLandmarkerResult, PoseLandmarkerResult } from '@mediapipe/task
 
 import { HandLandmarkerPoint, HandLandmarkerEstimation } from '@/computer-vision/hand-landmarker';
 import { PoseLandmarkerPoint } from '@/computer-vision/pose-landmarker';
-import { MMDBoneManager } from '@/mmd/bone-manager';
+import { MMDBoneManager } from '@/mmd/mmd-bone-manager';
 import { GuiderState } from '@/mmd/guider-state';
 import { boneTranslations } from '@/mmd/translation';
 import {
