@@ -1,4 +1,3 @@
-import * as BABYLON from '@babylonjs/core';
 import * as BABYLONMMD from 'babylon-mmd';
 import * as Kalidokit from 'kalidokit';
 import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision';
