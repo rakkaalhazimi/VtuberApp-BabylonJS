@@ -6,6 +6,7 @@ import type { PoseMMDAnimation } from '@/animation/poseMMDAnimation';
 import type { MMDAvatarController } from '@/mmd/mmd-avatar-controller';
 import { EyeGlowEffect } from '@/mmd-effect/eye-glow-effect';
 import { boneTranslations, morphTranslations } from '@/mmd/translation';
+import { LightReflectionEffect } from '@/mmd-effect/light-reflection-effect';
 
 
 
@@ -72,12 +73,31 @@ export class MMDGUI {
       .onChange((value: number) => effect.updateConfig({glowIntensity: value}));
   }
 
+  public createLightReflectEffectGUI(avatarController: MMDAvatarController, folder: dat.GUI = this.mainFolder) {
+    const lightReflect = avatarController.effects.getAllEffects()
+      .find((item) => item.effect instanceof LightReflectionEffect);
+
+    if (!lightReflect) return;
+
+    const name = lightReflect.name;
+    const effect = lightReflect.effect as LightReflectionEffect;
+    const config = effect.getConfig();
+    const lightReflectFolder = folder.addFolder(name);
+
+    lightReflectFolder.add(config, 'skinSpecularPower', 0, 200, 1)
+      .onChange((value: number) => effect.updateConfig({skinSpecularPower: value}));
+
+    lightReflectFolder.add(config, 'clothesSpecularPower', 0, 200, 1)
+      .onChange((value: number) => effect.updateConfig({clothesSpecularPower: value}));
+  }
+
   public createEffectGUI(avatarController: MMDAvatarController, folder: dat.GUI = this.mainFolder) {
     if (this.effectFolder) {
       folder.removeFolder(this.effectFolder);
     }
     this.effectFolder = folder.addFolder('Effect');
     this.createEyeGlowEffectGUI(avatarController, this.effectFolder);
+    this.createLightReflectEffectGUI(avatarController, this.effectFolder);
     this.effectFolder.open();
   }
 

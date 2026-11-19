@@ -10,6 +10,7 @@ import { MMDAvatarLoader } from '@/mmd/mmd-avatar-loader';
 import { MMDAvatarModel } from '@/mmd/mmd-avatar-model';
 import { MMDEffectManager } from '@/mmd-effect/mmd-effect-manager';
 import { BoneKey } from '@/mmd/translation';
+import { LightReflectionEffect } from '@/mmd-effect/light-reflection-effect';
 
 
 
@@ -28,6 +29,9 @@ export class MMDAvatarController {
 
     const eyeGlow = new EyeGlowEffect();
     this.effects.register('Eye Glow', eyeGlow);
+
+    const lightReflect = new LightReflectionEffect();
+    // this.effects.register('Light Reflect', lightReflect);
   }
 
   public async loadCharacter(path: string): Promise<MMDAvatarModel> {
