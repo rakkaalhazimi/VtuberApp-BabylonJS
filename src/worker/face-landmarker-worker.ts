@@ -5,7 +5,7 @@ import type { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 export class FaceLandmarkerWorker {
   public worker: Worker;
   public requests = new Map();
-  public isEnabled = true;
+  public isEnabled = false;
   public isProcessing = false;
   public idCounter = 0;
 
