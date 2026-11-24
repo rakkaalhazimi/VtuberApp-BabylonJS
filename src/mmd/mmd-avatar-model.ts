@@ -9,6 +9,7 @@ import { type BoneKeyType } from '@/mmd/translation';
 export class MMDAvatarModel {
   public readonly boneState: MMDBoneState;
   public readonly morphController: BABYLONMMD.MmdMorphController;
+  public materials: BABYLONMMD.MmdStandardMaterial[];
 
   constructor(
     public readonly mmdModel: BABYLONMMD.MmdModel,
@@ -17,6 +18,7 @@ export class MMDAvatarModel {
     // Automatically created and bound once on instantiation
     this.boneState = createMMDBoneState(mmdModel);
     this.morphController = mmdModel.morph;
+    this.materials = this.mmdModel.mesh.metadata.materials as BABYLONMMD.MmdStandardMaterial[];
   }
 
   rotateBone(key: BoneKeyType, quaternion: BABYLON.Quaternion) {
