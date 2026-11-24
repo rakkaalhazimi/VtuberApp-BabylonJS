@@ -80,7 +80,7 @@ const createScene = async () => {
   spotLight.intensity = 0;
 
   const hemiLight = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(0, 1, 0), scene);
-  hemiLight.intensity = 0;
+  hemiLight.intensity = 0.2;
 
 
   const shadowGenerator = new BABYLON.ShadowGenerator(1024, directionalLight, true);
