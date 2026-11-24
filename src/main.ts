@@ -17,6 +17,7 @@ import { DrawerGUI } from '@/gui/drawer-gui';
 import { LightGUI } from '@/gui/light-gui';
 import { MMDGUI } from '@/gui/mmd-gui';
 import { PoseGUI } from '@/gui/pose-gui';
+import { AnimationKey, MMDAvatarAnimation } from '@/mmd/mmd-avatar-animation';
 import { MMDAvatarController } from '@/mmd/mmd-avatar-controller';
 import { VideoCamera } from '@/video/video';
 import { FaceLandmarkerWorker } from '@/worker/face-landmarker-worker';
@@ -117,14 +118,24 @@ const createScene = async () => {
   // MMD Controller
   const mmdAvatarController = new MMDAvatarController(scene, camera, mmdRuntime, shadowGenerator);
   const mmdAvatarModel = await mmdAvatarController.loadCharacter('/models/Chen_Qianyu/Chen Qianyu.pmx');
-  await mmdAvatarController.loadAnimation('/vmd/walk.vmd');
-  await mmdAvatarController.playAnimation();
+
+  // MMD Animation
+  const mmdAvatarAnimation = new MMDAvatarAnimation(scene, mmdRuntime, mmdAvatarModel.mmdModel);
+  await mmdAvatarAnimation.initAnimation();
+  // mmdAvatarAnimation.playAnimation(AnimationKey.IDLE);
 
   document.addEventListener('keydown', (event) => {
     if (event.code === `Space`) {
-      mmdAvatarController.pauseAnimation();
+      if (mmdAvatarAnimation.currentKey === AnimationKey.WALK) {
+        mmdAvatarAnimation.playAnimation(AnimationKey.IDLE);
+      } else {
+        mmdAvatarAnimation.playAnimation(AnimationKey.WALK);
+      }
     }
   });
+
+  // const bone = mmdAvatarModel.mmdModel.runtimeBones.find(b => b.name === 'センター');
+  // bone!.linkedBone.position.x += 10;
 
 
   // Video Camera
@@ -224,7 +235,7 @@ const createScene = async () => {
 
   scene.onBeforeRenderObservable.add(async () => {
     if (poseWorker.isProcessing) {
-      poseMMDAnimation.guidePose();
+      // poseMMDAnimation.guidePose();
 
       return;
     };

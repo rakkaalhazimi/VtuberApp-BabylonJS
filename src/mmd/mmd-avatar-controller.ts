@@ -46,31 +46,6 @@ export class MMDAvatarController {
     return this.avatarModel;
   }
 
-  public async loadAnimation(path: string) {
-    const vmdLoader = new BABYLONMMD.VmdLoader(this.scene);
-    const mmdAnimation = await vmdLoader.loadAsync('motion',
-      [
-        path,
-      ]);
-
-    const mmdCamera = new BABYLONMMD.MmdCamera('MmdCamera', new BABYLON.Vector3(0, 10, 0), this.scene);
-    const cameraAnimationHandle = mmdCamera.createRuntimeAnimation(mmdAnimation);
-    mmdCamera.setRuntimeAnimation(cameraAnimationHandle);
-    this.mmdRuntime.addAnimatable(mmdCamera);
-
-    if (!this.avatarModel?.mmdModel) return;
-    const modelAnimationHandle = this.avatarModel.mmdModel.createRuntimeAnimation(mmdAnimation);
-    this.avatarModel.mmdModel.setRuntimeAnimation(modelAnimationHandle);
-  }
-
-  public async playAnimation() {
-    await this.mmdRuntime.playAnimation();
-  }
-
-  public pauseAnimation() {
-    this.mmdRuntime.pauseAnimation();
-  }
-
   public restArms(model: MMDAvatarModel) {
     model.rotateBone(BoneKey.LEFT_ARM, LEFT_ARM_DEFAULT_QUATERNION);
     model.rotateBone(BoneKey.RIGHT_ARM, RIGHT_ARM_DEFAULT_QUATERNION);
