@@ -22,7 +22,7 @@ export class MMDAvatarController {
   constructor(
     private scene: BABYLON.Scene,
     private camera: BABYLON.Camera,
-    mmdRuntime: BABYLONMMD.MmdRuntime,
+    public mmdRuntime: BABYLONMMD.MmdRuntime,
     shadowGenerator?: BABYLON.ShadowGenerator,
   ) {
     this.loader = new MMDAvatarLoader(this.scene, mmdRuntime, shadowGenerator);
@@ -44,6 +44,31 @@ export class MMDAvatarController {
     this.effects.applyAll(this.scene, materials);
 
     return this.avatarModel;
+  }
+
+  public async loadAnimation(path: string) {
+    const vmdLoader = new BABYLONMMD.VmdLoader(this.scene);
+    const mmdAnimation = await vmdLoader.loadAsync('motion',
+      [
+        path,
+      ]);
+
+    const mmdCamera = new BABYLONMMD.MmdCamera('MmdCamera', new BABYLON.Vector3(0, 10, 0), this.scene);
+    const cameraAnimationHandle = mmdCamera.createRuntimeAnimation(mmdAnimation);
+    mmdCamera.setRuntimeAnimation(cameraAnimationHandle);
+    this.mmdRuntime.addAnimatable(mmdCamera);
+
+    if (!this.avatarModel?.mmdModel) return;
+    const modelAnimationHandle = this.avatarModel.mmdModel.createRuntimeAnimation(mmdAnimation);
+    this.avatarModel.mmdModel.setRuntimeAnimation(modelAnimationHandle);
+  }
+
+  public async playAnimation() {
+    await this.mmdRuntime.playAnimation();
+  }
+
+  public pauseAnimation() {
+    this.mmdRuntime.pauseAnimation();
   }
 
   public restArms(model: MMDAvatarModel) {

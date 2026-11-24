@@ -114,19 +114,18 @@ const createScene = async () => {
   mmdRuntime.register(scene);
   // mmdRuntime.playAnimation();
 
-  // VMD
-  const vmdLoader = new BABYLONMMD.VmdLoader(scene);
-  // vmdLoader.loggingEnabled = true;
-
-  const mmdAnimation = await vmdLoader.loadAsync('motion',
-    [
-      '/vmd/walk.vmd',
-    ]);
-
-
   // MMD Controller
-  const mmdAvatarController = new MMDAvatarController(scene, camera, mmdRuntime);
-  const mmdAvatarModel = await mmdAvatarController.loadCharacter('/models/feixiao/星穹铁道—飞霄.pmx');
+  const mmdAvatarController = new MMDAvatarController(scene, camera, mmdRuntime, shadowGenerator);
+  const mmdAvatarModel = await mmdAvatarController.loadCharacter('/models/Chen_Qianyu/Chen Qianyu.pmx');
+  await mmdAvatarController.loadAnimation('/vmd/walk.vmd');
+  await mmdAvatarController.playAnimation();
+
+  document.addEventListener('keydown', (event) => {
+    if (event.code === `Space`) {
+      mmdAvatarController.pauseAnimation();
+    }
+  });
+
 
   // Video Camera
   const videoCamera = new VideoCamera('video');
