@@ -263,3 +263,70 @@ export function parseLandmarkNew(pose: PoseLandmarkerResult | HandLandmarkerResu
 export function smooth(oldValue: number, newValue: number, alpha = 0.05) {
   return oldValue + (newValue - oldValue) * alpha;
 }
+
+
+export async function reconstructNormalBlueChannel(
+  imageUrl: string,
+  name: string,
+  scene: BABYLON.Scene,
+  options?: {
+    invertY?: boolean; // Set true if your normal map uses DirectX (-Y) orientation
+    invertX?: boolean;
+  }
+): Promise<BABYLON.DynamicTexture> {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = imageUrl;
+
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error(`Failed to load normal texture: ${imageUrl}`));
+  });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = img.width;
+  canvas.height = img.height;
+
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(img, 0, 0);
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+
+  const invertX = options?.invertX ?? false;
+  const invertY = options?.invertY ?? false;
+
+  for (let i = 0; i < data.length; i += 4) {
+    // 1. Remap R and G from [0, 255] -> [0, 1] -> [-1, 1]
+    let x = (data[i] / 255) * 2 - 1;
+    let y = (data[i + 1] / 255) * 2 - 1;
+
+    if (invertX) x = -x;
+    if (invertY) y = -y;
+
+    // 2. Compute Z = sqrt(max(0, 1 - X^2 - Y^2)) in [-1, 1]
+    const zSigned = Math.sqrt(Math.max(0, 1 - x * x - y * y));
+
+    // 3. Remap Z from [-1, 1] -> [0, 1] -> [0, 255]
+    const zByte = Math.max(0, Math.min(255, Math.round((zSigned + 1) * 0.5 * 255)));
+
+    // Keep (or optionally flip) X and Y, and write reconstructed Z into Blue
+    data[i] = Math.max(0, Math.min(255, Math.round((x + 1) * 0.5 * 255)));
+    data[i + 1] = Math.max(0, Math.min(255, Math.round((y + 1) * 0.5 * 255)));
+    data[i + 2] = zByte;
+    data[i + 3] = 255;
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+
+  // samplingMode = 1 (NEAREST) or TRILINEAR; set generateMipMaps = true for normal maps
+  const dynTex = new BABYLON.DynamicTexture(
+    name,
+    canvas,
+    scene,
+    true,
+    BABYLON.Texture.TRILINEAR_SAMPLINGMODE,
+  );
+  dynTex.update();
+  return dynTex;
+}
