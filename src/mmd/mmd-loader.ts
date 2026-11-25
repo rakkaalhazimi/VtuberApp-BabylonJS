@@ -88,6 +88,31 @@ export class MMDLoader {
     this.enableModelShadow(this.mmdMesh);
     this.container.addAllToScene();
 
+    const materials = newContainer.materials;
+    const eyeMaterial = materials.find(material => material.name == '目') as BABYLON.StandardMaterial;
+    eyeMaterial.emissiveColor = BABYLON.Color3.FromHexString('#009933');
+    eyeMaterial.emissiveTexture = eyeMaterial.diffuseTexture;
+
+    // 2. Create the GlowLayer
+    const glowLayer = new BABYLON.GlowLayer("eyeGlowLayer", this.scene, {
+      mainTextureSamples: 4,
+      blurKernelSize: 64,
+    });
+    glowLayer.intensity = 0.85;
+
+    // 3. Isolate the glow strictly to your exact eyeMaterial instance
+    glowLayer.customEmissiveColorSelector = (mesh, subMesh, material, result) => {
+      if (material === eyeMaterial) {
+        // const color = BABYLON.Color4.FromHexString('#009933');
+        // result.copyFrom(color);
+        result.set(0.4, 0.8, 1.5, 1.0); // Match or boost your emissive RGBA
+      } else {
+        result.set(0, 0, 0, 0); // Block everything else from glowing
+      }
+    };
+
+    // console.log(eyeMaterial);
+
     this.mmdModel = this.mmdRuntime.createMmdModel(this.mmdMesh);
     this.moveCameraToHead(this.mmdModel);
 

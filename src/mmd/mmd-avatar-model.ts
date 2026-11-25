@@ -27,6 +27,15 @@ export class MMDAvatarModel {
     selected.bone.rotationQuaternion = quaternion;
   }
 
+  translateMesh(position: BABYLON.Vector3) {
+    this.mmdMesh.position = position;
+  }
+
+  rotateMesh(rotation: BABYLON.Vector3) {
+    const quaternion = BABYLON.Quaternion.FromEulerVector(rotation);
+    this.mmdMesh.rotationQuaternion = quaternion;
+  }
+
   public dispose(runtime: BABYLONMMD.MmdRuntime): void {
     runtime.destroyMmdModel(this.mmdModel);
   }

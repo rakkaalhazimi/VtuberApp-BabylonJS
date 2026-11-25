@@ -80,4 +80,12 @@ export class MMDAvatarAnimation {
     this.mmdRuntime.playAnimation();
     this.currentKey = key;
   }
+
+  public pauseAnimation() {
+    this.mmdRuntime.pauseAnimation();
+  }
+
+  public resumeAnimation() {
+    this.mmdRuntime.playAnimation();
+  }
 }

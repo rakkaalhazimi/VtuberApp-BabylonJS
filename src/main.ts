@@ -23,6 +23,7 @@ import { VideoCamera } from '@/video/video';
 import { FaceLandmarkerWorker } from '@/worker/face-landmarker-worker';
 import { HandLandmarkerWorker } from '@/worker/hand-landmarker-worker';
 import { PoseEstimationWorker } from '@/worker/pose-estimation-worker';
+import { MMDAvatarMovement } from './mmd/mmd-avatar-movement';
 
 
 
@@ -48,10 +49,10 @@ const createScene = async () => {
   // camera.position = new BABYLON.Vector3(0, 17, -15);
   // This attaches the camera to the canvas
   camera.attachControl(canvas, true);
-  camera.keysUp.push(87);    // 'W' key
-  camera.keysDown.push(83);  // 'S' key
-  camera.keysLeft.push(65);  // 'A' key
-  camera.keysRight.push(68); // 'D' key
+  // camera.keysUp.push(87);    // 'W' key
+  // camera.keysDown.push(83);  // 'S' key
+  // camera.keysLeft.push(65);  // 'A' key
+  // camera.keysRight.push(68); // 'D' key
 
 
   // const directionalLight = new BABYLON.DirectionalLight(
@@ -110,7 +111,8 @@ const createScene = async () => {
   physicsRuntime.register(scene);
 
   // MMD Runtime
-  const mmdRuntime = new BABYLONMMD.MmdRuntime(scene, new BABYLONMMD.MmdBulletPhysics(physicsRuntime));
+  // const mmdRuntime = new BABYLONMMD.MmdRuntime(scene, new BABYLONMMD.MmdBulletPhysics(physicsRuntime));
+  const mmdRuntime = new BABYLONMMD.MmdRuntime(scene);
   // mmdRuntime.loggingEnabled = true;
   mmdRuntime.register(scene);
   // mmdRuntime.playAnimation();
@@ -122,7 +124,7 @@ const createScene = async () => {
   // MMD Animation
   const mmdAvatarAnimation = new MMDAvatarAnimation(scene, mmdRuntime, mmdAvatarModel.mmdModel);
   await mmdAvatarAnimation.initAnimation();
-  // mmdAvatarAnimation.playAnimation(AnimationKey.IDLE);
+  mmdAvatarAnimation.playAnimation(AnimationKey.IDLE);
 
   document.addEventListener('keydown', (event) => {
     if (event.code === `Space`) {
@@ -134,6 +136,9 @@ const createScene = async () => {
     }
   });
 
+  // MMD Movement
+  const mmdMovement = new MMDAvatarMovement(camera, mmdAvatarModel, mmdAvatarAnimation);
+  mmdMovement.moveCharacter();
   // const bone = mmdAvatarModel.mmdModel.runtimeBones.find(b => b.name === 'センター');
   // bone!.linkedBone.position.x += 10;
 
